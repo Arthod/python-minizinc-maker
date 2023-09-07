@@ -3,33 +3,42 @@ import minizinc
 
 
 # Create a MiniZinc model
+# https://www.minizinc.org/doc-2.5.5/en/modelling.html
 model = lib.SDUMZModel()
-#model.add_string("""
-#var -100..100: x;
-#int: a; int: b; int: c;
-#constraint a*(x*x) + b*x = c;
-#solve satisfy;
-#""")
-model.add_variable(lib.Variable("x", -100, 100))
 
-model.add_constant(lib.Constant("a"))
-model.add_constant(lib.Constant("b"))
-model.add_constant(lib.Constant("c"))
+nc = model.add_constant("nc", value=3)
 
-model.add_constraint(lib.Constraint("a*(x*x) + b*x = c"))
+states = ["wa", "nsw", "nt", "v", "sa", "t", "q"]
+for state in states:
+    model.add_variable(state, 1, nc.value)
 
-model.set_solve_method("satisfy")
+model.add_constraint("wa != nt")
+model.add_constraint("wa != sa")
+model.add_constraint("nt != sa")
+model.add_constraint("nt != q")
+model.add_constraint("sa != q")
+model.add_constraint("sa != nsw")
+model.add_constraint("sa != v")
+model.add_constraint("q != nsw")
+model.add_constraint("nsw != v")
 
-model.generate()
+model.set_solve_criteria("satisfy")
+
+
+
+
+
+
+####
+model.generate(debug=True)
+#model.write("model.mzn")
 
 # Transform Model into a instance
 gecode = minizinc.Solver.lookup("gecode")
 inst = minizinc.Instance(gecode, model)
-inst["a"] = 1
-inst["b"] = 4
-inst["c"] = 0
 
 # Solve the instance
 result = inst.solve(all_solutions=True)
+print(result)
 for i in range(len(result)):
     print("x = {}".format(result[i, "x"]))
