@@ -4,8 +4,12 @@ import lib
 import minizinc
 
 class TestLib(unittest.TestCase):
+    def setUp(self):
+        self.model = lib.SDUMZModel()
+
+
     def test_ex1(self):
-        model = lib.SDUMZModel()
+        model = self.model
         model.add_variable("x", -100, 100)
 
         model.add_constant("a")
@@ -31,8 +35,7 @@ class TestLib(unittest.TestCase):
         self.assertEqual(result[1, "x"], 0)
 
     def test_ex2(self):
-        model = lib.SDUMZModel()
-
+        model = self.model
         model.add_variable("x", 1, 10)
         model.add_constraint("(x mod 2) = 1")
         model.set_solve_method(lib.Method.int_search(["x"], "first_fail", "indomain_min"))
@@ -54,8 +57,8 @@ class TestLib(unittest.TestCase):
 
     def test_ex3(self):
         # https://www.minizinc.org/doc-2.5.5/en/modelling.html
-        model = lib.SDUMZModel()
-
+    
+        model = self.model
         nc = model.add_constant("nc", value=3)
 
         states = ["wa", "nsw", "nt", "v", "sa", "t", "q"]
@@ -74,9 +77,17 @@ class TestLib(unittest.TestCase):
 
         model.set_solve_criteria("satisfy")
 
-    def test_ex4_integer_factorization(self):
 
-        model = lib.SDUMZModel()
+        # Transform Model into a instance
+        gecode = minizinc.Solver.lookup("gecode")
+        inst = minizinc.Instance(gecode, model)
+
+        # Solve the instance
+        result = inst.solve(all_solutions=True)
+        self.assertEqual(18, len(result))
+
+    def test_ex4_integer_factorization(self):
+        model = self.model
 
         model.add_variable("x", 1, 99999999)
         model.add_variable("y", 1, 99999999)
@@ -86,6 +97,16 @@ class TestLib(unittest.TestCase):
         model.add_constraint("x > y")
 
         model.set_solve_criteria("satisfy")
+
+        # Transform Model into a instance
+        gecode = minizinc.Solver.lookup("gecode")
+        inst = minizinc.Instance(gecode, model)
+
+        # Solve the instance
+        result = inst.solve(all_solutions=True)
+
+        self.assertEqual(result[0].x, 7829)
+        self.assertEqual(result[0].y, 6907)
 
 if __name__ == "__main__":
     unittest.main()

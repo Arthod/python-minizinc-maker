@@ -1,10 +1,9 @@
 import lib
 import minizinc
 
-
-# Create a MiniZinc model
 model = lib.SDUMZModel()
 
+# Create a MiniZinc model
 model.add_variable("x", 1, 99999999)
 model.add_variable("y", 1, 99999999)
 
@@ -13,11 +12,6 @@ model.add_constraint("y > 1")
 model.add_constraint("x > y")
 
 model.set_solve_criteria("satisfy")
-
-
-
-
-
 
 ####
 model.generate(debug=True)
@@ -29,6 +23,8 @@ inst = minizinc.Instance(gecode, model)
 
 # Solve the instance
 result = inst.solve(all_solutions=True)
-print(result)
+print(result[0].y)
+print(result[0].x)
+print(len(result))
 for i in range(len(result)):
     print("x = {}".format(result[i, "x"]))
