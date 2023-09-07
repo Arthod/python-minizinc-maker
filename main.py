@@ -3,24 +3,12 @@ import minizinc
 
 
 # Create a MiniZinc model
-# https://www.minizinc.org/doc-2.5.5/en/modelling.html
 model = lib.SDUMZModel()
 
-nc = model.add_constant("nc", value=3)
+model.add_variable("x", 1, 1000000)
+model.add_variable("y", 1, 1000000)
 
-states = ["wa", "nsw", "nt", "v", "sa", "t", "q"]
-for state in states:
-    model.add_variable(state, 1, nc.value)
-
-model.add_constraint("wa != nt")
-model.add_constraint("wa != sa")
-model.add_constraint("nt != sa")
-model.add_constraint("nt != q")
-model.add_constraint("sa != q")
-model.add_constraint("sa != nsw")
-model.add_constraint("sa != v")
-model.add_constraint("q != nsw")
-model.add_constraint("nsw != v")
+model.add_constraint("x * y = 8633")
 
 model.set_solve_criteria("satisfy")
 
