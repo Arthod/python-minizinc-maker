@@ -25,13 +25,16 @@ class Constraint:
     
 
     
-class SDULibModel(minizinc):
+class SDUMZModel(minizinc.Model):
     def __init__(self):
         self.model = minizinc.Model()
         self.variables = []
         self.constants = []
         self.constraints = []
         self.solve_method = None
+
+        super().__init__()
+        
 
     def set_solve_method(self, method: str):
         self.solve_method = f"solve {method};"
@@ -46,6 +49,8 @@ class SDULibModel(minizinc):
         self.constants.append(constant)
 
     def generate(self):
-        model_str = "".join(v for v in self.variables + self.constants + self.constraints)
+        model_str = "".join(str(v) for v in self.variables + self.constants + self.constraints)
+        model_str += self.solve_method
+        print(model_str)
         self.model.add_string(model_str)
         #return "".join(v for v in self.variables + self.constants + self.constraints)

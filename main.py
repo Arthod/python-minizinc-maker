@@ -1,8 +1,9 @@
 import lib
+import minizinc
 
 
 # Create a MiniZinc model
-model = lib.SDULibModel()
+model = lib.SDUMZModel()
 #model.add_string("""
 #var -100..100: x;
 #int: a; int: b; int: c;
@@ -19,9 +20,11 @@ model.add_constraint(lib.Constraint("a*(x*x) + b*x = c"))
 
 model.set_solve_method("satisfy")
 
+model.generate()
+
 # Transform Model into a instance
-gecode = lib.SDULibModel.Solver.lookup("gecode")
-inst = lib.SDULibModel.Instance(gecode, model)
+gecode = minizinc.Solver.lookup("gecode")
+inst = minizinc.Instance(gecode, model)
 inst["a"] = 1
 inst["b"] = 4
 inst["c"] = 0
