@@ -75,13 +75,17 @@ class SDUMZModel(minizinc.Model):
         return constant
 
     def generate(self, debug=False):
-        model_str = "".join(str(v) for v in self.variables + self.constants + self.constraints)
+        self.model_str = "".join(str(v) for v in self.variables + self.constants + self.constraints)
         
         if (self.solve_method is None):
-            model_str += f"solve {self.solve_criteria};\n"
+            self.model_str += f"solve {self.solve_criteria};\n"
         else:
-            model_str += f"solve :: {self.solve_method} {self.solve_criteria};\n"
+            self.model_str += f"solve :: {self.solve_method} {self.solve_criteria};\n"
         if (debug):
-            print(model_str)
-        self.add_string(model_str)
+            print(self.model_str)
+        self.add_string(self.model_str)
         #return "".join(v for v in self.variables + self.constants + self.constraints)
+
+    def write(self, fn: str):
+        with open(fn, "w") as f:
+            f.write(self.model_str)

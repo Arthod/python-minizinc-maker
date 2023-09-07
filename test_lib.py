@@ -74,5 +74,18 @@ class TestLib(unittest.TestCase):
 
         model.set_solve_criteria("satisfy")
 
+    def test_ex4_integer_factorization(self):
+
+        model = lib.SDUMZModel()
+
+        model.add_variable("x", 1, 99999999)
+        model.add_variable("y", 1, 99999999)
+
+        model.add_constraint(f"x * y = {7829 * 6907}")
+        model.add_constraint("y > 1")
+        model.add_constraint("x > y")
+
+        model.set_solve_criteria("satisfy")
+
 if __name__ == "__main__":
     unittest.main()
