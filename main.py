@@ -4,12 +4,12 @@ import minizinc
 model = lib.SDUMZModel()
 
 # Create a MiniZinc model
-model.add_variable("x", 1, 99999999)
-model.add_variable("y", 1, 99999999)
+n = 5
+q = model.add_variables(range(1, n+1), "q", 1, n)
 
-model.add_constraint(f"x * y = {7829 * 6907}")
-model.add_constraint("y > 1")
-model.add_constraint("x > y")
+model.add_constraint(lib.Constraint.alldifferent(q))
+model.add_constraint(lib.Constraint.alldifferent([q[i] + i for i in range(1, n+1)]))
+model.add_constraint(lib.Constraint.alldifferent([q[i] - i for i in range(1, n+1)]))
 
 model.set_solve_criteria("satisfy")
 
@@ -22,9 +22,7 @@ gecode = minizinc.Solver.lookup("gecode")
 inst = minizinc.Instance(gecode, model)
 
 # Solve the instance
-result = inst.solve(all_solutions=True)
-print(result[0].y)
-print(result[0].x)
-print(len(result))
-for i in range(len(result)):
-    print("x = {}".format(result[i, "x"]))
+result = inst.solve(all_solutions=False)
+
+if (len(result)):
+    print(result)

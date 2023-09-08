@@ -35,8 +35,17 @@ class Constant:
             return f"int: {self.name};\n"
     
 class Constraint:
-    def __init__(self, cstr: str):
+    CTYPE_NORMAL = 0
+    CTYPE_ALLDIFFERENT = 1
+    def __init__(self, cstr: str, ctype: int=CTYPE_NORMAL):
         self.cstr = cstr
+        self.ctype = ctype
+
+    @staticmethod
+    def alldifferent(variables: list[Variable]):
+        arr_str = str([v.name for v in variables]).replace("'", "")
+        cstr = Constraint(f"alldifferent({arr_str})", Constraint.CTYPE_ALLDIFFERENT)
+        return cstr
 
     def __repr__(self):
         return f"constraint {self.cstr};\n"
@@ -51,6 +60,8 @@ class SDUMZModel(minizinc.Model):
         self.solve_criteria = None
         self.solve_method = None
 
+        self.gcstr_alldifferent = False
+
         super().__init__()
 
     def set_solve_criteria(self, criteria: str):
@@ -63,9 +74,25 @@ class SDUMZModel(minizinc.Model):
         variable = Variable(name, val_min, val_max)
         self.variables.append(variable)
         return variable
+    
+    def add_variables(self, indices: list[int], name: str, val_min: int, val_max: int):
+        variables = []
+        for idx in indices:
+            variable = Variable(f"{name}_{idx}", val_min, val_max)
+            self.variables.append(variable)
+            variables.append(variable)
+
+        return variables
 
     def add_constraint(self, cstr: str):
-        constraint = Constraint(cstr)
+        if (type(cstr) is Constraint):
+            constraint = cstr
+            if (constraint.ctype == Constraint.CTYPE_ALLDIFFERENT):
+                self.gcstr_alldifferent = True
+
+        elif (type(cstr) is str):
+            constraint = Constraint(cstr)
+
         self.constraints.append(constraint)
         return constraint
 
@@ -75,16 +102,20 @@ class SDUMZModel(minizinc.Model):
         return constant
 
     def generate(self, debug=False):
-        self.model_str = "".join(str(v) for v in self.variables + self.constants + self.constraints)
+        self.model_str = ""
+        if (self.gcstr_alldifferent):
+            self.model_str += f'include \"alldifferent.mzn\";\n'
+
+        self.model_str += "".join(str(v) for v in self.variables + self.constants + self.constraints)
         
         if (self.solve_method is None):
             self.model_str += f"solve {self.solve_criteria};\n"
         else:
             self.model_str += f"solve :: {self.solve_method} {self.solve_criteria};\n"
+            
+        self.add_string(self.model_str)
         if (debug):
             print(self.model_str)
-        self.add_string(self.model_str)
-        #return "".join(v for v in self.variables + self.constants + self.constraints)
 
     def write(self, fn: str):
         with open(fn, "w") as f:
