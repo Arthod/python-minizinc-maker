@@ -61,7 +61,7 @@ class Constraint:
     
 
     
-class SDUMZModel(minizinc.Model):
+class Model(minizinc.Model):
     def __init__(self):
         self.variables = []
         self.constants = []

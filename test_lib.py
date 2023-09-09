@@ -1,11 +1,11 @@
 import unittest
 
-import lib
+import pymzm
 import minizinc
 
-class TestLib(unittest.TestCase):
+class TestPMZM(unittest.TestCase):
     def setUp(self):
-        self.model = lib.SDUMZModel()
+        self.model = pymzm.Model()
 
 
     def test_ex1(self):
@@ -38,7 +38,7 @@ class TestLib(unittest.TestCase):
         model = self.model
         model.add_variable("x", 1, 10)
         model.add_constraint("(x mod 2) = 1")
-        model.set_solve_method(lib.Method.int_search(["x"], "first_fail", "indomain_min"))
+        model.set_solve_method(pymzm.Method.int_search(["x"], "first_fail", "indomain_min"))
         model.set_solve_criteria("satisfy")
 
         ####

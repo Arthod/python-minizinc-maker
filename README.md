@@ -1,10 +1,10 @@
-# py-minizincmaker
+# python-minizinc-maker
 
-Create pure Minizinc .mzn files from Python using py-minizincmaker library.
+Create pure Minizinc .mzn files from Python using python-minizinc-maker library.
 
 main.py - integer factorization example
 ```python
-model = lib.SDUMZModel()
+model = pymzm.Model()
 
 model.add_variable("x", 1, 99999999)
 model.add_variable("y", 1, 99999999)
