@@ -1,0 +1,14 @@
+solve :: seq_search([
+             int_search(s, smallest, indomain_min),
+             int_search([end], input_order, indomain_min)])
+      minimize end
+
+solve :: search_ann satisfy;
+
+solve :: int_search(q, input_order, indomain_min);
+      :: restart_linear(1000)
+      satisfy
+
+
+boolean
+var bool: b;
