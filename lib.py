@@ -1,5 +1,7 @@
 import minizinc
 import chess
+import sympy
+
 
 class Method:
     def __init__(self, s: str):
@@ -14,6 +16,7 @@ class Method:
         return method
 
 
+
 class Variable:
     def __init__(self, name: str, val_min: int, val_max: int):
         self.name = name
@@ -22,6 +25,12 @@ class Variable:
 
     def __repr__(self):
         return f"var {self.val_min}..{self.val_max}: {self.name};\n"
+    
+    def __add__(self, other):
+        return sympy.Symbol(self.name) + other
+    
+    def __sub__(self, other):
+        return sympy.Symbol(self.name) - other
     
 class Constant:
     def __init__(self, name: str, value: int=None):
@@ -43,7 +52,7 @@ class Constraint:
 
     @staticmethod
     def alldifferent(variables: list[Variable]):
-        arr_str = str([v.name for v in variables]).replace("'", "")
+        arr_str = str([v.name if type(v) is Variable else v for v in variables ]).replace("'", "")
         cstr = Constraint(f"alldifferent({arr_str})", Constraint.CTYPE_ALLDIFFERENT)
         return cstr
 
