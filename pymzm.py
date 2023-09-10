@@ -18,38 +18,35 @@ class Method:
 class Expression:
     def __init__(self, name):
         self.name = name
-
-    def __repr__(self):
-        return self.name
     
-    def operator(self, symbol: str, other: "Expression"):
+    def operator(self, symbol: str, other: "Expression", reverse=False):
         if (isinstance(other, Expression)):
             other = other.name
-        return Expression(f"{self.name} {symbol} {other}")
 
-    def __add__(self, other: "Expression"):
-        return self.operator("+", other)
+        if (reverse):
+            return Expression(f"{other} {symbol} {self.name}")
+        else:
+            return Expression(f"{self.name} {symbol} {other}")
+
+    def __add__(self, other: "Expression"): return self.operator("+", other)
+    def __radd__(self, other: "Expression"): return self.operator("+", other, reverse=True)
+    def __sub__(self, other: "Expression"): return self.operator("-", other)
+    def __rsub__(self, other: "Expression"): return self.operator("-", other, reverse=True)
+    def __mul__(self, other: "Expression"): return self.operator("*", other)
+    def __rmul__(self, other: "Expression"): return self.operator("*", other, reverse=True)
+    def __truediv__(self, other: "Expression"): return self.operator("/", other)
+    def __rtruediv__(self, other: "Expression"): return self.operator("/", other, reverse=True)
+    def __mod__(self, other: "Expression"): return self.operator("mod", other)
+    def __rmod__(self, other: "Expression"): return self.operator("mod", other, reverse=True)
     
-    def __eq__(self, other: "Expression"):
-        return self.operator("=", other)
-        
-    def __lt__(self, other: "Expression"):
-        return self.operator("<", other)
-    
-    def __le__(self, other: "Expression"):
-        return self.operator("<=", other)
-        
-    def __gt__(self, other: "Expression"):
-        return self.operator(">", other)
-    
-    def __ge__(self, other: "Expression"):
-        return self.operator(">=", other)
-    
-    def __mod__(self, other: "Expression"):
-        return self.operator("mod", other)
-    
-    def __truediv__(self, other: "Expression"):
-        return self.operator("/", other)        
+    def __eq__(self, other: "Expression"):  return self.operator("=", other)
+    def __ne__(self, other: "Expression"):  return self.operator("!=", other)
+    def __lt__(self, other: "Expression"):  return self.operator("<", other)
+    def __le__(self, other: "Expression"):  return self.operator("<=", other)
+    def __gt__(self, other: "Expression"):  return self.operator(">", other)
+    def __ge__(self, other: "Expression"):  return self.operator(">=", other)
+
+
 
     def func(self, func: str, other: "Expression"=None):
         if (other is None):
@@ -60,13 +57,16 @@ class Expression:
             else:
                 return Expression(f"{func}({self.name}, {other})")
 
-
-    def __pow__(self, other: "Expression"):
-        return self.func("pow", other)
-    
-    def __abs__(self):
-        return self.func("abs")
-
+    def __pow__(self, other: "Expression"): return self.func("pow", other)
+    def __abs__(self):  return self.func("abs")
+    # TODO: https://www.minizinc.org/doc-2.7.6/en/lib-stdlib-builtins.html
+    # arg max, arg min
+    # max, min
+    # count
+    # exp(x)
+    # log_x, log_2, log_10, ln
+    # trinonometric functions
+    # ..and more!
 
 
 class Variable(Expression):
@@ -74,7 +74,7 @@ class Variable(Expression):
         self.name = name#super().__init__(name)
         self.val_min = val_min
         self.val_max = val_max
-
+    
     def __repr__(self):
         return f"var {self.val_min}..{self.val_max}: {self.name};\n"
     
