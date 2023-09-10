@@ -98,11 +98,13 @@ class Constraint:
         CTYPE_ALLDIFFERENT,
         CTYPE_AMONG,
         CTYPE_ALL_EQUAL,
+        CTYPE_COUNT,
     ] = [
         "normal",
         "alldifferent",
         "among",
-        "all_equal"
+        "all_equal",
+        "count"
     ]
     def __init__(self, cstr: str, ctype: int=CTYPE_NORMAL):
         self.cstr = cstr
@@ -127,6 +129,12 @@ class Constraint:
     def all_equal(variables: list[Variable]):
         arr_str = _variableList2Str(variables)
         cstr = Constraint(f"all_equal({arr_str})", Constraint.CTYPE_ALL_EQUAL)
+        return cstr
+    
+    @staticmethod
+    def count(variables: list[Variable], val: int, count: int):
+        arr_str = _variableList2Str(variables)
+        cstr = Constraint(f"count({arr_str}, {val}, {count})", Constraint.CTYPE_COUNT)
         return cstr
     
     
