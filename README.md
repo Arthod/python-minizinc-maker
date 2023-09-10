@@ -1,6 +1,6 @@
 # python-minizinc-maker
 
-Create pure Minizinc .mzn files from Python using python-minizinc-maker library.
+Create pure Minizinc .mzn files from Python using python-minizinc-maker and the standard minizinc library.
 
 main.py - integer factorization example
 ```python
@@ -34,6 +34,7 @@ But you can also use the minizinc library to solve the model directly.
 main.py - integer factorization example
 ```python
 ...
+import minizinc
 gecode = minizinc.Solver.lookup("gecode")
 inst = minizinc.Instance(gecode, model)
 
