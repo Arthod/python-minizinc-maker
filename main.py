@@ -4,6 +4,13 @@ import minizinc
 model = pymzm.Model()
 
 # Create a MiniZinc model
+x = model.add_variable("x", 1, 9)
+y = model.add_variable("y", 1, 9)
+
+
+model.add_constraint(abs(x)**2 / y == 2)
+model.add_constraint(y > 1)
+model.add_constraint(x > y)
 
 model.set_solve_criteria("satisfy")
 

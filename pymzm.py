@@ -15,22 +15,71 @@ class Method:
         method = Method(f"int_search({arr}, {varchoice}, {constrainchoice})")
         return method
 
-
-
-class Variable:
-    def __init__(self, name: str, val_min: int, val_max: int):
+class Expression:
+    def __init__(self, name):
         self.name = name
+
+    def __repr__(self):
+        return self.name
+    
+    def operator(self, symbol: str, other: "Expression"):
+        if (isinstance(other, Expression)):
+            other = other.name
+        return Expression(f"{self.name} {symbol} {other}")
+
+    def __add__(self, other: "Expression"):
+        return self.operator("+", other)
+    
+    def __eq__(self, other: "Expression"):
+        return self.operator("=", other)
+        
+    def __lt__(self, other: "Expression"):
+        return self.operator("<", other)
+    
+    def __le__(self, other: "Expression"):
+        return self.operator("<=", other)
+        
+    def __gt__(self, other: "Expression"):
+        return self.operator(">", other)
+    
+    def __ge__(self, other: "Expression"):
+        return self.operator(">=", other)
+    
+    def __mod__(self, other: "Expression"):
+        return self.operator("mod", other)
+    
+    def __truediv__(self, other: "Expression"):
+        return self.operator("/", other)        
+
+    def func(self, func: str, other: "Expression"=None):
+        if (other is None):
+            return Expression(f"{func}({self.name})")
+        else:
+            if (isinstance(other, Expression)):
+                return Expression(f"{func}({self.name}, {other.name})")
+            else:
+                return Expression(f"{func}({self.name}, {other})")
+
+
+    def __pow__(self, other: "Expression"):
+        return self.func("pow", other)
+    
+    def __abs__(self):
+        return self.func("abs")
+
+
+
+class Variable(Expression):
+    def __init__(self, name: str, val_min: int, val_max: int):
+        self.name = name#super().__init__(name)
         self.val_min = val_min
         self.val_max = val_max
 
     def __repr__(self):
         return f"var {self.val_min}..{self.val_max}: {self.name};\n"
     
-    def __add__(self, other):
-        return sympy.Symbol(self.name) + other
-    
-    def __sub__(self, other):
-        return sympy.Symbol(self.name) - other
+        
+
     
 class Constant:
     def __init__(self, name: str, value: int=None):
@@ -94,10 +143,13 @@ class Model(minizinc.Model):
         return variables
 
     def add_constraint(self, cstr: str):
-        if (type(cstr) is Constraint):
+        if (isinstance(cstr, Constraint)):
             constraint = cstr
             if (constraint.ctype == Constraint.CTYPE_ALLDIFFERENT):
                 self.gcstr_alldifferent = True
+
+        elif (isinstance(cstr, Expression)):
+            constraint = Constraint(cstr.name)
 
         elif (type(cstr) is str):
             constraint = Constraint(cstr)
