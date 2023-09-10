@@ -8,6 +8,7 @@ x = model.add_variable("x", 1, 99999999)
 y = model.add_variable("y", 1, 99999999)
 
 model.add_constraint(x * y == 7829 * 6907)
+model.add_constraint(pymzm.Constraint.among(1, [x, y], {6907}))
 model.add_constraint(y > 1)
 model.add_constraint(x > y)
 model.set_solve_criteria("satisfy")
@@ -22,3 +23,5 @@ inst = minizinc.Instance(gecode, model)
 
 # Solve the instance
 result = inst.solve(all_solutions=False)
+
+print(result)

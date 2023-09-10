@@ -93,20 +93,33 @@ class Constant:
             return f"int: {self.name};\n"
     
 class Constraint:
-    CTYPE_NORMAL = 0
-    CTYPE_ALLDIFFERENT = 1
+    CTYPES = [
+        CTYPE_NORMAL,
+        CTYPE_ALLDIFFERENT,
+        CTYPE_AMONG,
+    ] = [
+        "normal",
+        "alldifferent",
+        "among"
+    ]
     def __init__(self, cstr: str, ctype: int=CTYPE_NORMAL):
         self.cstr = cstr
         self.ctype = ctype
 
-    @staticmethod
-    def alldifferent(variables: list[Variable]):
-        arr_str = str([v.name if type(v) is Variable else v for v in variables ]).replace("'", "")
-        cstr = Constraint(f"alldifferent({arr_str})", Constraint.CTYPE_ALLDIFFERENT)
-        return cstr
-
     def __repr__(self):
         return f"constraint {self.cstr};\n"
+
+    @staticmethod
+    def alldifferent(variables: list[Variable]):
+        arr_str = _variableList2Str(variables)
+        cstr = Constraint(f"alldifferent({arr_str})", Constraint.CTYPE_ALLDIFFERENT)
+        return cstr
+    
+    @staticmethod
+    def among(n: int, variables: list[Variable], values: list[int]):
+        arr_str = _variableList2Str(variables)
+        cstr = Constraint(f"among({n}, {arr_str}, {values})", Constraint.CTYPE_AMONG)
+        return cstr
     
 
     
@@ -118,7 +131,7 @@ class Model(minizinc.Model):
         self.solve_criteria = None
         self.solve_method = None
 
-        self.gcstr_alldifferent = False
+        self.global_constraints = set()
 
         super().__init__()
 
@@ -145,8 +158,8 @@ class Model(minizinc.Model):
     def add_constraint(self, cstr: str):
         if (isinstance(cstr, Constraint)):
             constraint = cstr
-            if (constraint.ctype == Constraint.CTYPE_ALLDIFFERENT):
-                self.gcstr_alldifferent = True
+            if (constraint.ctype != Constraint.CTYPE_NORMAL):
+                self.global_constraints.add(constraint.ctype)
 
         elif (isinstance(cstr, Expression)):
             constraint = Constraint(cstr.name)
@@ -164,8 +177,8 @@ class Model(minizinc.Model):
 
     def generate(self, debug=False):
         self.model_str = ""
-        if (self.gcstr_alldifferent):
-            self.model_str += f'include \"alldifferent.mzn\";\n'
+        for gconst in self.global_constraints:
+            self.model_str += f'include \"{gconst}.mzn\";\n'
 
         self.model_str += "".join(str(v) for v in self.variables + self.constants + self.constraints)
         
@@ -181,3 +194,7 @@ class Model(minizinc.Model):
     def write(self, fn: str):
         with open(fn, "w") as f:
             f.write(self.model_str)
+
+
+def _variableList2Str(variables: list["Variable"]) -> str:
+    return str([v.name if type(v) is Variable else v for v in variables]).replace("'", "")
