@@ -6,12 +6,12 @@ main.py - integer factorization example
 ```python
 model = pymzm.Model()
 
-model.add_variable("x", 1, 99999999)
-model.add_variable("y", 1, 99999999)
+x = model.add_variable("x", 1, 99999999)
+y = model.add_variable("y", 1, 99999999)
 
-model.add_constraint(f"x * y = {7829 * 6907}")
-model.add_constraint("y > 1")
-model.add_constraint("x > y")
+model.add_constraint(x * y == 7829 * 6907)
+model.add_constraint(y > 1)
+model.add_constraint(x > y)
 
 model.set_solve_criteria("satisfy")
 model.generate()

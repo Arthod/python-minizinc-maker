@@ -4,12 +4,12 @@ import minizinc
 model = pymzm.Model()
 
 # Create a MiniZinc model
-X = model.add_variables(range(0, 5), "X", 1, 5)
+x = model.add_variable("x", 1, 99999999)
+y = model.add_variable("y", 1, 99999999)
 
-
-model.add_constraint(sum(X) == 5)
-model.add_constraint(X[0] > X[1])
-
+model.add_constraint(x * y == 7829 * 6907)
+model.add_constraint(y > 1)
+model.add_constraint(x > y)
 model.set_solve_criteria("satisfy")
 
 ####
