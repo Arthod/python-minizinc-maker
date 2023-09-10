@@ -6,9 +6,11 @@ model = pymzm.Model()
 # Create a MiniZinc model
 x = model.add_variable("x", 1, 99999999)
 y = model.add_variable("y", 1, 99999999)
+z = model.add_variable("z", 1, 99999999)
 
 model.add_constraint(x * y == 7829 * 6907)
 model.add_constraint(pymzm.Constraint.among(1, [x, y], {6907}))
+model.add_constraint(pymzm.Constraint.all_equal([z, y]))
 model.add_constraint(y > 1)
 model.add_constraint(x > y)
 model.set_solve_criteria("satisfy")

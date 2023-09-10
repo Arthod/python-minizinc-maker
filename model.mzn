@@ -1,8 +1,11 @@
+include "all_equal.mzn";
 include "among.mzn";
 var 1..99999999: x;
 var 1..99999999: y;
+var 1..99999999: z;
 constraint x * y = 54074903;
 constraint among(1, [x, y], {6907});
+constraint all_equal([z, y]);
 constraint y > 1;
 constraint x > y;
 solve satisfy;

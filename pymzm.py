@@ -97,10 +97,12 @@ class Constraint:
         CTYPE_NORMAL,
         CTYPE_ALLDIFFERENT,
         CTYPE_AMONG,
+        CTYPE_ALL_EQUAL,
     ] = [
         "normal",
         "alldifferent",
-        "among"
+        "among",
+        "all_equal"
     ]
     def __init__(self, cstr: str, ctype: int=CTYPE_NORMAL):
         self.cstr = cstr
@@ -120,6 +122,13 @@ class Constraint:
         arr_str = _variableList2Str(variables)
         cstr = Constraint(f"among({n}, {arr_str}, {values})", Constraint.CTYPE_AMONG)
         return cstr
+    
+    @staticmethod
+    def all_equal(variables: list[Variable]):
+        arr_str = _variableList2Str(variables)
+        cstr = Constraint(f"all_equal({arr_str})", Constraint.CTYPE_ALL_EQUAL)
+        return cstr
+    
     
 
     
