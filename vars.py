@@ -4,11 +4,7 @@ import minizinc
 model = pymzm.Model()
 
 # Create a MiniZinc model
-x = model.add_variable("x", 1, 9)
-y = model.add_variable("y", 1, 9)
-z = model.add_variable("z", 1, 9)
-
-model.add_constraint(x >= 9 or y < 4)
+xs = model.add_variables("xs", range(3), val_min=0, val_max=1)
 
 
 model.set_solve_criteria("satisfy")
