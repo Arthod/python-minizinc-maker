@@ -14,8 +14,8 @@ model.add_constraint(pymzm.Constraint.alldifferent([q[i] - i for i in range(n)])
 model.set_solve_criteria("satisfy")
 
 ####
-model.generate(debug=True)
-model.write("model.mzn")
+model.generate_mzn(debug=True)
+model.write_mzn("model.mzn")
 
 # Transform Model into a instance
 gecode = minizinc.Solver.lookup("gecode")

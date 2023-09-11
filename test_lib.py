@@ -20,7 +20,7 @@ class TestPMZM(unittest.TestCase):
 
         model.set_solve_criteria("satisfy")
 
-        model.generate()
+        model.generate_mzn()
 
         # Transform Model into a instance
         gecode = minizinc.Solver.lookup("gecode")
@@ -42,8 +42,8 @@ class TestPMZM(unittest.TestCase):
         model.set_solve_criteria("satisfy")
 
         ####
-        model.generate()
-        #model.write("model.mzn")
+        model.generate_mzn()
+        #model.write_mzn("model.mzn")
 
         # Transform Model into a instance
         gecode = minizinc.Solver.lookup("gecode")

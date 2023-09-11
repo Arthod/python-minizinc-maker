@@ -30,8 +30,8 @@ for i in range(b):
 model.set_solve_criteria("satisfy")
 
 ####
-model.generate(debug=True)
-model.write("model.mzn")
+model.generate_mzn(debug=True)
+model.write_mzn("model.mzn")
 
 # Transform Model into a instance
 gecode = minizinc.Solver.lookup("gecode")

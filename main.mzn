@@ -1,0 +1,10 @@
+var 1..9: x;
+var 1..9: y;
+var 1..9: z;
+var 1..9: w;
+var 1..9: j;
+var 1..9: k;
+var 1..922: X;
+constraint x + y - j / k >= z - w;
+constraint X = x + y;
+solve satisfy;

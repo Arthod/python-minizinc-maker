@@ -20,6 +20,9 @@ class Method:
 class Expression:
     def __init__(self, name):
         self.name = name
+
+    def __str__(self):
+        return self.name
     
     def operator(self, symbol: str, other: "Expression", reverse=False):
         if (isinstance(other, Expression)):
@@ -47,8 +50,6 @@ class Expression:
     def __le__(self, other: "Expression"):  return self.operator("<=", other)
     def __gt__(self, other: "Expression"):  return self.operator(">", other)
     def __ge__(self, other: "Expression"):  return self.operator(">=", other)
-
-
 
     def func(self, func: str, other: "Expression"=None):
         if (other is None):
@@ -90,9 +91,16 @@ class Variable(Expression):
         self.vtype = vtype
     
     def __str__(self):
+        return self.name
+
+    def _to_mz(self):
         return f"var {self.val_min}..{self.val_max}: {self.name};\n"
     
-        
+    def _to_fz(self):
+        return f"var {self.val_min}..{self.val_max}: {self.name}:: output_var;\n"
+    
+    def _to_tz(self):
+        pass
 
     
 class Constant:
@@ -101,10 +109,16 @@ class Constant:
         self.value = value
     
     def __str__(self):
+        return self.name
+
+    def _to_mz(self):
         if (self.value is not None):
-            return f"int: {self.name} = {self.value};"
+            return f"int: {self.name} = {self.value};\n"
         else:
             return f"int: {self.name};\n"
+        
+    def _to_fz(self):
+        raise NotImplementedError()
     
 class Constraint:
     CTYPES = [
@@ -125,6 +139,12 @@ class Constraint:
         self.ctype = ctype
 
     def __str__(self):
+        return self.cstr
+    
+    def _to_mz(self):
+        return f"constraint {self.cstr};\n"
+    
+    def _to_fz(self):
         return f"constraint {self.cstr};\n"
 
     @staticmethod
@@ -207,25 +227,48 @@ class Model(minizinc.Model):
         self.constants.append(constant)
         return constant
 
-    def generate(self, debug=False):
-        self.model_str = ""
+    def generate_mzn(self, debug=False):
+        self.model_mzn_str = ""
         for gconst in self.global_constraints:
-            self.model_str += f'include \"{gconst}.mzn\";\n'
+            self.model_mzn_str += f'include \"{gconst}.mzn\";\n'
 
-        self.model_str += "".join(str(v) for v in self.variables + self.constants + self.constraints)
+        self.model_mzn_str += "".join(a._to_mz() for a in self.variables + self.constants + self.constraints)
         
         if (self.solve_method is None):
-            self.model_str += f"solve {self.solve_criteria};\n"
+            self.model_mzn_str += f"solve {self.solve_criteria};\n"
         else:
-            self.model_str += f"solve :: {self.solve_method} {self.solve_criteria};\n"
+            self.model_mzn_str += f"solve :: {self.solve_method} {self.solve_criteria};\n"
             
-        self.add_string(self.model_str)
+        self.add_string(self.model_mzn_str)
         if (debug):
-            print(self.model_str)
+            print(self.model_mzn_str)
 
-    def write(self, fn: str):
+    def write_mzn(self, fn: str):
+        if (self.model_mzn_str is None):
+            self.generate_mzn()
         with open(fn, "w") as f:
-            f.write(self.model_str)
+            f.write(self.model_mzn_str)
+
+    def generate_fzn(self, debug=False):
+        self.model_fzn_str = ""
+
+        self.model_fzn_str += "".join(a._to_fz() for a in self.variables + self.constants + self.constraints)
+        
+        # TODO
+        if (self.solve_method is None):
+            self.model_fzn_str += f"solve {self.solve_criteria};\n"
+        else:
+            self.model_fzn_str += f"solve :: {self.solve_method} {self.solve_criteria};\n"
+            
+        self.add_string(self.model_fzn_str)
+        if (debug):
+            print(self.model_fzn_str)
+
+    def write_fzn(self, fn: str):
+        if (self.model_fzn_str is None):
+            self.generate_mzn()
+        with open(fn, "w") as f:
+            f.write(self.model_fzn_str)
 
 
 def _variableIterable2Str(variables: Iterable[Variable]) -> str:

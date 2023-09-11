@@ -1,0 +1,8 @@
+output ["x = ",showDzn(x),";\n","y = ",showDzn(y),";\n","z = ",showDzn(z),";\n","w = ",showDzn(w),";\n","j = ",showDzn(j),";\n","k = ",showDzn(k),";\n","X = ",showDzn(X),";\n"];
+int: X;
+int: k;
+int: j;
+int: w;
+int: z;
+int: y;
+int: x;
