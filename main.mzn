@@ -5,6 +5,6 @@ var 1..9: w;
 var 1..9: j;
 var 1..9: k;
 var 1..922: X;
-constraint x + y - j / k >= z - w;
+constraint x + y - j div k >= z - w;
 constraint X = x + y;
 solve satisfy;

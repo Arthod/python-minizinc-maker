@@ -41,6 +41,8 @@ class Expression:
     def __rmul__(self, other: "Expression"): return self.operator("*", other, reverse=True)
     def __truediv__(self, other: "Expression"): return self.operator("/", other)
     def __rtruediv__(self, other: "Expression"): return self.operator("/", other, reverse=True)
+    def __floordiv__(self, other: "Expression"): return self.operator("div", other)
+    def __rfloordiv__(self, other: "Expression"): return self.operator("div", other, reverse=True)
     def __mod__(self, other: "Expression"): return self.operator("mod", other)
     def __rmod__(self, other: "Expression"): return self.operator("mod", other, reverse=True)
     

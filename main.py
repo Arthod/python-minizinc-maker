@@ -12,7 +12,7 @@ j = model.add_variable("j", 1, 9)
 k = model.add_variable("k", 1, 9)
 X = model.add_variable("X", 1, 922)
 
-model.add_constraint(x + y - j / k >= z - w)
+model.add_constraint(x + y - j // k >= z - w)
 model.add_constraint(X == x + y)
 
 

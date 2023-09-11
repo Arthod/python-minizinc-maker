@@ -5,6 +5,6 @@ var 1..9: w:: output_var;
 var 1..9: j:: output_var;
 var 1..9: k:: output_var;
 var 1..922: X:: output_var;
-constraint x + y - j / k >= z - w;
+constraint x + y - j div k >= z - w;
 constraint X = x + y;
 solve satisfy;
