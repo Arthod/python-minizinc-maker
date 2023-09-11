@@ -180,7 +180,8 @@ class Model(minizinc.Model):
     def add_variables(self, name: str, indices: list[tuple[int]], val_min: int=None, val_max: int=None, vtype=Variable.VTYPE_INTEGER):
         variables = {}
         for idx in indices:
-            variable = Variable(f"{name}_{idx}", val_min, val_max, vtype)
+            idx_str = str(idx).replace(", ", "_").replace("(", "").replace(")", "")
+            variable = Variable(f"{name}_{idx_str}", val_min, val_max, vtype)
             self.variables.append(variable)
             variables[idx] = variable
 
