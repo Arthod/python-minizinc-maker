@@ -120,7 +120,7 @@ class Constraint:
         "all_equal",
         "count"
     ]
-    def __init__(self, cstr: str, ctype: int=CTYPE_NORMAL):
+    def __init__(self, cstr: str, ctype: str=CTYPE_NORMAL):
         self.cstr = cstr
         self.ctype = ctype
 
@@ -128,28 +128,28 @@ class Constraint:
         return f"constraint {self.cstr};\n"
 
     @staticmethod
+    def from_global_constraint(func: str, ctype: str, *args):
+        return Constraint(f"{func}({', '.join(str(a) for a in args)})", ctype)
+
+    @staticmethod
     def alldifferent(variables: Iterable[Variable]):
         arr_str = _variableIterable2Str(variables)
-        cstr = Constraint(f"alldifferent({arr_str})", Constraint.CTYPE_ALLDIFFERENT)
-        return cstr
+        return Constraint.from_global_constraint("alldifferent", Constraint.CTYPE_ALLDIFFERENT, arr_str)
     
     @staticmethod
     def among(n: int, variables: Iterable[Variable], values: list[int]):
         arr_str = _variableIterable2Str(variables)
-        cstr = Constraint(f"among({n}, {arr_str}, {values})", Constraint.CTYPE_AMONG)
-        return cstr
+        return Constraint.from_global_constraint("among", Constraint.CTYPE_AMONG, n, arr_str, values)
     
     @staticmethod
     def all_equal(variables: Iterable[Variable]):
         arr_str = _variableIterable2Str(variables)
-        cstr = Constraint(f"all_equal({arr_str})", Constraint.CTYPE_ALL_EQUAL)
-        return cstr
+        return Constraint.from_global_constraint("all_equal", Constraint.CTYPE_ALL_EQUAL, arr_str)
     
     @staticmethod
     def count(variables: Iterable[Variable], val: int, count: int):
         arr_str = _variableIterable2Str(variables)
-        cstr = Constraint(f"count({arr_str}, {val}, {count})", Constraint.CTYPE_COUNT)
-        return cstr
+        return Constraint.from_global_constraint("count", Constraint.CTYPE_COUNT, arr_str, val, count)
     
     
 

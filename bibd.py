@@ -9,10 +9,10 @@ model = pymzm.Model()
 # such that each block contains exactly k distinct objects, each object 
 # occurs in exactly r different blocks, and every two distinct objects 
 # occur together in exactly λ blocks.
-v = 111
-b = 111
-r = 11
-k = 11
+v = 7
+b = 7
+r = 3
+k = 3
 l = 1
 
 # Create a MiniZinc model
