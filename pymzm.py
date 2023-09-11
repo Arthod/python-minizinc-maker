@@ -1,13 +1,15 @@
 import minizinc
 import chess
 import sympy
+from collections.abc import Iterable
+
 
 
 class Method:
     def __init__(self, s: str):
         self.s = s
 
-    def __repr__(self):
+    def __str__(self):
         return self.s
 
     @staticmethod
@@ -70,12 +72,24 @@ class Expression:
 
 
 class Variable(Expression):
-    def __init__(self, name: str, val_min: int, val_max: int):
+    VTYPES = [
+        VTYPE_INTEGER,
+        VTYPE_FLOAT,
+        VTYPE_BOOL,
+        VTYPE_STRING,
+    ] = [
+        "integer",
+        "float",
+        "bool",
+        "string",
+    ]
+    def __init__(self, name: str, val_min: int, val_max: int, vtype=VTYPE_INTEGER):
         self.name = name#super().__init__(name)
         self.val_min = val_min
         self.val_max = val_max
+        self.vtype = vtype
     
-    def __repr__(self):
+    def __str__(self):
         return f"var {self.val_min}..{self.val_max}: {self.name};\n"
     
         
@@ -86,7 +100,7 @@ class Constant:
         self.name = name
         self.value = value
     
-    def __repr__(self):
+    def __str__(self):
         if (self.value is not None):
             return f"int: {self.name} = {self.value};"
         else:
@@ -110,30 +124,30 @@ class Constraint:
         self.cstr = cstr
         self.ctype = ctype
 
-    def __repr__(self):
+    def __str__(self):
         return f"constraint {self.cstr};\n"
 
     @staticmethod
-    def alldifferent(variables: list[Variable]):
-        arr_str = _variableList2Str(variables)
+    def alldifferent(variables: Iterable[Variable]):
+        arr_str = _variableIterable2Str(variables)
         cstr = Constraint(f"alldifferent({arr_str})", Constraint.CTYPE_ALLDIFFERENT)
         return cstr
     
     @staticmethod
-    def among(n: int, variables: list[Variable], values: list[int]):
-        arr_str = _variableList2Str(variables)
+    def among(n: int, variables: Iterable[Variable], values: list[int]):
+        arr_str = _variableIterable2Str(variables)
         cstr = Constraint(f"among({n}, {arr_str}, {values})", Constraint.CTYPE_AMONG)
         return cstr
     
     @staticmethod
-    def all_equal(variables: list[Variable]):
-        arr_str = _variableList2Str(variables)
+    def all_equal(variables: Iterable[Variable]):
+        arr_str = _variableIterable2Str(variables)
         cstr = Constraint(f"all_equal({arr_str})", Constraint.CTYPE_ALL_EQUAL)
         return cstr
     
     @staticmethod
-    def count(variables: list[Variable], val: int, count: int):
-        arr_str = _variableList2Str(variables)
+    def count(variables: Iterable[Variable], val: int, count: int):
+        arr_str = _variableIterable2Str(variables)
         cstr = Constraint(f"count({arr_str}, {val}, {count})", Constraint.CTYPE_COUNT)
         return cstr
     
@@ -163,12 +177,12 @@ class Model(minizinc.Model):
         self.variables.append(variable)
         return variable
     
-    def add_variables(self, indices: list[int], name: str, val_min: int, val_max: int):
-        variables = []
+    def add_variables(self, name: str, indices: list[tuple[int]], val_min: int=None, val_max: int=None, vtype=Variable.VTYPE_INTEGER):
+        variables = {}
         for idx in indices:
-            variable = Variable(f"{name}_{idx}", val_min, val_max)
+            variable = Variable(f"{name}_{idx}", val_min, val_max, vtype)
             self.variables.append(variable)
-            variables.append(variable)
+            variables[idx] = variable
 
         return variables
 
@@ -213,5 +227,10 @@ class Model(minizinc.Model):
             f.write(self.model_str)
 
 
-def _variableList2Str(variables: list["Variable"]) -> str:
-    return str([v.name if type(v) is Variable else v for v in variables]).replace("'", "")
+def _variableIterable2Str(variables: Iterable[Variable]) -> str:
+    if (isinstance(variables, dict)):
+        variables = variables.values()
+    return str([v.name if isinstance(v, Expression) else v for v in variables]).replace("'", "")
+
+if __name__ == "__main__":
+    pass
