@@ -1,0 +1,6 @@
+
+var 1..9: x:: output_var;
+var 1..9: y:: output_var;
+constraint int_lin_eq([1,1], [x, y], 5);    % x + y = 5
+constraint int_lin_le([1,-1], [x, y], 0);    % x*1+y*(-1) <= 0   ==>   x <= y
+solve satisfy;
