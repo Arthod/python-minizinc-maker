@@ -23,6 +23,40 @@ class Expression:
         self.name = name
 
     @staticmethod
+    def OR(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool": # TODO split into single OR or multiple
+        assert isinstance(expr1, ExpressionBool)
+        assert isinstance(expr2, ExpressionBool)
+        return ExpressionBool(expr1.operator("\/", expr2))
+    
+    @staticmethod
+    def AND(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool": # TODO split into single AND or multiple
+        assert isinstance(expr1, ExpressionBool)
+        assert isinstance(expr2, ExpressionBool)
+        return ExpressionBool(expr1.operator("/\\", expr2))
+
+    @staticmethod
+    def onlyIf(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool":
+        assert isinstance(expr1, ExpressionBool)
+        assert isinstance(expr2, ExpressionBool)
+        return ExpressionBool(expr1.operator("<-", expr2))
+    
+    @staticmethod
+    def implies(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool":
+        assert isinstance(expr1, ExpressionBool)
+        assert isinstance(expr2, ExpressionBool)
+        return ExpressionBool(expr1.operator("->", expr2))
+    
+    @staticmethod
+    def iff(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool":
+        assert isinstance(expr1, ExpressionBool)
+        assert isinstance(expr2, ExpressionBool)
+        return ExpressionBool(expr1.operator("<->", expr2))
+    
+    @staticmethod
+    def NOT(expr1: "ExpressionBool") -> "ExpressionBool":
+        return expr1.func("not")
+
+    @staticmethod
     def product(arr: list["Variable"]):
         if (isinstance(arr, dict)):
             arr = arr.values()
@@ -40,29 +74,29 @@ class Expression:
             other = other.name
 
         if (reverse):
-            return Expression(f"{other} {symbol} {self.name}")
+            return f"({other} {symbol} {self.name})"
         else:
-            return Expression(f"{self.name} {symbol} {other}")
+            return f"({self.name} {symbol} {other})"
 
-    def __add__(self, other: "Expression"): return self.operator("+", other)
-    def __radd__(self, other: "Expression"): return self.operator("+", other, reverse=True)
-    def __sub__(self, other: "Expression"): return self.operator("-", other)
-    def __rsub__(self, other: "Expression"): return self.operator("-", other, reverse=True)
-    def __mul__(self, other: "Expression"): return self.operator("*", other)
-    def __rmul__(self, other: "Expression"): return self.operator("*", other, reverse=True)
-    def __truediv__(self, other: "Expression"): return self.operator("/", other)
-    def __rtruediv__(self, other: "Expression"): return self.operator("/", other, reverse=True)
-    def __floordiv__(self, other: "Expression"): return self.operator("div", other)
-    def __rfloordiv__(self, other: "Expression"): return self.operator("div", other, reverse=True)
-    def __mod__(self, other: "Expression"): return self.operator("mod", other)
-    def __rmod__(self, other: "Expression"): return self.operator("mod", other, reverse=True)
+    def __add__(self, other: "Expression"): return Expression(self.operator("+", other))
+    def __radd__(self, other: "Expression"): return Expression(self.operator("+", other, reverse=True))
+    def __sub__(self, other: "Expression"): return Expression(self.operator("-", other))
+    def __rsub__(self, other: "Expression"): return Expression(self.operator("-", other, reverse=True))
+    def __mul__(self, other: "Expression"): return Expression(self.operator("*", other))
+    def __rmul__(self, other: "Expression"): return Expression(self.operator("*", other, reverse=True))
+    def __truediv__(self, other: "Expression"): return Expression(self.operator("/", other))
+    def __rtruediv__(self, other: "Expression"): return Expression(self.operator("/", other, reverse=True))
+    def __floordiv__(self, other: "Expression"): return Expression(self.operator("div", other))
+    def __rfloordiv__(self, other: "Expression"): return Expression(self.operator("div", other, reverse=True))
+    def __mod__(self, other: "Expression"): return Expression(self.operator("mod", other))
+    def __rmod__(self, other: "Expression"): return Expression(self.operator("mod", other, reverse=True))
     
-    def __eq__(self, other: "Expression"):  return self.operator("==", other)
-    def __ne__(self, other: "Expression"):  return self.operator("!=", other)
-    def __lt__(self, other: "Expression"):  return self.operator("<", other)
-    def __le__(self, other: "Expression"):  return self.operator("<=", other)
-    def __gt__(self, other: "Expression"):  return self.operator(">", other)
-    def __ge__(self, other: "Expression"):  return self.operator(">=", other)
+    def __eq__(self, other: "Expression"):  return ExpressionBool(self.operator("==", other))
+    def __ne__(self, other: "Expression"):  return ExpressionBool(self.operator("!=", other))
+    def __lt__(self, other: "Expression"):  return ExpressionBool(self.operator("<", other))
+    def __le__(self, other: "Expression"):  return ExpressionBool(self.operator("<=", other))
+    def __gt__(self, other: "Expression"):  return ExpressionBool(self.operator(">", other))
+    def __ge__(self, other: "Expression"):  return ExpressionBool(self.operator(">=", other))
 
     def func(self, func: str, other: "Expression"=None):
         if (other is None):
@@ -84,7 +118,8 @@ class Expression:
     # trinonometric functions
     # ..and more!
 
-#class ExpressionBool(Expression):
+class ExpressionBool(Expression):
+    pass
 
 
 

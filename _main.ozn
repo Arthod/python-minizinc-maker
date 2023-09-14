@@ -3,4 +3,4 @@ int: q_4;
 int: q_3;
 int: q_2;
 int: q_1;
-int: q_0 = 3;
+int: q_0;

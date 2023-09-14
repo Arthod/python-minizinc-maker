@@ -5,13 +5,13 @@ model = pymzm.Model()
 n = 5
 q = model.add_variables("q", range(n), val_min=0, val_max=5)
 
-model.add_constraint(3 == q[0])
+model.add_constraint(pymzm.Expression.NOT(q[2] == (q[0] + 1)))
 #model.add_constraint(pymzm.Constraint.alldifferent(q))
 #model.add_constraint(pymzm.Constraint.alldifferent([q[i] + i for i in range(n)]))
 #model.add_constraint(pymzm.Constraint.alldifferent([q[i] - i for i in range(n)]))
 
 model.set_solve_criteria("satisfy")
-model.generate()
+model.generate(debug=True)
 model.write("_main.mzn")
 
 # Transform Model into a instance
