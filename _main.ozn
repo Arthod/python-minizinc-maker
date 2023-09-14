@@ -1,0 +1,5 @@
+output ["x = ",showDzn(x),";\n","y = ",showDzn(y),";\n","a = \n",let {array [int] of string: idx1 = [], array [int] of string: idx2 = [], array [int,int] of string: x = [(i, j) : showDzn(a[i,j]) | i in 1..2, j in 1..10]} in (show2d_indexed(idx1,idx2,x)),";\n","X = ",showDzn(X),";\n"];
+int: X;
+array [1..2,1..10] of int: a;
+int: y;
+int: x;

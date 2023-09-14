@@ -1,3 +1,0 @@
-output ["x = ",showDzn(x),";\n","y = ",showDzn(y),";\n"];
-int: y;
-int: x;

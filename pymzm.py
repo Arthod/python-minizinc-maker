@@ -98,9 +98,6 @@ class Variable(Expression):
     def _to_mz(self):
         return f"var {self.val_min}..{self.val_max}: {self.name};\n"
     
-    def _to_fz(self):
-        return f"var {self.val_min}..{self.val_max}: {self.name}:: output_var;\n"
-    
     def _to_tz(self):
         pass
 
@@ -118,9 +115,6 @@ class Constant:
             return f"int: {self.name} = {self.value};\n"
         else:
             return f"int: {self.name};\n"
-        
-    def _to_fz(self):
-        raise NotImplementedError()
     
 class Constraint:
     CTYPES = [
@@ -144,9 +138,6 @@ class Constraint:
         return self.cstr
     
     def _to_mz(self):
-        return f"constraint {self.cstr};\n"
-    
-    def _to_fz(self):
         return f"constraint {self.cstr};\n"
 
     @staticmethod
@@ -229,7 +220,7 @@ class Model(minizinc.Model):
         self.constants.append(constant)
         return constant
 
-    def generate_mzn(self, debug=False):
+    def generate(self, debug=False):
         self.model_mzn_str = ""
         for gconst in self.global_constraints:
             self.model_mzn_str += f'include \"{gconst}.mzn\";\n'
@@ -245,33 +236,11 @@ class Model(minizinc.Model):
         if (debug):
             print(self.model_mzn_str)
 
-    def write_mzn(self, fn: str):
+    def write(self, fn: str):
         if (self.model_mzn_str is None):
             self.generate_mzn()
         with open(fn, "w") as f:
             f.write(self.model_mzn_str)
-
-    def generate_fzn(self, debug=False):
-        self.model_fzn_str = ""
-
-        self.model_fzn_str += "".join(a._to_fz() for a in self.variables + self.constants + self.constraints)
-        
-        # TODO
-        if (self.solve_method is None):
-            self.model_fzn_str += f"solve {self.solve_criteria};\n"
-        else:
-            self.model_fzn_str += f"solve :: {self.solve_method} {self.solve_criteria};\n"
-            
-        self.add_string(self.model_fzn_str)
-        if (debug):
-            print(self.model_fzn_str)
-
-    def write_fzn(self, fn: str):
-        if (self.model_fzn_str is None):
-            self.generate_mzn()
-        with open(fn, "w") as f:
-            f.write(self.model_fzn_str)
-
 
 def _variableIterable2Str(variables: Iterable[Variable]) -> str:
     if (isinstance(variables, dict)):

@@ -43,7 +43,6 @@ class TestPMZM(unittest.TestCase):
 
         ####
         model.generate_mzn()
-        #model.write_mzn("model.mzn")
 
         # Transform Model into a instance
         gecode = minizinc.Solver.lookup("gecode")
@@ -76,6 +75,7 @@ class TestPMZM(unittest.TestCase):
         model.add_constraint("nsw != v")
 
         model.set_solve_criteria("satisfy")
+        model.generate_mzn()
 
 
         # Transform Model into a instance
@@ -83,8 +83,9 @@ class TestPMZM(unittest.TestCase):
         inst = minizinc.Instance(gecode, model)
 
         # Solve the instance
-        #result = inst.solve(all_solutions=True)
-        #self.assertEqual(18, len(result))
+        result = inst.solve(all_solutions=True)
+        
+        self.assertEqual(18, len(result))
 
     def test_ex4_integer_factorization(self):
         model = self.model
@@ -97,6 +98,7 @@ class TestPMZM(unittest.TestCase):
         model.add_constraint("x > y")
 
         model.set_solve_criteria("satisfy")
+        model.generate()
 
         # Transform Model into a instance
         gecode = minizinc.Solver.lookup("gecode")
@@ -105,8 +107,8 @@ class TestPMZM(unittest.TestCase):
         # Solve the instance
         result = inst.solve(all_solutions=True)
 
-        #self.assertEqual(result[0].x, 7829)
-        #self.assertEqual(result[0].y, 6907)
+        self.assertEqual(result[0].x, 7829)
+        self.assertEqual(result[0].y, 6907)
 
     def test_ex5_nqueens(self):
         model = self.model
@@ -119,6 +121,7 @@ class TestPMZM(unittest.TestCase):
         model.add_constraint(pymzm.Constraint.alldifferent([q[i] - i for i in range(n)]))
 
         model.set_solve_criteria("satisfy")
+        model.generate()
 
         # Transform Model into a instance
         gecode = minizinc.Solver.lookup("gecode")
@@ -126,6 +129,8 @@ class TestPMZM(unittest.TestCase):
 
         # Solve the instance
         result = inst.solve(all_solutions=True)
+
+        self.assertEqual(92, len(result))
 
 
 if __name__ == "__main__":
