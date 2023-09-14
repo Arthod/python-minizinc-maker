@@ -19,8 +19,7 @@ class TestPMZM(unittest.TestCase):
         model.add_constraint("a*(x*x) + b*x = c")
 
         model.set_solve_criteria("satisfy")
-
-        model.generate_mzn()
+        model.generate()
 
         # Transform Model into a instance
         gecode = minizinc.Solver.lookup("gecode")
@@ -42,7 +41,7 @@ class TestPMZM(unittest.TestCase):
         model.set_solve_criteria("satisfy")
 
         ####
-        model.generate_mzn()
+        model.generate()
 
         # Transform Model into a instance
         gecode = minizinc.Solver.lookup("gecode")
@@ -75,7 +74,7 @@ class TestPMZM(unittest.TestCase):
         model.add_constraint("nsw != v")
 
         model.set_solve_criteria("satisfy")
-        model.generate_mzn()
+        model.generate()
 
 
         # Transform Model into a instance

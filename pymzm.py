@@ -1,3 +1,4 @@
+import math
 import minizinc
 import chess
 import sympy
@@ -20,6 +21,16 @@ class Method:
 class Expression:
     def __init__(self, name):
         self.name = name
+
+    @staticmethod
+    def product(arr: list["Variable"]):
+        if (isinstance(arr, dict)):
+            arr = arr.values()
+
+        v = 1
+        for a in arr:
+            v *= a
+        return v
 
     def __str__(self):
         return self.name
@@ -46,7 +57,7 @@ class Expression:
     def __mod__(self, other: "Expression"): return self.operator("mod", other)
     def __rmod__(self, other: "Expression"): return self.operator("mod", other, reverse=True)
     
-    def __eq__(self, other: "Expression"):  return self.operator("=", other)
+    def __eq__(self, other: "Expression"):  return self.operator("==", other)
     def __ne__(self, other: "Expression"):  return self.operator("!=", other)
     def __lt__(self, other: "Expression"):  return self.operator("<", other)
     def __le__(self, other: "Expression"):  return self.operator("<=", other)
@@ -72,6 +83,9 @@ class Expression:
     # log_x, log_2, log_10, ln
     # trinonometric functions
     # ..and more!
+
+#class ExpressionBool(Expression):
+
 
 
 class Variable(Expression):
