@@ -18,7 +18,7 @@ class TestPMZM(unittest.TestCase):
 
         model.add_constraint("a*(x*x) + b*x = c")
 
-        model.set_solve_criteria("satisfy")
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
         model.generate()
 
         # Transform Model into a instance
@@ -38,7 +38,7 @@ class TestPMZM(unittest.TestCase):
         model.add_variable("x", 1, 10)
         model.add_constraint("(x mod 2) = 1")
         model.set_solve_method(pymzm.Method.int_search(["x"], "first_fail", "indomain_min"))
-        model.set_solve_criteria("satisfy")
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
 
         ####
         model.generate()
@@ -73,7 +73,7 @@ class TestPMZM(unittest.TestCase):
         model.add_constraint("q != nsw")
         model.add_constraint("nsw != v")
 
-        model.set_solve_criteria("satisfy")
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
         model.generate()
 
 
@@ -96,7 +96,7 @@ class TestPMZM(unittest.TestCase):
         model.add_constraint("y > 1")
         model.add_constraint("x > y")
 
-        model.set_solve_criteria("satisfy")
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
         model.generate()
 
         # Transform Model into a instance
@@ -119,7 +119,7 @@ class TestPMZM(unittest.TestCase):
         model.add_constraint(pymzm.Constraint.alldifferent([q[i] + i for i in range(n)]))
         model.add_constraint(pymzm.Constraint.alldifferent([q[i] - i for i in range(n)]))
 
-        model.set_solve_criteria("satisfy")
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
         model.generate()
 
         # Transform Model into a instance
@@ -130,6 +130,7 @@ class TestPMZM(unittest.TestCase):
         result = inst.solve(all_solutions=True)
 
         self.assertEqual(92, len(result))
+
 
 
 if __name__ == "__main__":

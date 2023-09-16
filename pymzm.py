@@ -4,7 +4,9 @@ import chess
 import sympy
 from collections.abc import Iterable
 
-
+SOLVE_MAXIMIZE = "maximize"
+SOLVE_MINIMIZE = "minimize"
+SOLVE_SATISFY = "satisfy"
 
 class Method:
     def __init__(self, s: str):
@@ -21,6 +23,9 @@ class Method:
 class Expression:
     def __init__(self, name):
         self.name = name
+
+    def __str__(self):
+        return self.name
 
     @staticmethod
     def OR(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool": # TODO split into single OR or multiple
@@ -53,30 +58,34 @@ class Expression:
         return ExpressionBool(expr1.operator("<->", expr2))
     
     @staticmethod
-    def NOT(expr1: "ExpressionBool") -> "ExpressionBool":
-        return expr1.func("not")
+    def NOT(expr: "ExpressionBool") -> "ExpressionBool":
+        assert isinstance(expr, ExpressionBool)
+        return expr.func("not")
 
     @staticmethod
     def product(arr: list["Variable"]):
         if (isinstance(arr, dict)):
             arr = arr.values()
-
         v = 1
         for a in arr:
             v *= a
         return v
 
-    def __str__(self):
-        return self.name
-    
-    def operator(self, symbol: str, other: "Expression", reverse=False):
+    def operator(self, symbol: str, other: "Expression", reverse=False, bracket=False):
         if (isinstance(other, Expression)):
             other = other.name
 
+        main = self.name
         if (reverse):
-            return f"({other} {symbol} {self.name})"
-        else:
-            return f"({self.name} {symbol} {other})"
+            t = other
+            other = main
+            main = t
+
+        out = f"{main} {symbol} {other}"
+        if (bracket):
+            out = f"({out})"
+
+        return out
 
     def __add__(self, other: "Expression"): return Expression(self.operator("+", other))
     def __radd__(self, other: "Expression"): return Expression(self.operator("+", other, reverse=True))
@@ -91,21 +100,21 @@ class Expression:
     def __mod__(self, other: "Expression"): return Expression(self.operator("mod", other))
     def __rmod__(self, other: "Expression"): return Expression(self.operator("mod", other, reverse=True))
     
-    def __eq__(self, other: "Expression"):  return ExpressionBool(self.operator("==", other))
-    def __ne__(self, other: "Expression"):  return ExpressionBool(self.operator("!=", other))
-    def __lt__(self, other: "Expression"):  return ExpressionBool(self.operator("<", other))
-    def __le__(self, other: "Expression"):  return ExpressionBool(self.operator("<=", other))
-    def __gt__(self, other: "Expression"):  return ExpressionBool(self.operator(">", other))
-    def __ge__(self, other: "Expression"):  return ExpressionBool(self.operator(">=", other))
+    def __eq__(self, other: "Expression"):  return ExpressionBool(self.operator("==", other, bracket=True))
+    def __ne__(self, other: "Expression"):  return ExpressionBool(self.operator("!=", other, bracket=True))
+    def __lt__(self, other: "Expression"):  return ExpressionBool(self.operator("<", other, bracket=True))
+    def __le__(self, other: "Expression"):  return ExpressionBool(self.operator("<=", other, bracket=True))
+    def __gt__(self, other: "Expression"):  return ExpressionBool(self.operator(">", other, bracket=True))
+    def __ge__(self, other: "Expression"):  return ExpressionBool(self.operator(">=", other, bracket=True))
 
     def func(self, func: str, other: "Expression"=None):
         if (other is None):
             return Expression(f"{func}({self.name})")
+        
         else:
             if (isinstance(other, Expression)):
-                return Expression(f"{func}({self.name}, {other.name})")
-            else:
-                return Expression(f"{func}({self.name}, {other})")
+                other = other.name
+            return Expression(f"{func}({self.name}, {other})")
 
     def __pow__(self, other: "Expression"): return self.func("pow", other)
     def __abs__(self):  return self.func("abs")
@@ -222,14 +231,21 @@ class Model(minizinc.Model):
         self.constants = []
         self.constraints = []
         self.solve_criteria = None
+        self.solve_expression = None
         self.solve_method = None
 
         self.global_constraints = set()
 
         super().__init__()
 
-    def set_solve_criteria(self, criteria: str):
+    def set_solve_criteria(self, criteria: str, expr: Expression=None):
         self.solve_criteria = criteria
+        self.solve_expression = expr
+
+        if (criteria == SOLVE_MAXIMIZE or criteria == SOLVE_MINIMIZE):
+            assert expr is not None
+        else:
+            assert expr is None
 
     def set_solve_method(self, method: Method):
         self.solve_method = method
@@ -277,7 +293,10 @@ class Model(minizinc.Model):
         self.model_mzn_str += "".join(a._to_mz() for a in self.variables + self.constants + self.constraints)
         
         if (self.solve_method is None):
-            self.model_mzn_str += f"solve {self.solve_criteria};\n"
+            if (self.solve_expression is None):
+                self.model_mzn_str += f"solve {self.solve_criteria};\n"
+            else:
+                self.model_mzn_str += f"solve {self.solve_criteria} {self.solve_expression};\n"
         else:
             self.model_mzn_str += f"solve :: {self.solve_method} {self.solve_criteria};\n"
             

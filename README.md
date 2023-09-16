@@ -14,8 +14,8 @@ model.add_constraint(y > 1)
 model.add_constraint(x > y)
 
 model.set_solve_criteria("satisfy")
-model.generate_mzn()
-model.write_mzn("model.mzn")
+model.generate()
+model.write("model.mzn")
 ...
 ```
 
