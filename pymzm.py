@@ -203,7 +203,15 @@ class Constraint:
         return Constraint(f"{func}({', '.join(str(a) for a in args)})", ctype)
 
     @staticmethod
-    def alldifferent(variables: Iterable[Variable]):
+    def alldifferent(variables: Iterable[Variable]) -> Constraint:
+        """Constrain the elements in the passed iterable of variables to be pairwise different.
+
+        Args:
+            variables (Iterable[Variable]): Passed iterable of variables
+
+        Returns:
+            Constraint: Alldifferent constraint
+        """
         arr_str = _variableIterable2Str(variables)
         return Constraint.from_global_constraint("alldifferent", Constraint.CTYPE_ALLDIFFERENT, arr_str)
     
