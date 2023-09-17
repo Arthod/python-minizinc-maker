@@ -71,7 +71,7 @@ class Expression:
             v *= a
         return v
 
-    def operator(self, symbol: str, other: "Expression", reverse=False, bracket=False):
+    def operator(self, symbol: str, other: str, reverse=False, bracket=False):
         if (isinstance(other, Expression)):
             other = other.name
 
@@ -87,27 +87,27 @@ class Expression:
 
         return out
 
-    def __add__(self, other: "Expression"): return Expression(self.operator("+", other))
-    def __radd__(self, other: "Expression"): return Expression(self.operator("+", other, reverse=True))
-    def __sub__(self, other: "Expression"): return Expression(self.operator("-", other))
-    def __rsub__(self, other: "Expression"): return Expression(self.operator("-", other, reverse=True))
-    def __mul__(self, other: "Expression"): return Expression(self.operator("*", other))
-    def __rmul__(self, other: "Expression"): return Expression(self.operator("*", other, reverse=True))
-    def __truediv__(self, other: "Expression"): return Expression(self.operator("/", other))
-    def __rtruediv__(self, other: "Expression"): return Expression(self.operator("/", other, reverse=True))
-    def __floordiv__(self, other: "Expression"): return Expression(self.operator("div", other))
-    def __rfloordiv__(self, other: "Expression"): return Expression(self.operator("div", other, reverse=True))
-    def __mod__(self, other: "Expression"): return Expression(self.operator("mod", other))
-    def __rmod__(self, other: "Expression"): return Expression(self.operator("mod", other, reverse=True))
+    def __add__(self, other: str): return Expression(self.operator("+", other))
+    def __radd__(self, other: str): return Expression(self.operator("+", other, reverse=True))
+    def __sub__(self, other: str): return Expression(self.operator("-", other))
+    def __rsub__(self, other: str): return Expression(self.operator("-", other, reverse=True))
+    def __mul__(self, other: str): return Expression(self.operator("*", other))
+    def __rmul__(self, other: str): return Expression(self.operator("*", other, reverse=True))
+    def __truediv__(self, other: str): return Expression(self.operator("/", other))
+    def __rtruediv__(self, other: str): return Expression(self.operator("/", other, reverse=True))
+    def __floordiv__(self, other: str): return Expression(self.operator("div", other))
+    def __rfloordiv__(self, other: str): return Expression(self.operator("div", other, reverse=True))
+    def __mod__(self, other: str): return Expression(self.operator("mod", other))
+    def __rmod__(self, other: str): return Expression(self.operator("mod", other, reverse=True))
     
-    def __eq__(self, other: "Expression"):  return ExpressionBool(self.operator("==", other, bracket=True))
-    def __ne__(self, other: "Expression"):  return ExpressionBool(self.operator("!=", other, bracket=True))
-    def __lt__(self, other: "Expression"):  return ExpressionBool(self.operator("<", other, bracket=True))
-    def __le__(self, other: "Expression"):  return ExpressionBool(self.operator("<=", other, bracket=True))
-    def __gt__(self, other: "Expression"):  return ExpressionBool(self.operator(">", other, bracket=True))
-    def __ge__(self, other: "Expression"):  return ExpressionBool(self.operator(">=", other, bracket=True))
+    def __eq__(self, other: str):  return ExpressionBool(self.operator("==", other, bracket=True))
+    def __ne__(self, other: str):  return ExpressionBool(self.operator("!=", other, bracket=True))
+    def __lt__(self, other: str):  return ExpressionBool(self.operator("<", other, bracket=True))
+    def __le__(self, other: str):  return ExpressionBool(self.operator("<=", other, bracket=True))
+    def __gt__(self, other: str):  return ExpressionBool(self.operator(">", other, bracket=True))
+    def __ge__(self, other: str):  return ExpressionBool(self.operator(">=", other, bracket=True))
 
-    def func(self, func: str, other: "Expression"=None):
+    def func(self, func: str, other: str=None):
         if (other is None):
             return Expression(f"{func}({self.name})")
         
@@ -116,7 +116,7 @@ class Expression:
                 other = other.name
             return Expression(f"{func}({self.name}, {other})")
 
-    def __pow__(self, other: "Expression"): return self.func("pow", other)
+    def __pow__(self, other: str): return self.func("pow", other)
     def __abs__(self):  return self.func("abs")
     # TODO: https://www.minizinc.org/doc-2.7.6/en/lib-stdlib-builtins.html
     # arg max, arg min
@@ -203,7 +203,7 @@ class Constraint:
         return Constraint(f"{func}({', '.join(str(a) for a in args)})", ctype)
 
     @staticmethod
-    def alldifferent(variables: Iterable[Variable]) -> Constraint:
+    def alldifferent(variables: Iterable[Variable]) -> "Constraint":
         """Constrain the elements in the passed iterable of variables to be pairwise different.
 
         Args:

@@ -4,6 +4,7 @@ Create pure Minizinc .mzn files from Python using python-minizinc-maker and the 
 
 main.py - integer factorization example
 ```python
+import pymzm
 model = pymzm.Model()
 
 x = model.add_variable("x", 1, 99999999)
@@ -13,7 +14,7 @@ model.add_constraint(x * y == 7829 * 6907)
 model.add_constraint(y > 1)
 model.add_constraint(x > y)
 
-model.set_solve_criteria("satisfy")
+model.set_solve_criteria(pymzm.SOLVE_SATISFY)
 model.generate()
 model.write("model.mzn")
 ...

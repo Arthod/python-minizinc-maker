@@ -2,6 +2,7 @@ import unittest
 
 import pymzm
 import minizinc
+import math
 
 class TestPMZM(unittest.TestCase):
     def setUp(self):
@@ -131,6 +132,25 @@ class TestPMZM(unittest.TestCase):
 
         self.assertEqual(92, len(result))
 
+    def test_ex6_711(self):
+        model = self.model
+        n = 4
+        items = model.add_variables("item", range(n), val_min=0, val_max=999)
+
+        model.add_constraint(sum(items[a] for a in items) == 711)
+        model.add_constraint(pymzm.Expression.product(items) == 711 * 100 * 100 * 100)
+
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+        model.generate()
+
+        gecode = minizinc.Solver.lookup("gecode")
+        inst = minizinc.Instance(gecode, model)
+
+        result = inst.solve(all_solutions=False)
+
+        rs = [result[f"item_{i}"] / 100 for i in range(n)]
+        self.assertTrue(sum(rs) == 7.11)
+        self.assertTrue(math.prod(rs) == 7.11)
 
 
 if __name__ == "__main__":
