@@ -152,6 +152,50 @@ class TestPMZM(unittest.TestCase):
         self.assertTrue(sum(rs) == 7.11)
         self.assertTrue(math.prod(rs) == 7.11)
 
+    def test_ex7_bibd(self):
+        model = self.model
+        # BIBD generation is described in most standard textbooks on combinatorics. 
+        # A BIBD is defined as an arrangement of v  distinct objects into b blocks 
+        # such that each block contains exactly k distinct objects, each object 
+        # occurs in exactly r different blocks, and every two distinct objects 
+        # occur together in exactly λ blocks.
+        v = 7
+        b = 7
+        r = 3
+        k = 3
+        l = 1
+
+        # Create a MiniZinc model
+        xs = model.add_variables("x", indices=[(i, j) for i in range(v) for j in range(b)], vtype=pymzm.Variable.VTYPE_BOOL, val_min=0, val_max=1) # bool if object v is in block b
+
+        for i in range(b):
+            model.add_constraint(sum(xs[i, j] for j in range(v)) == r)
+        for i in range(v):
+            model.add_constraint(sum(xs[j, i] for j in range(b)) == k)
+
+        for i in range(b):
+            for j in range(i):
+                model.add_constraint(sum(xs[i, k] * xs[j, k] for k in range(v)) == l)
+
+        model.set_solve_criteria("satisfy")
+        model.generate()
+
+        gecode = minizinc.Solver.lookup("gecode")
+        inst = minizinc.Instance(gecode, model)
+        result = inst.solve(all_solutions=False)
+
+
+        for j in range(b):
+            self.assertTrue(sum(result[f"x_{i}_{j}"] for i in range(v)) == r)
+        for i in range(v):
+            self.assertTrue(sum(result[f"x_{i}_{j}"] for j in range(b)) == r)
+        # TODO add product between any pairs of rows
+        for i in range(b):
+            for j in range(i):
+                self.assertTrue(sum(result[f"x_{i}_{k}"] * result[f"x_{j}_{k}"] for k in range(v)) == l)
+
+
+
 
 if __name__ == "__main__":
     unittest.main()
