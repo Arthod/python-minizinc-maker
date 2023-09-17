@@ -1,4 +1,12 @@
-var 0..5: q_0_0_0;
-var 0..5: q_1_0_0;
-constraint (abs((q_0_0_0 == 5)) + (q_0_0_0 == 3) >= 1);
+var bool: x_0;
+var bool: x_1;
+var bool: x_2;
+var bool: x_3;
+var bool: x_4;
+var bool: x_5;
+var bool: x_6;
+var bool: x_7;
+var bool: x_8;
+var bool: x_9;
+constraint x_0 \/ x_1;
 solve satisfy;

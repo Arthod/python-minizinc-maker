@@ -8,6 +8,7 @@ SOLVE_MAXIMIZE = "maximize"
 SOLVE_MINIMIZE = "minimize"
 SOLVE_SATISFY = "satisfy"
 
+
 class Method:
     def __init__(self, s: str):
         self.s = s
@@ -29,6 +30,7 @@ class Expression:
 
     @staticmethod
     def OR(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool": # TODO split into single OR or multiple
+        print(type(expr1))
         assert isinstance(expr1, ExpressionBool)
         assert isinstance(expr2, ExpressionBool)
         return ExpressionBool(expr1.operator("\/", expr2))
@@ -131,7 +133,6 @@ class ExpressionBool(Expression):
     pass
 
 
-
 class Variable(Expression):
     VTYPES = [
         VTYPE_INTEGER,
@@ -144,21 +145,32 @@ class Variable(Expression):
         "bool",
         "string",
     ]
-    def __init__(self, name: str, val_min: int, val_max: int, vtype=VTYPE_INTEGER):
+    def __init__(self, name: str, val_min: int=None, val_max: int=None, vtype=VTYPE_INTEGER):
         self.name = name#super().__init__(name)
-        self.val_min = val_min
-        self.val_max = val_max
         self.vtype = vtype
+
+        if (vtype == Variable.VTYPE_INTEGER or vtype == Variable.VTYPE_FLOAT):
+            assert val_min is not None
+            assert val_max is not None
+            self.val_min = val_min
+            self.val_max = val_max
+
+        elif (vtype == Variable.VTYPE_BOOL):
+            self.val_min = 0
+            self.val_max = 1
+            self.__class__ = VariableBool
     
     def __str__(self):
         return self.name
 
     def _to_mz(self):
-        return f"var {self.val_min}..{self.val_max}: {self.name};\n"
+        if (self.vtype == Variable.VTYPE_BOOL):
+            return f"var bool: {self.name};\n"
+        else:
+            return f"var {self.val_min}..{self.val_max}: {self.name};\n"
     
-    def _to_tz(self):
-        pass
-
+class VariableBool(ExpressionBool, Variable):
+    pass
     
 class Constant:
     def __init__(self, name: str, value: int=None):
@@ -300,6 +312,7 @@ class Model(minizinc.Model):
 
         self.model_mzn_str += "".join(a._to_mz() for a in self.variables + self.constants + self.constraints)
         
+        assert self.solve_criteria is not None
         if (self.solve_method is None):
             if (self.solve_expression is None):
                 self.model_mzn_str += f"solve {self.solve_criteria};\n"
