@@ -8,5 +8,5 @@ var bool: x_6;
 var bool: x_7;
 var bool: x_8;
 var bool: x_9;
-constraint x_0 \/ x_1;
-solve satisfy;
+constraint (((x_0 xor x_2) \/ (x_3 /\ x_4)) \/ (x_5 xor not(x_0)));
+solve maximize 0 + x_0 + x_1 + x_2 + x_3 + x_4 + x_5 + x_6 + x_7 + x_8 + x_9;

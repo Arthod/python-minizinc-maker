@@ -30,39 +30,44 @@ class Expression:
 
     @staticmethod
     def OR(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool": # TODO split into single OR or multiple
-        print(type(expr1))
         assert isinstance(expr1, ExpressionBool)
         assert isinstance(expr2, ExpressionBool)
-        return ExpressionBool(expr1.operator("\/", expr2))
+        return ExpressionBool(expr1.operator("\/", expr2, bracket=True))
     
     @staticmethod
     def AND(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool": # TODO split into single AND or multiple
         assert isinstance(expr1, ExpressionBool)
         assert isinstance(expr2, ExpressionBool)
-        return ExpressionBool(expr1.operator("/\\", expr2))
+        return ExpressionBool(expr1.operator("/\\", expr2, bracket=True))
 
     @staticmethod
     def onlyIf(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool":
         assert isinstance(expr1, ExpressionBool)
         assert isinstance(expr2, ExpressionBool)
-        return ExpressionBool(expr1.operator("<-", expr2))
+        return ExpressionBool(expr1.operator("<-", expr2, bracket=True))
     
     @staticmethod
     def implies(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool":
         assert isinstance(expr1, ExpressionBool)
         assert isinstance(expr2, ExpressionBool)
-        return ExpressionBool(expr1.operator("->", expr2))
+        return ExpressionBool(expr1.operator("->", expr2, bracket=True))
     
     @staticmethod
     def iff(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool":
         assert isinstance(expr1, ExpressionBool)
         assert isinstance(expr2, ExpressionBool)
-        return ExpressionBool(expr1.operator("<->", expr2))
+        return ExpressionBool(expr1.operator("<->", expr2, bracket=True))
     
     @staticmethod
     def NOT(expr: "ExpressionBool") -> "ExpressionBool":
         assert isinstance(expr, ExpressionBool)
-        return expr.func("not")
+        return ExpressionBool(expr.func("not"))
+
+    @staticmethod
+    def xor(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool":
+        assert isinstance(expr1, ExpressionBool)
+        assert isinstance(expr2, ExpressionBool)
+        return ExpressionBool(expr1.operator("xor", expr2, bracket=True))
 
     @staticmethod
     def product(arr: list["Variable"]):
@@ -108,18 +113,23 @@ class Expression:
     def __le__(self, other: str):  return ExpressionBool(self.operator("<=", other, bracket=True))
     def __gt__(self, other: str):  return ExpressionBool(self.operator(">", other, bracket=True))
     def __ge__(self, other: str):  return ExpressionBool(self.operator(">=", other, bracket=True))
+    
+    def __and__(self, other):   return Expression.AND(self, other)
+    def __or__(self, other):    return Expression.OR(self, other)
+    def __invert__(self):       return Expression.NOT(self)
+    def __xor__(self, other):          return Expression.xor(self, other)
 
     def func(self, func: str, other: str=None):
         if (other is None):
-            return Expression(f"{func}({self.name})")
+            return f"{func}({self.name})"
         
         else:
             if (isinstance(other, Expression)):
                 other = other.name
-            return Expression(f"{func}({self.name}, {other})")
+            return f"{func}({self.name}, {other})"
 
-    def __pow__(self, other: str): return self.func("pow", other)
-    def __abs__(self):  return self.func("abs")
+    def __pow__(self, other: str): return Expression(self.func("pow", other))
+    def __abs__(self):  return Expression(self.func("abs"))
     # TODO: https://www.minizinc.org/doc-2.7.6/en/lib-stdlib-builtins.html
     # arg max, arg min
     # max, min
@@ -327,7 +337,7 @@ class Model(minizinc.Model):
 
     def write(self, fn: str):
         if (self.model_mzn_str is None):
-            self.generate_mzn()
+            self.generate()
         with open(fn, "w") as f:
             f.write(self.model_mzn_str)
 
