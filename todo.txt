@@ -1,5 +1,4 @@
-model.add_constraint(pymzm.Expression.AND((~xs[a]) for a in xs))
 
 add constraints s
 
-reverse boolean methods
+False/True as boolean expressions

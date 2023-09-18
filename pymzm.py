@@ -29,45 +29,32 @@ class Expression:
         return self.name
 
     @staticmethod
-    def OR(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool": # TODO split into single OR or multiple
-        assert isinstance(expr1, ExpressionBool)
-        assert isinstance(expr2, ExpressionBool)
-        return ExpressionBool(expr1.operator("\/", expr2, bracket=True))
+    def OR(arr: Iterable) -> "ExpressionBool":
+        return ExpressionBool._operator("\/", arr, bracket=True)
     
     @staticmethod
-    def AND(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool": # TODO split into single AND or multiple
-        assert isinstance(expr1, ExpressionBool)
-        assert isinstance(expr2, ExpressionBool)
-        return ExpressionBool(expr1.operator("/\\", expr2, bracket=True))
-
-    @staticmethod
-    def onlyIf(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool":
-        assert isinstance(expr1, ExpressionBool)
-        assert isinstance(expr2, ExpressionBool)
-        return ExpressionBool(expr1.operator("<-", expr2, bracket=True))
+    def AND(arr: Iterable) -> "ExpressionBool":
+        return ExpressionBool._operator("/\\", arr, bracket=True)
     
     @staticmethod
-    def implies(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool":
-        assert isinstance(expr1, ExpressionBool)
-        assert isinstance(expr2, ExpressionBool)
-        return ExpressionBool(expr1.operator("->", expr2, bracket=True))
+    def onlyIf(arr: Iterable) -> "ExpressionBool":
+        return ExpressionBool._operator("<-", arr, bracket=True)
     
     @staticmethod
-    def iff(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool":
-        assert isinstance(expr1, ExpressionBool)
-        assert isinstance(expr2, ExpressionBool)
-        return ExpressionBool(expr1.operator("<->", expr2, bracket=True))
+    def implies(arr: Iterable) -> "ExpressionBool":
+        return ExpressionBool._operator("->", arr, bracket=True)
+    
+    @staticmethod
+    def iff(arr: Iterable) -> "ExpressionBool":
+        return ExpressionBool._operator("<->", arr, bracket=True)
     
     @staticmethod
     def NOT(expr: "ExpressionBool") -> "ExpressionBool":
-        assert isinstance(expr, ExpressionBool)
         return ExpressionBool(expr.func("not"))
-
+    
     @staticmethod
-    def xor(expr1: "ExpressionBool", expr2: "ExpressionBool") -> "ExpressionBool":
-        assert isinstance(expr1, ExpressionBool)
-        assert isinstance(expr2, ExpressionBool)
-        return ExpressionBool(expr1.operator("xor", expr2, bracket=True))
+    def xor(arr: Iterable) -> "ExpressionBool":
+        return ExpressionBool._operator("xor", arr, bracket=True)
 
     @staticmethod
     def product(arr: list["Variable"]):
@@ -78,46 +65,44 @@ class Expression:
             v *= a
         return v
 
-    def operator(self, symbol: str, other: str, reverse=False, bracket=False):
-        if (isinstance(other, Expression)):
-            other = other.name
+    @classmethod
+    def _operator(cls, symbol, exprs, bracket=False, bracket_right=None):
+        exprs = [expr.name if isinstance(expr, Expression) else expr for expr in exprs]
+        out = f" {symbol} ".join(str(a) for a in exprs)
 
-        main = self.name
-        if (reverse):
-            t = other
-            other = main
-            main = t
-
-        out = f"{main} {symbol} {other}"
         if (bracket):
             out = f"({out})"
 
-        return out
+        return cls(out)
 
-    def __add__(self, other: str): return Expression(self.operator("+", other))
-    def __radd__(self, other: str): return Expression(self.operator("+", other, reverse=True))
-    def __sub__(self, other: str): return Expression(self.operator("-", other))
-    def __rsub__(self, other: str): return Expression(self.operator("-", other, reverse=True))
-    def __mul__(self, other: str): return Expression(self.operator("*", other))
-    def __rmul__(self, other: str): return Expression(self.operator("*", other, reverse=True))
-    def __truediv__(self, other: str): return Expression(self.operator("/", other))
-    def __rtruediv__(self, other: str): return Expression(self.operator("/", other, reverse=True))
-    def __floordiv__(self, other: str): return Expression(self.operator("div", other))
-    def __rfloordiv__(self, other: str): return Expression(self.operator("div", other, reverse=True))
-    def __mod__(self, other: str): return Expression(self.operator("mod", other))
-    def __rmod__(self, other: str): return Expression(self.operator("mod", other, reverse=True))
+    def __add__(self, other: str): return Expression._operator("+", [self, other])
+    def __radd__(self, other: str): return Expression._operator("+", [other, self])
+    def __sub__(self, other: str): return Expression._operator("-", [self, other], bracket_right=True)
+    def __rsub__(self, other: str): return Expression._operator("-", [other, self], bracket_right=True)
+    def __mul__(self, other: str): return Expression._operator("*", [self, other])
+    def __rmul__(self, other: str): return Expression._operator("*", [other, self])
+    def __truediv__(self, other: str): return Expression._operator("/", [self, other], bracket_right=True)
+    def __rtruediv__(self, other: str): return Expression._operator("/", [other, self], bracket_right=True)
+    def __floordiv__(self, other: str): return Expression._operator("div", [self, other], bracket_right=True)
+    def __rfloordiv__(self, other: str): return Expression._operator("div", [other, self], bracket_right=True)
+    def __mod__(self, other: str): return Expression._operator("mod", [self, other])
+    def __rmod__(self, other: str): return Expression._operator("mod", [other, self])
     
-    def __eq__(self, other: str):  return ExpressionBool(self.operator("==", other, bracket=True))
-    def __ne__(self, other: str):  return ExpressionBool(self.operator("!=", other, bracket=True))
-    def __lt__(self, other: str):  return ExpressionBool(self.operator("<", other, bracket=True))
-    def __le__(self, other: str):  return ExpressionBool(self.operator("<=", other, bracket=True))
-    def __gt__(self, other: str):  return ExpressionBool(self.operator(">", other, bracket=True))
-    def __ge__(self, other: str):  return ExpressionBool(self.operator(">=", other, bracket=True))
+    def __eq__(self, other: str): return ExpressionBool._operator("==", [self, other], bracket=True)
+    def __ne__(self, other: str): return ExpressionBool._operator("!=", [self, other], bracket=True)
+    def __lt__(self, other: str): return ExpressionBool._operator("<", [self, other], bracket=True)
+    def __le__(self, other: str): return ExpressionBool._operator("<=", [self, other], bracket=True)
+    def __gt__(self, other: str): return ExpressionBool._operator(">", [self, other], bracket=True)
+    def __ge__(self, other: str): return ExpressionBool._operator(">=", [self, other], bracket=True)
     
-    def __and__(self, other):   return Expression.AND(self, other)
-    def __or__(self, other):    return Expression.OR(self, other)
-    def __invert__(self):       return Expression.NOT(self)
-    def __xor__(self, other):          return Expression.xor(self, other)
+    def __and__(self, other): return Expression.AND([self, other])
+    def __rand__(self, other): return Expression.AND([other, self])
+    def __or__(self, other): return Expression.OR([self, other])
+    def __ror__(self, other): return Expression.OR([other, self])
+    def __xor__(self, other): return Expression.xor([self, other])
+    def __rxor__(self, other): return Expression.xor([other, self])
+    def __invert__(self): return Expression.NOT(self)
+    def __neg__(self): return self.func("-")
 
     def func(self, func: str, other: str=None):
         if (other is None):
@@ -226,10 +211,10 @@ class Constraint:
 
     @staticmethod
     def alldifferent(variables: Iterable[Variable]) -> "Constraint":
-        """Constrain the elements in the passed iterable of variables to be pairwise different.
+        """Constrain the elements in the passed Iterable of variables to be pairwise different.
 
         Args:
-            variables (Iterable[Variable]): Passed iterable of variables
+            variables (Iterable[Variable]): Passed Iterable of variables
 
         Returns:
             Constraint: Alldifferent constraint
