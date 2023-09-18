@@ -4,12 +4,11 @@ import pymzm
 import minizinc
 import math
 
-class TestPymzm(unittest.TestCase):
+class TestPymzmProblems(unittest.TestCase):
 
     def setUp(self):
         self.model = pymzm.Model()
         self.gecode = minizinc.Solver.lookup("gecode")
-
 
     def test_ex1(self):
         model = self.model
@@ -20,6 +19,7 @@ class TestPymzm(unittest.TestCase):
 
         result = minizinc.Instance(self.gecode, model).solve(all_solutions=True)
 
+        self.assertTrue(result.solution is not None)
         self.assertEqual(result[0, "x"], -4)
         self.assertEqual(result[1, "x"], 0)
 
@@ -33,6 +33,7 @@ class TestPymzm(unittest.TestCase):
 
         result = minizinc.Instance(self.gecode, model).solve(all_solutions=True)
 
+        self.assertTrue(result.solution is not None)
         vals_expected = [1, 3, 5, 7, 9]
         for i in range(len(result)):
             self.assertEqual(vals_expected[i], result[i, "x"])
@@ -58,6 +59,7 @@ class TestPymzm(unittest.TestCase):
 
         result = minizinc.Instance(self.gecode, model).solve(all_solutions=True)
         
+        self.assertTrue(result.solution is not None)
         self.assertEqual(18, len(result))
 
     def test_ex4_integer_factorization(self):
@@ -72,6 +74,7 @@ class TestPymzm(unittest.TestCase):
 
         result = minizinc.Instance(self.gecode, model).solve(all_solutions=True)
 
+        self.assertTrue(result.solution is not None)
         self.assertEqual(result[0].x, 7829)
         self.assertEqual(result[0].y, 6907)
 
@@ -87,6 +90,7 @@ class TestPymzm(unittest.TestCase):
 
         result = minizinc.Instance(self.gecode, model).solve(all_solutions=True)
 
+        self.assertTrue(result.solution is not None)
         self.assertEqual(92, len(result))
 
     def test_ex6_711(self):
@@ -100,6 +104,7 @@ class TestPymzm(unittest.TestCase):
         
         result = minizinc.Instance(self.gecode, model).solve(all_solutions=False)
 
+        self.assertTrue(result.solution is not None)
         rs = [result[f"item_{i}"] / 100 for i in range(n)]
         self.assertTrue(sum(rs) == 7.11)
         self.assertTrue(math.prod(rs) == 7.11)
@@ -134,6 +139,8 @@ class TestPymzm(unittest.TestCase):
         
         result = minizinc.Instance(self.gecode, model).solve(all_solutions=False)
 
+        self.assertTrue(result.solution is not None)
+
         for j in range(b):
             self.assertTrue(sum(result[f"x_{i}_{j}"] for i in range(v)) == r)
         for i in range(v):
@@ -143,6 +150,10 @@ class TestPymzm(unittest.TestCase):
             for j in range(i):
                 self.assertTrue(sum(result[f"x_{i}_{k}"] * result[f"x_{j}_{k}"] for k in range(v)) == l)
 
+class TestPymzmMisc(unittest.TestCase):
+    def setUp(self):
+        self.model = pymzm.Model()
+        self.gecode = minizinc.Solver.lookup("gecode")
 
     def test_misc1(self):
         model = self.model
@@ -154,19 +165,41 @@ class TestPymzm(unittest.TestCase):
         
         result = minizinc.Instance(self.gecode, model).solve(all_solutions=False)
 
+        self.assertTrue(result.solution is not None)
         self.assertTrue(result.objective < 0)
-        
-    def test_misc2(self):
-        model = self.model
-        x = model.add_variable("x", 0, 100)
-        model.add_constraint(5 * x == 15)
-        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-        model.generate()
-        
-        result = minizinc.Instance(self.gecode, model).solve(all_solutions=False)
 
-        self.assertTrue(result["x"] == 3)
+def test_operator_case(func, model, solver, unit):
+    x = model.add_variable("x", -100, 100)
+    model.add_constraint(func(x))
+    model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+    model.generate()
 
+    results = minizinc.Instance(solver, model).solve(all_solutions=True)
+
+    unit.assertTrue(results.solution is not None)
+    for i in range(len(results)):
+        unit.assertTrue(func(results[i, "x"]))
+
+class TestPymzmOperators(unittest.TestCase):
+
+    def setUp(self):
+        self.model = pymzm.Model()
+        self.gecode = minizinc.Solver.lookup("gecode")
+
+    def test_operators1(self):
+        test_operator_case(lambda x: 5 * x == 15, self.model, self.gecode, self)
+
+    def test_operators2(self):
+        test_operator_case(lambda x: 5 * x == 15, self.model, self.gecode, self)
+
+    def test_operators3(self):
+        test_operator_case(lambda x: x % 20 == 15, self.model, self.gecode, self)
+
+    def test_operators4(self):
+        test_operator_case(lambda x: x // 20 == 3, self.model, self.gecode, self)
+
+    def test_operators5(self):
+        test_operator_case(lambda x: x / 20 == 3, self.model, self.gecode, self)
 
 if __name__ == "__main__":
     unittest.main()
