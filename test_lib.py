@@ -168,38 +168,121 @@ class TestPymzmMisc(unittest.TestCase):
         self.assertTrue(result.solution is not None)
         self.assertTrue(result.objective < 0)
 
-def test_operator_case(func, model, solver, unit):
-    x = model.add_variable("x", -100, 100)
-    model.add_constraint(func(x))
-    model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-    model.generate()
-
-    results = minizinc.Instance(solver, model).solve(all_solutions=True)
-
-    unit.assertTrue(results.solution is not None)
-    for i in range(len(results)):
-        unit.assertTrue(func(results[i, "x"]))
 
 class TestPymzmOperators(unittest.TestCase):
-
     def setUp(self):
+        self.solver = minizinc.Solver.lookup("gecode")
+        self.val_min = -100
+        self.val_max = 100
+        self.a = 7
+        self.b = 3
+    
+    def operator_case(self, func, positive_only=False, val_max: int=None):
         self.model = pymzm.Model()
-        self.gecode = minizinc.Solver.lookup("gecode")
+        val_min = 0 if positive_only else self.val_min
+        val_max = self.val_max if val_max is None else val_max
+        
+        x = self.model.add_variable("x", val_min, val_max)
+        self.model.add_constraint(func(x))
+        self.model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+        self.model.generate()
 
-    def test_operators1(self):
-        test_operator_case(lambda x: 5 * x == 15, self.model, self.gecode, self)
+        sols = []
+        for i in range(val_min, val_max + 1):
+            try:
+                if (func(i)):
+                    sols.append(i)
+            except ZeroDivisionError:
+                pass
 
-    def test_operators2(self):
-        test_operator_case(lambda x: 5 * x == 15, self.model, self.gecode, self)
+        results = minizinc.Instance(self.solver, self.model).solve(all_solutions=True)
 
-    def test_operators3(self):
-        test_operator_case(lambda x: x % 20 == 15, self.model, self.gecode, self)
+        self.assertTrue(results.solution is not None)
+        self.assertEqual(len(sols), len(results), f"{sols}, {results}")
+        for i in range(len(results)):
+            self.assertTrue(func(results[i, "x"]))
 
-    def test_operators4(self):
-        test_operator_case(lambda x: x // 20 == 3, self.model, self.gecode, self)
+    def test_operators_simple(self):
+        a = self.a
+        b = self.b
+        self.operator_case(lambda x: a + x == b)
+        self.operator_case(lambda x: x + a == b)
+        self.operator_case(lambda x: a - x == b)
+        self.operator_case(lambda x: x - a == b)
+        self.operator_case(lambda x: - x == b)
+        self.operator_case(lambda x: - x == - b)
+        self.operator_case(lambda x: - (x - 5) == b)
+        self.operator_case(lambda x: a * x == b)
+        self.operator_case(lambda x: x * a == b)
+        self.operator_case(lambda x: a / x == b)
+        #self.operator_case(lambda x: x / a == b) TODO: this isn't solved correctly in the solver
+        self.operator_case(lambda x: a // x == b)
+        self.operator_case(lambda x: x // a == b)
+        self.operator_case(lambda x: a % x == b, positive_only=True)
+        self.operator_case(lambda x: x % a == b, positive_only=True)
 
-    def test_operators5(self):
-        test_operator_case(lambda x: x / 20 == 3, self.model, self.gecode, self)
+    def test_operators_bracket1(self):
+        self.operator_case(lambda x: x + (x + 7) == 21)
+        self.operator_case(lambda x: x + (x - 7) == 21)
+        self.operator_case(lambda x: x + (x * 7) == 21)
+        self.operator_case(lambda x: x + (x / 7) == 21)
+        self.operator_case(lambda x: x + (x // 7) == 21)
+        self.operator_case(lambda x: x + (x % 7) == 21)
+
+        self.operator_case(lambda x: x - (x + 7) == 21)
+        self.operator_case(lambda x: x - (x - 7) == 21)
+        self.operator_case(lambda x: x - (x * 7) == 21)
+        self.operator_case(lambda x: x - (x / 7) == 21)
+        self.operator_case(lambda x: x - (x // 7) == 21)
+        self.operator_case(lambda x: x - (x % 7) == 21)
+
+        self.operator_case(lambda x: x * (x + 7) == 21)
+        self.operator_case(lambda x: x * (x - 7) == 21)
+        self.operator_case(lambda x: x * (x * 7) == 21)
+        self.operator_case(lambda x: x * (x / 7) == 21)
+        self.operator_case(lambda x: x * (x // 7) == 21)
+        self.operator_case(lambda x: x * (x % 7) == 21)
+
+        self.operator_case(lambda x: x / (x + 7) == 21)
+        self.operator_case(lambda x: x / (x - 7) == 21)
+        #self.operator_case(lambda x: x / (x * 7) == 21)
+        #self.operator_case(lambda x: x / (x / 7) == 21)
+        #self.operator_case(lambda x: x / (x // 7) == 21)
+        #self.operator_case(lambda x: x / (x % 7) == 21)
+
+        self.operator_case(lambda x: x // (x + 7) == 21)
+        self.operator_case(lambda x: x // (x - 7) == 21)
+        self.operator_case(lambda x: x // (x * 7) == 21)
+        #self.operator_case(lambda x: x // (x / 7) == 21)
+        self.operator_case(lambda x: x // (x // 7) == 21)
+        self.operator_case(lambda x: x // (x % 7) == 21)
+
+        #self.operator_case(lambda x: x % (x + 7) == 2)
+        #self.operator_case(lambda x: x % (x - 7) == 2)
+        #self.operator_case(lambda x: x % (x * 7) == 2)
+        #self.operator_case(lambda x: x % (x / 7) == 2)
+        #self.operator_case(lambda x: x % (x // 7) == 2)
+        #self.operator_case(lambda x: x % (x % 7) == 2)
+
+
+
+    def test_funcs_pow(self):
+        self.operator_case(lambda x: pow(x, 2) == 81)
+        self.operator_case(lambda x: pow(x, 2) == 5)
+        self.operator_case(lambda x: pow(x, 3) == 27)
+        self.operator_case(lambda x: pow(2, x) == 64, val_max=10)
+        self.operator_case(lambda x: x ** 2 == 81)
+        self.operator_case(lambda x: x ** 2 == 5)
+        self.operator_case(lambda x: x ** 3 == 27)
+        self.operator_case(lambda x: 3 ** x == 243, val_max=10)
+
+    def test_funcs_abs(self):
+        self.operator_case(lambda x: abs(-x) == 81)
+        self.operator_case(lambda x: -abs(x) == 5)
+        self.operator_case(lambda x: abs(x) == 27)
+        self.operator_case(lambda x: abs(x) == -27)
+
 
 if __name__ == "__main__":
+    print("".join("\n" for _ in range(10)))
     unittest.main()
