@@ -1,0 +1,18 @@
+[project]
+name = "pymzm"
+version = "0.0.1"
+authors = [
+  { name="Ahmad Othman", email="ahoth19@student.sdu.dk" },
+]
+description = "Create pure Minizinc .mzn files from Python using python-minizinc-maker library."
+readme = "README.md"
+requires-python = ">=3.9.1"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache-2.0 license",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/Arthod/python-minizinc-maker"
+"Bug Tracker" = "https://github.com/Arthod/python-minizinc-maker/issues"
