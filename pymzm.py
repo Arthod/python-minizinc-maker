@@ -8,6 +8,20 @@ SOLVE_MAXIMIZE = "maximize"
 SOLVE_MINIMIZE = "minimize"
 SOLVE_SATISFY = "satisfy"
 
+class ValueDict(dict):
+    def __iter__(self):
+        for v in self.values():
+            yield v
+    
+    def __invert__(self):  return ValueDict({k: (~v) for k, v in self.items()})
+    def __add__(self, other):
+        raise NotImplementedError()
+        #if (isinstance(other, ValueDict)):
+        #    assert len(other) == len(self)
+        #    return ValueDict({k: (~v) for k, v in self.items()})
+    def __sub__(self, other):
+        raise NotImplementedError()
+
 
 class Method:
     def __init__(self, s: str):
@@ -50,7 +64,7 @@ class Expression:
     
     @staticmethod
     def NOT(expr: "ExpressionBool") -> "ExpressionBool":
-        return ExpressionBool(expr.func("not"))
+        return ExpressionBool.func("not", [expr])
     
     @staticmethod
     def xor(arr: Iterable) -> "ExpressionBool":
@@ -88,6 +102,7 @@ class Expression:
     def __mod__(self, other: str): return Expression._operator("mod", [self, other])
     def __rmod__(self, other: str): return Expression._operator("mod", [other, self])
     def __neg__(self): return Expression.func("-", [self])
+    #def __pos__(self): return Expression.func("+", [self]) TODO: not allowed in minizinc example: +x == v
     
     def __eq__(self, other: str): return ExpressionBool._operator("==", [self, other], bracket=True)
     def __ne__(self, other: str): return ExpressionBool._operator("!=", [self, other], bracket=True)
@@ -186,12 +201,16 @@ class Constraint:
         CTYPE_AMONG,
         CTYPE_ALL_EQUAL,
         CTYPE_COUNT,
+        CTYPE_INCREASING,
+        CTYPE_DECREASING
     ] = [
         "normal",
         "alldifferent",
         "among",
         "all_equal",
-        "count"
+        "count",
+        "increasing",
+        "decreasing"
     ]
     def __init__(self, cstr: str, ctype: str=CTYPE_NORMAL):
         self.cstr = cstr
@@ -235,7 +254,17 @@ class Constraint:
         arr_str = _variableIterable2Str(variables)
         return Constraint.from_global_constraint("count", Constraint.CTYPE_COUNT, arr_str, val, count)
     
-    
+    @staticmethod
+    def increasing(variables: Iterable[Variable]):
+        # Requires that the array x is in increasing order (duplicates are allowed).
+        arr_str = _variableIterable2Str(variables)
+        return Constraint.from_global_constraint("increasing", Constraint.CTYPE_INCREASING, arr_str)
+
+    @staticmethod
+    def decreasing(variables: Iterable[Variable]):
+        # Requires that the array x is in decreasing order (duplicates are allowed).
+        arr_str = _variableIterable2Str(variables)
+        return Constraint.from_global_constraint("decreasing", Constraint.CTYPE_DECREASING, arr_str)
 
     
 class Model(minizinc.Model):
@@ -268,8 +297,8 @@ class Model(minizinc.Model):
         self.variables.append(variable)
         return variable
     
-    def add_variables(self, name: str, indices: list[tuple[int]], val_min: int=None, val_max: int=None, vtype=Variable.VTYPE_INTEGER):
-        variables = {}
+    def add_variables(self, name: str, indices: list[tuple[int]], val_min: int=None, val_max: int=None, vtype=Variable.VTYPE_INTEGER) -> ValueDict:
+        variables = ValueDict()
         for idx in indices:
             idx_str = str(idx).replace(", ", "_").replace("(", "").replace(")", "")
             variable = Variable(f"{name}_{idx_str}", val_min, val_max, vtype)
@@ -285,6 +314,7 @@ class Model(minizinc.Model):
                 self.global_constraints.add(constraint.ctype)
 
         elif (isinstance(cstr, Expression)):
+            assert isinstance(cstr, ExpressionBool)
             constraint = Constraint(cstr.name)
 
         elif (type(cstr) is str):
@@ -325,8 +355,6 @@ class Model(minizinc.Model):
             f.write(self.model_mzn_str)
 
 def _variableIterable2Str(variables: Iterable[Variable]) -> str:
-    if (isinstance(variables, dict)):
-        variables = variables.values()
     return str([v.name if isinstance(v, Expression) else v for v in variables]).replace("'", "")
 
 if __name__ == "__main__":

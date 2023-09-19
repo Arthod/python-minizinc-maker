@@ -4,6 +4,8 @@ import pymzm
 import minizinc
 import math
 
+import inspect
+
 class TestPymzmProblems(unittest.TestCase):
 
     def setUp(self):
@@ -97,7 +99,7 @@ class TestPymzmProblems(unittest.TestCase):
         model = self.model
         n = 4
         items = model.add_variables("item", range(n), val_min=0, val_max=999)
-        model.add_constraint(sum(items[a] for a in items) == 711)
+        model.add_constraint(sum(items) == 711)
         model.add_constraint(pymzm.Expression.product(items) == 711 * 100 * 100 * 100)
         model.set_solve_criteria(pymzm.SOLVE_SATISFY)
         model.generate()
@@ -160,7 +162,7 @@ class TestPymzmMisc(unittest.TestCase):
         # Negative summation
         xs = model.add_variables("x", range(10), 0, 1, vtype=pymzm.Variable.VTYPE_BOOL)
         ys = model.add_variables("y", range(10), 9, 10, vtype=pymzm.Variable.VTYPE_INTEGER)
-        model.set_solve_criteria(pymzm.SOLVE_MAXIMIZE, sum(xs[a] for a in xs) - sum(ys[a] for a in ys))
+        model.set_solve_criteria(pymzm.SOLVE_MAXIMIZE, sum(xs) - sum(ys))
         model.generate()
         
         result = minizinc.Instance(self.gecode, model).solve(all_solutions=False)
@@ -177,7 +179,7 @@ class TestPymzmOperators(unittest.TestCase):
         self.a = 7
         self.b = 3
     
-    def operator_case(self, func, positive_only=False, val_max: int=None):
+    def operator_case_single(self, func, positive_only=False, val_max: int=None):
         self.model = pymzm.Model()
         val_min = 0 if positive_only else self.val_min
         val_max = self.val_max if val_max is None else val_max
@@ -194,6 +196,7 @@ class TestPymzmOperators(unittest.TestCase):
                     sols.append(i)
             except ZeroDivisionError:
                 pass
+        if (len(sols) == 0): print(inspect.getsource(func))
 
         results = minizinc.Instance(self.solver, self.model).solve(all_solutions=True)
 
@@ -201,86 +204,113 @@ class TestPymzmOperators(unittest.TestCase):
         self.assertEqual(len(sols), len(results), f"{sols}, {results}")
         for i in range(len(results)):
             self.assertTrue(func(results[i, "x"]))
+    
+    def operator_case_multiple(self, func, positive_only=False, val_max: int=None):
+        self.model = pymzm.Model()
+        val_min = 0 if positive_only else self.val_min
+        val_max = self.val_max if val_max is None else val_max
+        
+        xs = self.model.add_variables("x", range(5), val_min, val_max)
+        self.model.add_constraint(func(xs))
+        print(func(xs))
+        #self.model.add_constraint(pymzm.Constraint.increasing(xs)) # remove symmetries
+        self.model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+        self.model.generate()
+
+        result = minizinc.Instance(self.solver, self.model).solve(all_solutions=False)
+
+        self.assertTrue(result.solution is not None)
+        self.assertTrue(func([result[f"x_{i}"] for i in range(5)]))
 
     def test_operators_simple(self):
         a = self.a
         b = self.b
-        self.operator_case(lambda x: a + x == b)
-        self.operator_case(lambda x: x + a == b)
-        self.operator_case(lambda x: a - x == b)
-        self.operator_case(lambda x: x - a == b)
-        self.operator_case(lambda x: - x == b)
-        self.operator_case(lambda x: - x == - b)
-        self.operator_case(lambda x: - (x - 5) == b)
-        self.operator_case(lambda x: a * x == b)
-        self.operator_case(lambda x: x * a == b)
-        self.operator_case(lambda x: a / x == b)
-        #self.operator_case(lambda x: x / a == b) TODO: this isn't solved correctly in the solver
-        self.operator_case(lambda x: a // x == b)
-        self.operator_case(lambda x: x // a == b)
-        self.operator_case(lambda x: a % x == b, positive_only=True)
-        self.operator_case(lambda x: x % a == b, positive_only=True)
+        self.operator_case_single(lambda x: x == b)
+        self.operator_case_single(lambda x: a + x == b)
+        self.operator_case_single(lambda x: x + a == b)
+        self.operator_case_single(lambda x: a - x == b)
+        self.operator_case_single(lambda x: x - a == b)
+        self.operator_case_single(lambda x: - x == b)
+        self.operator_case_single(lambda x: - x == - b)
+        self.operator_case_single(lambda x: 0 - (x - 5) == b)
+        self.operator_case_single(lambda x: 0 - (x + 5) == b)
+        self.operator_case_single(lambda x: - (x - 5) == b)
+        self.operator_case_single(lambda x: - (x + 5) == b)
+        self.operator_case_single(lambda x: a * x == b)
+        self.operator_case_single(lambda x: x * a == b)
+        self.operator_case_single(lambda x: a / x == b)
+        #self.operator_case_single(lambda x: x / a == b) TODO: this isn't solved correctly in the solver
+        self.operator_case_single(lambda x: a // x == b)
+        self.operator_case_single(lambda x: x // a == b)
+        self.operator_case_single(lambda x: a % x == b, positive_only=True)
+        self.operator_case_single(lambda x: x % a == b, positive_only=True)
 
     def test_operators_bracket1(self):
-        self.operator_case(lambda x: x + (x + 7) == 21)
-        self.operator_case(lambda x: x + (x - 7) == 21)
-        self.operator_case(lambda x: x + (x * 7) == 21)
-        self.operator_case(lambda x: x + (x / 7) == 21)
-        self.operator_case(lambda x: x + (x // 7) == 21)
-        self.operator_case(lambda x: x + (x % 7) == 21)
+        self.operator_case_single(lambda x: x + (x + 7) == 21)
+        self.operator_case_single(lambda x: x + (x - 7) == 21)
+        self.operator_case_single(lambda x: x + (x * 7) == 21)
+        self.operator_case_single(lambda x: x + (x * 7) == 40)
+        self.operator_case_single(lambda x: x + (x / 7) == 21)
+        self.operator_case_single(lambda x: x + (x / 7) == 8)
+        self.operator_case_single(lambda x: x + (x // 7) == 21)
+        self.operator_case_single(lambda x: x + (x % 7) == 21)
 
-        self.operator_case(lambda x: x - (x + 7) == 21)
-        self.operator_case(lambda x: x - (x - 7) == 21)
-        self.operator_case(lambda x: x - (x * 7) == 21)
-        self.operator_case(lambda x: x - (x / 7) == 21)
-        self.operator_case(lambda x: x - (x // 7) == 21)
-        self.operator_case(lambda x: x - (x % 7) == 21)
+        self.operator_case_single(lambda x: x - (x + 7) == 21)
+        self.operator_case_single(lambda x: x - (x - 7) == 21)
+        self.operator_case_single(lambda x: x - (x * 7) == 21)
+        self.operator_case_single(lambda x: x - (x / 7) == 21)
+        self.operator_case_single(lambda x: x - (x // 7) == 21)
+        self.operator_case_single(lambda x: x - (x % 7) == 21)
 
-        self.operator_case(lambda x: x * (x + 7) == 21)
-        self.operator_case(lambda x: x * (x - 7) == 21)
-        self.operator_case(lambda x: x * (x * 7) == 21)
-        self.operator_case(lambda x: x * (x / 7) == 21)
-        self.operator_case(lambda x: x * (x // 7) == 21)
-        self.operator_case(lambda x: x * (x % 7) == 21)
+        self.operator_case_single(lambda x: x * (x + 7) == 21)
+        self.operator_case_single(lambda x: x * (x - 7) == 21)
+        self.operator_case_single(lambda x: x * (x * 7) == 21)
+        self.operator_case_single(lambda x: x * (x / 7) == 21)
+        self.operator_case_single(lambda x: x * (x // 7) == 21)
+        self.operator_case_single(lambda x: x * (x % 7) == 21)
 
-        self.operator_case(lambda x: x / (x + 7) == 21)
-        self.operator_case(lambda x: x / (x - 7) == 21)
-        #self.operator_case(lambda x: x / (x * 7) == 21)
-        #self.operator_case(lambda x: x / (x / 7) == 21)
-        #self.operator_case(lambda x: x / (x // 7) == 21)
-        #self.operator_case(lambda x: x / (x % 7) == 21)
+        self.operator_case_single(lambda x: x / (x + 7) == 21)
+        self.operator_case_single(lambda x: x / (x - 7) == 21)
+        #self.operator_case_single(lambda x: x / (x * 7) == 21)
+        #self.operator_case_single(lambda x: x / (x / 7) == 21)
+        #self.operator_case_single(lambda x: x / (x // 7) == 21)
+        #self.operator_case_single(lambda x: x / (x % 7) == 21)
 
-        self.operator_case(lambda x: x // (x + 7) == 21)
-        self.operator_case(lambda x: x // (x - 7) == 21)
-        self.operator_case(lambda x: x // (x * 7) == 21)
-        #self.operator_case(lambda x: x // (x / 7) == 21)
-        self.operator_case(lambda x: x // (x // 7) == 21)
-        self.operator_case(lambda x: x // (x % 7) == 21)
+        self.operator_case_single(lambda x: x // (x + 7) == 21)
+        self.operator_case_single(lambda x: x // (x - 7) == 21)
+        self.operator_case_single(lambda x: x // (x * 7) == 21)
+        #self.operator_case_single(lambda x: x // (x / 7) == 21)
+        self.operator_case_single(lambda x: x // (x // 7) == 21)
+        self.operator_case_single(lambda x: x // (x % 7) == 21)
 
-        #self.operator_case(lambda x: x % (x + 7) == 2)
-        #self.operator_case(lambda x: x % (x - 7) == 2)
-        #self.operator_case(lambda x: x % (x * 7) == 2)
-        #self.operator_case(lambda x: x % (x / 7) == 2)
-        #self.operator_case(lambda x: x % (x // 7) == 2)
-        #self.operator_case(lambda x: x % (x % 7) == 2)
+        #self.operator_case_single(lambda x: x % (x + 7) == 2)
+        #self.operator_case_single(lambda x: x % (x - 7) == 2)
+        #self.operator_case_single(lambda x: x % (x * 7) == 2)
+        #self.operator_case_single(lambda x: x % (x / 7) == 2)
+        #self.operator_case_single(lambda x: x % (x // 7) == 2)
+        #self.operator_case_single(lambda x: x % (x % 7) == 2)
 
+    def test_sum(self):
+        self.operator_case_multiple(lambda xs: 0 + sum(xs) == 22)
+        self.operator_case_multiple(lambda xs: 0 - sum(xs) == 22)
+        self.operator_case_multiple(lambda xs: - sum(xs) == 22)
 
 
     def test_funcs_pow(self):
-        self.operator_case(lambda x: pow(x, 2) == 81)
-        self.operator_case(lambda x: pow(x, 2) == 5)
-        self.operator_case(lambda x: pow(x, 3) == 27)
-        self.operator_case(lambda x: pow(2, x) == 64, val_max=10)
-        self.operator_case(lambda x: x ** 2 == 81)
-        self.operator_case(lambda x: x ** 2 == 5)
-        self.operator_case(lambda x: x ** 3 == 27)
-        self.operator_case(lambda x: 3 ** x == 243, val_max=10)
+        self.operator_case_single(lambda x: pow(x, 2) == 81)
+        self.operator_case_single(lambda x: pow(x, 2) == 5)
+        self.operator_case_single(lambda x: pow(x, 3) == 27)
+        self.operator_case_single(lambda x: pow(2, x) == 64, val_max=10)
+        self.operator_case_single(lambda x: x ** 2 == 81)
+        self.operator_case_single(lambda x: x ** 2 == 5)
+        self.operator_case_single(lambda x: x ** 3 == 27)
+        self.operator_case_single(lambda x: 3 ** x == 243, val_max=10)
 
     def test_funcs_abs(self):
-        self.operator_case(lambda x: abs(-x) == 81)
-        self.operator_case(lambda x: -abs(x) == 5)
-        self.operator_case(lambda x: abs(x) == 27)
-        self.operator_case(lambda x: abs(x) == -27)
+        self.operator_case_single(lambda x: abs(-x) == 81)
+        self.operator_case_single(lambda x: -abs(x) == 5)
+        self.operator_case_single(lambda x: abs(x) == 27)
+        self.operator_case_single(lambda x: abs(x) == -27)
 
 
 if __name__ == "__main__":
