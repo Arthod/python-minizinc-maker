@@ -1,6 +1,6 @@
 # python-minizinc-maker
 
-Create pure Minizinc .mzn files from Python using python-minizinc-maker and the standard minizinc library.
+Create pure Minizinc .mzn files from Python using python-minizinc-maker and [minizinc-python](https://github.com/MiniZinc/minizinc-python).
 
 
 ## Model
