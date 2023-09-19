@@ -14,7 +14,7 @@ Solve: `model.set_solve_criteria(solve_criteria, expr)`
 alldifferent, among, all_equal, count, increasing, decreasing, ..(more to be added later)..
 
 ### Solve
-* model.set_solve_criteria(pymzm.SOLVE_MAXIMIZE, x)
+* model.set_solve_criteria(pymzm.SOLVE_MAXIMIZE, sum(xs))
 * model.set_solve_criteria(pymzm.SOLVE_SATISFY)
 
 ### 
