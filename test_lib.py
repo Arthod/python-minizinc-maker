@@ -196,7 +196,7 @@ class TestPymzmOperators(unittest.TestCase):
                     sols.append(i)
             except ZeroDivisionError:
                 pass
-        if (len(sols) == 0): print(inspect.getsource(func))
+        #if (len(sols) == 0): print(inspect.getsource(func))
 
         results = minizinc.Instance(self.solver, self.model).solve(all_solutions=True)
 
@@ -212,7 +212,7 @@ class TestPymzmOperators(unittest.TestCase):
         
         xs = self.model.add_variables("x", range(5), val_min, val_max)
         self.model.add_constraint(func(xs))
-        print(func(xs))
+        #print(func(xs))
         #self.model.add_constraint(pymzm.Constraint.increasing(xs)) # remove symmetries
         self.model.set_solve_criteria(pymzm.SOLVE_SATISFY)
         self.model.generate()

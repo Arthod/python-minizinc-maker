@@ -1,6 +1,0 @@
-output ["q_0 = ",showDzn(q_0),";\n","q_1 = ",showDzn(q_1),";\n","q_2 = ",showDzn(q_2),";\n","q_3 = ",showDzn(q_3),";\n","q_4 = ",showDzn(q_4),";\n"];
-int: q_4;
-int: q_3;
-int: q_2;
-int: q_1;
-int: q_0;
