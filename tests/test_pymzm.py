@@ -205,12 +205,12 @@ class TestPymzmOperators(unittest.TestCase):
         for i in range(len(results)):
             self.assertTrue(func(results[i, "x"]))
     
-    def operator_case_multiple(self, func, positive_only=False, val_max: int=None):
+    def operator_case_multiple(self, func, positive_only=False, val_max: int=None, count: int=5):
         self.model = pymzm.Model()
         val_min = 0 if positive_only else self.val_min
         val_max = self.val_max if val_max is None else val_max
         
-        xs = self.model.add_variables("x", range(5), val_min, val_max)
+        xs = self.model.add_variables("x", range(count), val_min, val_max)
         self.model.add_constraint(func(xs))
         #print(func(xs))
         #self.model.add_constraint(pymzm.Constraint.increasing(xs)) # remove symmetries
@@ -220,7 +220,7 @@ class TestPymzmOperators(unittest.TestCase):
         result = minizinc.Instance(self.solver, self.model).solve(all_solutions=False)
 
         self.assertTrue(result.solution is not None)
-        self.assertTrue(func([result[f"x_{i}"] for i in range(5)]))
+        self.assertTrue(func([result[f"x_{i}"] for i in range(count)]))
 
     def test_operators_simple(self):
         a = self.a
@@ -291,10 +291,20 @@ class TestPymzmOperators(unittest.TestCase):
         #self.operator_case_single(lambda x: x % (x % 7) == 2)
 
     def test_sum(self):
-        self.operator_case_multiple(lambda xs: 0 + sum(xs) == 22)
-        self.operator_case_multiple(lambda xs: 0 - sum(xs) == 22)
-        self.operator_case_multiple(lambda xs: - sum(xs) == 22)
+        self.operator_case_multiple(lambda xs: 0 + sum(xs) == 27, count=5)
+        self.operator_case_multiple(lambda xs: 0 - sum(xs) == 31, count=5)
+        self.operator_case_multiple(lambda xs: 5 * sum(xs) == 30, count=5)
+        self.operator_case_multiple(lambda xs: sum(xs) * sum(xs) == 25, count=2)
+        self.operator_case_multiple(lambda xs: - sum(xs) == 14, count=5)
 
+    def test_product(self):
+        self.operator_case_multiple(lambda xs: 0 + pymzm.Expression.product(xs) == 2*1*1, count=3)
+        self.operator_case_multiple(lambda xs: 0 - pymzm.Expression.product(xs) == 5*6*(-3), count=3)
+        self.operator_case_multiple(lambda xs: 5 * pymzm.Expression.product(xs) == 11*5*1, count=3)
+        self.operator_case_multiple(lambda xs: pymzm.Expression.product(xs) + pymzm.Expression.product(xs) == 2*11*6*2, count=3)
+        self.operator_case_multiple(lambda xs: - pymzm.Expression.product(xs) == 5*5*5, count=3)
+
+    
 
     def test_funcs_pow(self):
         self.operator_case_single(lambda x: pow(x, 2) == 81)

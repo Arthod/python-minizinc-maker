@@ -16,9 +16,6 @@ class ValueDict(dict):
     def __invert__(self):  return ValueDict({k: (~v) for k, v in self.items()})
     def __add__(self, other):
         raise NotImplementedError()
-        #if (isinstance(other, ValueDict)):
-        #    assert len(other) == len(self)
-        #    return ValueDict({k: (~v) for k, v in self.items()})
     def __sub__(self, other):
         raise NotImplementedError()
 
@@ -43,35 +40,8 @@ class Expression:
         return self.name
 
     @staticmethod
-    def OR(arr: Iterable) -> "ExpressionBool":
-        return ExpressionBool._operator("\/", arr, bracket=True)
-    
-    @staticmethod
-    def AND(arr: Iterable) -> "ExpressionBool":
-        return ExpressionBool._operator("/\\", arr, bracket=True)
-    
-    @staticmethod
-    def onlyIf(arr: Iterable) -> "ExpressionBool":
-        return ExpressionBool._operator("<-", arr, bracket=True)
-    
-    @staticmethod
-    def implies(arr: Iterable) -> "ExpressionBool":
-        return ExpressionBool._operator("->", arr, bracket=True)
-    
-    @staticmethod
-    def iff(arr: Iterable) -> "ExpressionBool":
-        return ExpressionBool._operator("<->", arr, bracket=True)
-    
-    @staticmethod
-    def NOT(expr: "ExpressionBool") -> "ExpressionBool":
-        return ExpressionBool.func("not", [expr])
-    
-    @staticmethod
-    def xor(arr: Iterable) -> "ExpressionBool":
-        return ExpressionBool._operator("xor", arr, bracket=True)
-
-    @staticmethod
     def product(arr: list["Variable"]):
+        # TODO: inefficient implementation
         if (isinstance(arr, dict)):
             arr = arr.values()
         v = 1
@@ -84,10 +54,31 @@ class Expression:
         exprs = [expr.name if isinstance(expr, Expression) else expr for expr in exprs]
         out = f" {symbol} ".join(str(a) for a in exprs)
 
-        if (bracket):
+        if (bracket or True):
             out = f"({out})"
 
         return cls(out)
+
+    @classmethod
+    def func(cls, func_symbol: str, exprs):
+        exprs = [expr.name if isinstance(expr, Expression) else expr for expr in exprs]
+        out = f", ".join(str(a) for a in exprs)
+        return cls(f"{func_symbol}({out})")
+
+    @staticmethod
+    def OR(arr: Iterable) -> "ExpressionBool":  return ExpressionBool._operator("\/", arr, bracket=True)
+    @staticmethod
+    def AND(arr: Iterable) -> "ExpressionBool": return ExpressionBool._operator("/\\", arr, bracket=True)
+    @staticmethod
+    def onlyIf(arr: Iterable) -> "ExpressionBool":  return ExpressionBool._operator("<-", arr, bracket=True)
+    @staticmethod
+    def implies(arr: Iterable) -> "ExpressionBool": return ExpressionBool._operator("->", arr, bracket=True)
+    @staticmethod
+    def iff(arr: Iterable) -> "ExpressionBool": return ExpressionBool._operator("<->", arr, bracket=True)
+    @staticmethod
+    def NOT(expr: "ExpressionBool") -> "ExpressionBool":    return ExpressionBool.func("not", [expr])
+    @staticmethod
+    def xor(arr: Iterable) -> "ExpressionBool": return ExpressionBool._operator("xor", arr, bracket=True)
 
     def __add__(self, other: str): return Expression._operator("+", [self, other])
     def __radd__(self, other: str): return Expression._operator("+", [other, self])
@@ -118,12 +109,6 @@ class Expression:
     def __xor__(self, other): return Expression.xor([self, other])
     def __rxor__(self, other): return Expression.xor([other, self])
     def __invert__(self): return Expression.NOT(self)
-
-    @classmethod
-    def func(cls, func_symbol: str, exprs):
-        exprs = [expr.name if isinstance(expr, Expression) else expr for expr in exprs]
-        out = f", ".join(str(a) for a in exprs)
-        return cls(f"{func_symbol}({out})")
 
     def __pow__(self, other: str): return Expression.func("pow", [self, other])
     def __rpow__(self, other: str): return Expression.func("pow", [other, self])
