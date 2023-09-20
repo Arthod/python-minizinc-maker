@@ -12,6 +12,9 @@ class ValueDict(dict):
     def __iter__(self):
         for v in self.values():
             yield v
+
+    def __str__(self):
+        return _variableIterable2Str(self)
     
     def __invert__(self):  return ValueDict({k: (~v) for k, v in self.items()})
     def __add__(self, other):
@@ -40,7 +43,7 @@ class Expression:
         return self.name
 
     @staticmethod
-    def product(arr: list["Variable"]):
+    def product_old(arr: list["Variable"]):
         # TODO: inefficient implementation
         if (isinstance(arr, dict)):
             arr = arr.values()
@@ -48,6 +51,22 @@ class Expression:
         for a in arr:
             v *= a
         return v
+
+    @staticmethod
+    def product(exprs: list["Expression"]):
+        return Expression.func("product", [exprs])
+
+    @staticmethod
+    def sum(exprs: list["Expression"]) -> "Expression":
+        return Expression.func("sum", [exprs])
+
+    @staticmethod
+    def min(exprs):
+        return Expression.func("min", [exprs])
+
+    @staticmethod
+    def max(exprs):
+        return Expression.func("max", [exprs])
 
     @classmethod
     def _operator(cls, symbol: str, exprs, bracket=False):
@@ -92,7 +111,7 @@ class Expression:
     def __rfloordiv__(self, other: str): return Expression._operator("div", [other, self])
     def __mod__(self, other: str): return Expression._operator("mod", [self, other])
     def __rmod__(self, other: str): return Expression._operator("mod", [other, self])
-    def __neg__(self): return Expression.func("-", [self])
+    def __neg__(self): return 0 - self#Expression.func("-", [self])
     #def __pos__(self): return Expression.func("+", [self]) TODO: not allowed in minizinc example: +x == v
     
     def __eq__(self, other: str): return ExpressionBool._operator("==", [self, other], bracket=True)
