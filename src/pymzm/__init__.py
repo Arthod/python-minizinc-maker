@@ -48,19 +48,19 @@ class Expression:
 
     @staticmethod
     def product(exprs: list["Expression"]) -> "Expression":
-        return Expression.func("product", [exprs])
+        return Expression._func("product", [exprs])
 
     @staticmethod
     def sum(exprs: list["Expression"]) -> "Expression":
-        return Expression.func("sum", [exprs])
+        return Expression._func("sum", [exprs])
 
     @staticmethod
     def min(exprs: list["Expression"]) -> "Expression":
-        return Expression.func("min", [exprs])
+        return Expression._func("min", [exprs])
 
     @staticmethod
     def max(exprs: list["Expression"]) -> "Expression":
-        return Expression.func("max", [exprs])
+        return Expression._func("max", [exprs])
 
     @classmethod
     def _operator(cls, symbol: str, exprs, bracket=False):
@@ -73,7 +73,7 @@ class Expression:
         return cls(out)
 
     @classmethod
-    def func(cls, func_symbol: str, exprs):
+    def _func(cls, func_symbol: str, exprs):
         exprs = [expr.name if isinstance(expr, Expression) else expr for expr in exprs]
         out = f", ".join(str(a) for a in exprs)
         return cls(f"{func_symbol}({out})")
@@ -105,8 +105,8 @@ class Expression:
     def __rfloordiv__(self, other: str): return Expression._operator("div", [other, self])
     def __mod__(self, other: str): return Expression._operator("mod", [self, other])
     def __rmod__(self, other: str): return Expression._operator("mod", [other, self])
-    def __neg__(self): return 0 - self#Expression.func("-", [self])
-    #def __pos__(self): return Expression.func("+", [self]) TODO: not allowed in minizinc example: +x == v
+    def __neg__(self): return 0 - self#Expression._func("-", [self])
+    #def __pos__(self): return Expression._func("+", [self]) TODO: not allowed in minizinc example: +x == v
     
     def __eq__(self, other: str): return ExpressionBool._operator("==", [self, other], bracket=True)
     def __ne__(self, other: str): return ExpressionBool._operator("!=", [self, other], bracket=True)
@@ -123,9 +123,9 @@ class Expression:
     def __rxor__(self, other): return Expression.xor([other, self])
     def __invert__(self): return Expression.NOT(self)
 
-    def __pow__(self, other: str): return Expression.func("pow", [self, other])
-    def __rpow__(self, other: str): return Expression.func("pow", [other, self])
-    def __abs__(self):  return Expression.func("abs", [self])
+    def __pow__(self, other: str): return Expression._func("pow", [self, other])
+    def __rpow__(self, other: str): return Expression._func("pow", [other, self])
+    def __abs__(self):  return Expression._func("abs", [self])
     # TODO: https://www.minizinc.org/doc-2.7.6/en/lib-stdlib-builtins.html
     # arg max, arg min
     # max, min
