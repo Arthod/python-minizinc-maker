@@ -14,7 +14,7 @@ model.add_constraint(pymzm.Constraint.alldifferent([q[i] - i for i in range(n)])
 model.set_solve_criteria("satisfy")
 
 ####
-model.generate(debug=False)
+model.generate(debug=True)
 model.write("model.mzn")
 
 # Transform Model into a instance

@@ -1,0 +1,13 @@
+include "alldifferent.mzn";
+var 0..7: q_0;
+var 0..7: q_1;
+var 0..7: q_2;
+var 0..7: q_3;
+var 0..7: q_4;
+var 0..7: q_5;
+var 0..7: q_6;
+var 0..7: q_7;
+constraint alldifferent([q_0, q_1, q_2, q_3, q_4, q_5, q_6, q_7]);
+constraint alldifferent([(q_0 + 0), (q_1 + 1), (q_2 + 2), (q_3 + 3), (q_4 + 4), (q_5 + 5), (q_6 + 6), (q_7 + 7)]);
+constraint alldifferent([(q_0 - 0), (q_1 - 1), (q_2 - 2), (q_3 - 3), (q_4 - 4), (q_5 - 5), (q_6 - 6), (q_7 - 7)]);
+solve satisfy;

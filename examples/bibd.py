@@ -24,7 +24,7 @@ for i in range(b):
         model.add_constraint(sum(xs[i, k] * xs[j, k] for k in range(v)) == l)
 
 model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-model.generate()
+model.generate(debug=True)
 
 gecode = minizinc.Solver.lookup("gecode")
 result = minizinc.Instance(gecode, model).solve(all_solutions=False)

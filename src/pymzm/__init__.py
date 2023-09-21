@@ -16,7 +16,8 @@ class ValueDict(dict):
     def __str__(self):
         return _variableIterable2Str(self)
     
-    def __invert__(self):  return ValueDict({k: (~v) for k, v in self.items()})
+    def __invert__(self):
+        raise NotImplementedError()
     def __add__(self, other):
         raise NotImplementedError()
     def __sub__(self, other):
@@ -42,18 +43,11 @@ class Expression:
     def __str__(self):
         return self.name
 
-    @staticmethod
-    def product_old(arr: list["Variable"]):
-        # TODO: inefficient implementation
-        if (isinstance(arr, dict)):
-            arr = arr.values()
-        v = 1
-        for a in arr:
-            v *= a
-        return v
+    def __repr__(self):
+        return self.name
 
     @staticmethod
-    def product(exprs: list["Expression"]):
+    def product(exprs: list["Expression"]) -> "Expression":
         return Expression.func("product", [exprs])
 
     @staticmethod
@@ -61,11 +55,11 @@ class Expression:
         return Expression.func("sum", [exprs])
 
     @staticmethod
-    def min(exprs):
+    def min(exprs: list["Expression"]) -> "Expression":
         return Expression.func("min", [exprs])
 
     @staticmethod
-    def max(exprs):
+    def max(exprs: list["Expression"]) -> "Expression":
         return Expression.func("max", [exprs])
 
     @classmethod
@@ -158,7 +152,7 @@ class Variable(Expression):
         "string",
     ]
     def __init__(self, name: str, val_min: int=None, val_max: int=None, vtype=VTYPE_INTEGER):
-        self.name = name#super().__init__(name)
+        self.name = name
         self.vtype = vtype
 
         if (vtype == Variable.VTYPE_INTEGER or vtype == Variable.VTYPE_FLOAT):
@@ -231,44 +225,38 @@ class Constraint:
         return Constraint(f"{func}({', '.join(str(a) for a in args)})", ctype)
 
     @staticmethod
-    def alldifferent(variables: Iterable[Variable]) -> "Constraint":
-        """Constrain the elements in the passed Iterable of variables to be pairwise different.
+    def alldifferent(exprs: Iterable[Expression]) -> "Constraint":
+        """Constrain the elements in the passed Iterable to be pairwise different.
 
         Args:
-            variables (Iterable[Variable]): Passed Iterable of variables
+            variables (Iterable[Expression]): Passed Iterable of expressions
 
         Returns:
             Constraint: Alldifferent constraint
         """
-        arr_str = _variableIterable2Str(variables)
-        return Constraint.from_global_constraint("alldifferent", Constraint.CTYPE_ALLDIFFERENT, arr_str)
+        return Constraint.from_global_constraint("alldifferent", Constraint.CTYPE_ALLDIFFERENT, exprs)
     
     @staticmethod
-    def among(n: int, variables: Iterable[Variable], values: list[int]):
-        arr_str = _variableIterable2Str(variables)
-        return Constraint.from_global_constraint("among", Constraint.CTYPE_AMONG, n, arr_str, values)
+    def among(n: int, exprs: Iterable[Expression], values: list[int]):
+        return Constraint.from_global_constraint("among", Constraint.CTYPE_AMONG, n, exprs, values)
     
     @staticmethod
-    def all_equal(variables: Iterable[Variable]):
-        arr_str = _variableIterable2Str(variables)
-        return Constraint.from_global_constraint("all_equal", Constraint.CTYPE_ALL_EQUAL, arr_str)
+    def all_equal(exprs: Iterable[Expression]):
+        return Constraint.from_global_constraint("all_equal", Constraint.CTYPE_ALL_EQUAL, exprs)
     
     @staticmethod
-    def count(variables: Iterable[Variable], val: int, count: int):
-        arr_str = _variableIterable2Str(variables)
-        return Constraint.from_global_constraint("count", Constraint.CTYPE_COUNT, arr_str, val, count)
+    def count(exprs: Iterable[Expression], val: int, count: int):
+        return Constraint.from_global_constraint("count", Constraint.CTYPE_COUNT, exprs, val, count)
     
     @staticmethod
-    def increasing(variables: Iterable[Variable]):
+    def increasing(exprs: Iterable[Expression]):
         # Requires that the array x is in increasing order (duplicates are allowed).
-        arr_str = _variableIterable2Str(variables)
-        return Constraint.from_global_constraint("increasing", Constraint.CTYPE_INCREASING, arr_str)
+        return Constraint.from_global_constraint("increasing", Constraint.CTYPE_INCREASING, exprs)
 
     @staticmethod
-    def decreasing(variables: Iterable[Variable]):
+    def decreasing(exprs: Iterable[Expression]):
         # Requires that the array x is in decreasing order (duplicates are allowed).
-        arr_str = _variableIterable2Str(variables)
-        return Constraint.from_global_constraint("decreasing", Constraint.CTYPE_DECREASING, arr_str)
+        return Constraint.from_global_constraint("decreasing", Constraint.CTYPE_DECREASING, exprs)
 
     
 class Model(minizinc.Model):
