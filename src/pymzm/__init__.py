@@ -89,7 +89,7 @@ class Expression:
     @staticmethod
     def iff(arr: Iterable) -> "ExpressionBool": return ExpressionBool._operator("<->", arr, bracket=True)
     @staticmethod
-    def NOT(expr: "ExpressionBool") -> "ExpressionBool":    return ExpressionBool.func("not", [expr])
+    def NOT(expr: "ExpressionBool") -> "ExpressionBool":    return ExpressionBool._func("not", [expr])
     @staticmethod
     def xor(arr: Iterable) -> "ExpressionBool": return ExpressionBool._operator("xor", arr, bracket=True)
 
