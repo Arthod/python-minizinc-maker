@@ -46,6 +46,9 @@ class Expression:
     def __repr__(self):
         return self.name
 
+    def __bool__(self):
+        return False
+
     @staticmethod
     def product(exprs: list["Expression"]) -> "Expression":
         return Expression._func("product", [exprs])
