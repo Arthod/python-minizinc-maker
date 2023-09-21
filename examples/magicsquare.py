@@ -9,14 +9,14 @@ y = model.add_variable("y", val_min=0, val_max=50000)
 model.add_constraint(pymzm.Constraint.alldifferent(xs))
 
 # Two main diagonals
-model.add_constraint(sum([xs[i, i] for i in range(n)]) == y)
-model.add_constraint(sum([xs[i, n - 1 - i] for i in range(n)]) == y)
+model.add_constraint(pymzm.Expression.sum([xs[i, i] for i in range(n)]) == y)
+model.add_constraint(pymzm.Expression.sum([xs[i, n - 1 - i] for i in range(n)]) == y)
 
 # Rows and columns are equal
 for i in range(n):
-    model.add_constraint(sum([xs[i, j] for j in range(n)]) == y)
+    model.add_constraint(pymzm.Expression.sum([xs[i, j] for j in range(n)]) == y)
 for j in range(n):
-    model.add_constraint(sum([xs[i, j] for i in range(n)]) == y)
+    model.add_constraint(pymzm.Expression.sum([xs[i, j] for i in range(n)]) == y)
 
 
 model.set_solve_criteria(pymzm.SOLVE_SATISFY)

@@ -3,6 +3,7 @@ import minizinc
 import chess
 import sympy
 from collections.abc import Iterable
+import types
 
 SOLVE_MAXIMIZE = "maximize"
 SOLVE_MINIMIZE = "minimize"
@@ -77,8 +78,15 @@ class Expression:
 
     @classmethod
     def _func(cls, func_symbol: str, exprs):
-        exprs = [expr.name if isinstance(expr, Expression) else expr for expr in exprs]
-        out = f", ".join(str(a) for a in exprs)
+        exprs2 = []
+        for expr in exprs:
+            if (isinstance(expr, Expression)):
+                exprs2.append(expr.name)
+            elif (isinstance(expr, types.GeneratorType)):
+                exprs2.append(list(expr))
+            else:
+                exprs2.append(expr)
+        out = f", ".join(str(a) for a in exprs2)
         return cls(f"{func_symbol}({out})")
 
     @staticmethod

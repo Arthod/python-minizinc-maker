@@ -73,13 +73,13 @@ indicies = [(i, j) for i in range(v) for j in range(b)]
 xs = model.add_variables("x", indices=indicies, vtype=pymzm.Variable.VTYPE_BOOL)
 
 for i in range(b):
-    model.add_constraint(sum(xs[i, j] for j in range(v)) == r)
+    model.add_constraint(pymzm.Expression.sum(xs[i, j] for j in range(v)) == r)
 for i in range(v):
-    model.add_constraint(sum(xs[j, i] for j in range(b)) == k)
+    model.add_constraint(pymzm.Expression.sum(xs[j, i] for j in range(b)) == k)
 
 for i in range(b):
     for j in range(i):
-        model.add_constraint(sum(xs[i, k] * xs[j, k] for k in range(v)) == l)
+        model.add_constraint(pymzm.Expression.sum(xs[i, k] * xs[j, k] for k in range(v)) == l)
 
 model.set_solve_criteria(pymzm.SOLVE_SATISFY)
 model.generate()
