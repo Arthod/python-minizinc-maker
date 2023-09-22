@@ -1,31 +1,37 @@
 import pymzm
 import minizinc
-model = pymzm.Model()
 
-n = 3
-xs = model.add_variables("x", [(i, j) for i in range(n) for j in range(n)], val_min=1, val_max=n * n)
-y = model.add_variable("y", val_min=0, val_max=50000)
+def magicsquare(model, n):
+    xs = model.add_variables("x", [(i, j) for i in range(n) for j in range(n)], val_min=1, val_max=n * n)
+    y = model.add_variable("y", val_min=0, val_max=50000)
 
-model.add_constraint(pymzm.Constraint.alldifferent(xs))
+    model.add_constraint(pymzm.Constraint.alldifferent(xs))
 
-# Two main diagonals
-model.add_constraint(pymzm.Expression.sum([xs[i, i] for i in range(n)]) == y)
-model.add_constraint(pymzm.Expression.sum([xs[i, n - 1 - i] for i in range(n)]) == y)
+    # Two main diagonals
+    model.add_constraint(pymzm.Expression.sum([xs[i, i] for i in range(n)]) == y)
+    model.add_constraint(pymzm.Expression.sum([xs[i, n - 1 - i] for i in range(n)]) == y)
 
-# Rows and columns are equal
-for i in range(n):
-    model.add_constraint(pymzm.Expression.sum([xs[i, j] for j in range(n)]) == y)
-for j in range(n):
-    model.add_constraint(pymzm.Expression.sum([xs[i, j] for i in range(n)]) == y)
-
-
-model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-model.generate(debug=True)
+    # Rows and columns are equal
+    for i in range(n):
+        model.add_constraint(pymzm.Expression.sum([xs[i, j] for j in range(n)]) == y)
+    for j in range(n):
+        model.add_constraint(pymzm.Expression.sum([xs[i, j] for i in range(n)]) == y)
 
 
-gecode = minizinc.Solver.lookup("gecode")
-result = minizinc.Instance(gecode, model).solve(all_solutions=False)
+    model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+    model.generate(debug=False)
 
-for i in range(n):
-    print(" ".join([str(result[f"x_{i}_{j}"]) for j in range(n)]))
-print(f"y = {result[f'y']}")
+
+    gecode = minizinc.Solver.lookup("gecode")
+    result = minizinc.Instance(gecode, model).solve(all_solutions=False)
+
+    return result
+
+if __name__ == "__main__":
+    n = 3
+    model = pymzm.Model()
+    result = magicsquare(model, n)
+
+    for i in range(n):
+        print(" ".join([str(result[f"x_{i}_{j}"]) for j in range(n)]))
+    print(f"y = {result[f'y']}")
