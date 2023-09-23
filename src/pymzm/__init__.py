@@ -52,6 +52,19 @@ class Expression:
         return False
 
     @staticmethod
+    def ifthenelse(condition: "Expression", expr1: "Expression", expr2: "Expression"):
+        """ifelse: if (condition) then expr1 else expr2:
+
+        Args:
+            condition (Expression): condition of expression
+            expr1 (Expression): expression if condition
+            expr2 (Expression): expression else
+
+        Returns:
+            Expression: the main if then else expression 
+        """
+
+    @staticmethod
     def product(exprs: list["Expression"]) -> "Expression":
         exprs = list(exprs)
         assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
