@@ -14,7 +14,7 @@ females = [bride, bridesmaid, carol, alice, rona, clara]
 
 model = pymzm.Model()
 
-seats = model.add_variables("seat", guests, vtype=pymzm.Variable.VTYPE_INTEGER, val_min=0, val_max=11)
+seats = model.add_variables("seat", guests, val_min=0, val_max=11)
 
 # Cannot sit on same seat
 model.add_constraint(pymzm.Constraint.alldifferent(seats))
@@ -29,7 +29,8 @@ model.add_constraint(pymzm.Expression.AND([seats[ed] != 0, seats[ed] != 5, seats
 # The bride and groom must sit next to eachother
 model.add_constraint((abs(seats[groom] - seats[bride]) == 1) & (pymzm.Expression.iff([seats[groom] <= 5, seats[bride] <= 5])))
 
-model.set_solve_criteria(pymzm.SOLVE_MAXIMIZE, )
+d = model.add_variable("d", 0, 9999999)
+model.set_solve_criteria(pymzm.SOLVE_MAXIMIZE, d)
 model.generate(debug=True)
 
 gecode = minizinc.Solver.lookup("gecode")

@@ -22,7 +22,7 @@ class TestExpression(unittest.TestCase):
         val_min = 0 if positive_only else self.val_min
         val_max = self.val_max if val_max is None else val_max
         
-        x = model.add_variable("x", val_min, val_max)
+        x = model.add_variable("x", vtype=pymzm.Variable.VTYPE_INTEGER, val_min=val_min, val_max=val_max)
         model.add_constraint(func(x))
         model.set_solve_criteria(pymzm.SOLVE_SATISFY)
         model.generate()
@@ -46,7 +46,7 @@ class TestExpression(unittest.TestCase):
     def operator_case_multiple(self, func_expr, method_mz, method_py=None, var_count: int=5, is_solveable=True):
         model = pymzm.Model()
         
-        xs = model.add_variables("x", range(var_count), self.val_min, self.val_max)
+        xs = model.add_variables("x", range(var_count), vtype=pymzm.Variable.VTYPE_INTEGER, val_min=self.val_min, val_max=self.val_max)
 
         func_mz = partial(func_expr, method_mz)
         func_py = partial(func_expr, method_py) if method_py is not None else None

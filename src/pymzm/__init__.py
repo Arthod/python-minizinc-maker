@@ -52,7 +52,7 @@ class Expression:
         return False
 
     @staticmethod
-    def ifthenelse(condition: "Expression", expr1: "Expression", expr2: "Expression"):
+    def ifthenelse(condition: "ExpressionBool", expr1: "Expression", expr2: "Expression"):
         """ifelse: if (condition) then expr1 else expr2:
 
         Args:
@@ -63,6 +63,11 @@ class Expression:
         Returns:
             Expression: the main if then else expression 
         """
+        assert isinstance(condition, (ExpressionBool, bool))
+        assert isinstance(expr1, (Expression, Variable, int, float))
+        assert isinstance(expr2, (Expression, Variable, int, float))
+        assert type(expr1) == type(expr2)
+        return Expression(f"if {condition} then {expr1} else {expr2}")
 
     @staticmethod
     def product(exprs: list["Expression"]) -> "Expression":
@@ -284,17 +289,19 @@ class Variable(Expression):
         "bool",
         "string",
     ]
-    def __init__(self, name: str, val_min: int=None, val_max: int=None, vtype=VTYPE_INTEGER):
+    def __init__(self, name: str, vtype: int=VTYPE_INTEGER, val_min: int=None, val_max: int=None):
         self.name = name
         self.vtype = vtype
+        self.val_min = val_min
+        self.val_max = val_max
 
         if (vtype == Variable.VTYPE_INTEGER or vtype == Variable.VTYPE_FLOAT):
-            assert val_min is not None
-            assert val_max is not None
-            self.val_min = val_min
-            self.val_max = val_max
+            assert self.val_min is not None
+            assert self.val_max is not None
 
         elif (vtype == Variable.VTYPE_BOOL):
+            assert self.val_min is None or self.val_min == 0
+            assert self.val_max is None or self.val_max == 1
             self.val_min = 0
             self.val_max = 1
             self.__class__ = VariableBool
@@ -310,20 +317,6 @@ class Variable(Expression):
     
 class VariableBool(ExpressionBool, Variable):
     pass
-    
-class Constant:
-    def __init__(self, name: str, value: int=None):
-        self.name = name
-        self.value = value
-    
-    def __str__(self):
-        return self.name
-
-    def _to_mz(self):
-        if (self.value is not None):
-            return f"int: {self.name} = {self.value};\n"
-        else:
-            return f"int: {self.name};\n"
     
 class Constraint:
     CTYPES = [
@@ -395,7 +388,6 @@ class Constraint:
 class Model(minizinc.Model):
     def __init__(self):
         self.variables = []
-        self.constants = []
         self.constraints = []
         self.solve_criteria = None
         self.solve_expression = None
@@ -417,33 +409,31 @@ class Model(minizinc.Model):
     def set_solve_method(self, method: Method):
         self.solve_method = method
 
-    def add_variable(self, name: str, val_min: int, val_max: int):
-        variable = Variable(name, val_min, val_max)
+    def add_variable(self, name: str, vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None):
+        variable = Variable(name, vtype, val_min, val_max)
         self.variables.append(variable)
         return variable
     
-    def add_variables(self, name: str, indices: list[tuple[int]], val_min: int=None, val_max: int=None, vtype=Variable.VTYPE_INTEGER) -> ValueDict:
+    def add_variables(self, name: str, indices: list[tuple[int]], vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None) -> ValueDict:
         variables = ValueDict()
         for idx in indices:
             idx_str = str(idx).replace(", ", "_").replace("(", "").replace(")", "")
-            variable = Variable(f"{name}_{idx_str}", val_min, val_max, vtype)
+            variable = Variable(f"{name}_{idx_str}", vtype, val_min, val_max)
             self.variables.append(variable)
             variables[idx] = variable
 
         return variables
 
-    def add_constraint(self, cstr: str):
-        if (isinstance(cstr, Constraint)):
-            constraint = cstr
+    def add_constraint(self, constraint: ExpressionBool):
+        if (isinstance(constraint, Constraint)):
             if (constraint.ctype != Constraint.CTYPE_NORMAL):
                 self.global_constraints.add(constraint.ctype)
 
-        elif (isinstance(cstr, Expression)):
-            assert isinstance(cstr, ExpressionBool)
-            constraint = Constraint(cstr.name)
+        elif (isinstance(constraint, ExpressionBool)):
+            constraint = Constraint(constraint.name)
 
-        elif (type(cstr) is str):
-            constraint = Constraint(cstr)
+        else:
+            raise Exception("invalid constraint type")
 
         self.constraints.append(constraint)
         return constraint
@@ -454,17 +444,12 @@ class Model(minizinc.Model):
         for constraint in constraints:
             self.add_constraint(constraint)
 
-    def add_constant(self, name: str, value: int=None):
-        constant = Constant(name, value)
-        self.constants.append(constant)
-        return constant
-
     def generate(self, debug=False):
         self.model_mzn_str = ""
         for gconst in self.global_constraints:
             self.model_mzn_str += f'include \"{gconst}.mzn\";\n'
 
-        self.model_mzn_str += "".join(a._to_mz() for a in self.variables + self.constants + self.constraints)
+        self.model_mzn_str += "".join(a._to_mz() for a in self.variables + self.constraints)
         
         assert self.solve_criteria is not None
         if (self.solve_method is None):

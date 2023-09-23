@@ -2,8 +2,8 @@ import pymzm
 import minizinc
 
 def intfact(model, solver, n1, n2):
-    x = model.add_variable("x", 1, 99999999)
-    y = model.add_variable("y", 1, 99999999)
+    x = model.add_variable("x", val_min=1, val_max=99999999)
+    y = model.add_variable("y", val_min=1, val_max=99999999)
 
     model.add_constraint(x * y == n1 * n2)
     model.add_constraint(y > 1)

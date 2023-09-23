@@ -21,19 +21,18 @@ class TestExamples(unittest.TestCase):
     def test_australia(self):
         # https://www.minizinc.org/doc-2.5.5/en/modelling.html
         model = self.model
-        nc = model.add_constant("nc", value=3)
+        nc = 3
         states = ["wa", "nsw", "nt", "v", "sa", "t", "q"]
-        for state in states:
-            model.add_variable(state, 1, nc.value)
-        model.add_constraint("wa != nt")
-        model.add_constraint("wa != sa")
-        model.add_constraint("nt != sa")
-        model.add_constraint("nt != q")
-        model.add_constraint("sa != q")
-        model.add_constraint("sa != nsw")
-        model.add_constraint("sa != v")
-        model.add_constraint("q != nsw")
-        model.add_constraint("nsw != v")
+        s = model.add_variables("state", states, val_min=1, val_max=nc)
+        model.add_constraint(s["wa"] != s["nt"])
+        model.add_constraint(s["wa"] != s["sa"])
+        model.add_constraint(s["nt"] != s["sa"])
+        model.add_constraint(s["nt"] != s["q"])
+        model.add_constraint(s["sa"] != s["q"])
+        model.add_constraint(s["sa"] != s["nsw"])
+        model.add_constraint(s["sa"] != s["v"])
+        model.add_constraint(s["q"] != s["nsw"])
+        model.add_constraint(s["nsw"] != s["v"])
         model.set_solve_criteria(pymzm.SOLVE_SATISFY)
         model.generate()
 

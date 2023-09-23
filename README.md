@@ -14,7 +14,7 @@ Solve: `model.set_solve_criteria(solve_criteria, expr)`
 alldifferent, among, all_equal, count, increasing, decreasing, ..(more to be added later)..
 
 ### Solve
-* model.set_solve_criteria(pymzm.SOLVE_MAXIMIZE, sum(xs))
+* model.set_solve_criteria(pymzm.SOLVE_MAXIMIZE, pymzm.Expression.sum(xs))
 * model.set_solve_criteria(pymzm.SOLVE_SATISFY)
 
 ### 
@@ -26,8 +26,8 @@ intfact.py
 import pymzm
 model = pymzm.Model()
 
-x = model.add_variable("x", 1, 99999999)
-y = model.add_variable("y", 1, 99999999)
+x = model.add_variable("x", val_min=1, val_max=99999999)
+y = model.add_variable("y", val_min=1, val_max=99999999)
 
 model.add_constraint(x * y == 7829 * 6907)
 model.add_constraint(y > 1)

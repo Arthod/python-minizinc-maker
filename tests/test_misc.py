@@ -11,8 +11,8 @@ class TestMisc(unittest.TestCase):
     def test_misc1(self):
         model = self.model
         # Negative summation
-        xs = model.add_variables("x", range(10), 0, 1, vtype=pymzm.Variable.VTYPE_BOOL)
-        ys = model.add_variables("y", range(10), 9, 10, vtype=pymzm.Variable.VTYPE_INTEGER)
+        xs = model.add_variables("x", range(10), pymzm.Variable.VTYPE_BOOL, 0, 1)
+        ys = model.add_variables("y", range(10), pymzm.Variable.VTYPE_INTEGER, 9, 10)
         model.set_solve_criteria(pymzm.SOLVE_MAXIMIZE, pymzm.Expression.sum(xs) - pymzm.Expression.sum(ys))
         model.generate()
         
