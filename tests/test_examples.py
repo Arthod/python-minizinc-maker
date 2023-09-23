@@ -3,11 +3,12 @@ import pymzm
 import minizinc
 import math
 import sys
+import os
 
 class TestExamples(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        sys.path.append("../")
+        sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "\\..")
 
     @classmethod
     def tearDownClass(cls):
@@ -38,58 +39,43 @@ class TestExamples(unittest.TestCase):
 
         result = minizinc.Instance(self.gecode, model).solve(all_solutions=True)
         
+        # Assert that solution is correct
         self.assertTrue(result.solution is not None)
         self.assertEqual(18, len(result))
 
     def test_integer_factorization(self):
-        model = self.model
-        model.add_variable("x", 1, 99999999)
-        model.add_variable("y", 1, 99999999)
-        model.add_constraint(f"x * y = {7829 * 6907}")
-        model.add_constraint("y > 1")
-        model.add_constraint("x > y")
-        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-        model.generate()
+        from examples.intfact import intfact
+        n1 = 7829
+        n2 = 6907
+        result = intfact(self.model, self.gecode, n1, n2)
 
-        result = minizinc.Instance(self.gecode, model).solve(all_solutions=True)
-
+        # Assert that solution is correct
         self.assertTrue(result.solution is not None)
-        self.assertEqual(result[0].x, 7829)
-        self.assertEqual(result[0].y, 6907)
+        self.assertEqual(result[0].x, n1)
+        self.assertEqual(result[0].y, n2)
 
     def test_nqueens(self):
-        model = self.model
+        from examples.nqueens import nqueens
         n = 8
-        q = model.add_variables("q", range(n), val_min=0, val_max=n-1)
-        model.add_constraint(pymzm.Constraint.alldifferent(q))
-        model.add_constraint(pymzm.Constraint.alldifferent([q[i] + i for i in range(n)]))
-        model.add_constraint(pymzm.Constraint.alldifferent([q[i] - i for i in range(n)]))
-        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-        model.generate()
+        result = nqueens(self.model, self.gecode, n)
 
-        result = minizinc.Instance(self.gecode, model).solve(all_solutions=True)
-
+        # Assert that solution is correct
         self.assertTrue(result.solution is not None)
         self.assertEqual(92, len(result))
 
     def test_711(self):
-        model = self.model
+        from examples.pr711 import pr711
         n = 4
-        items = model.add_variables("item", range(n), val_min=0, val_max=999)
-        model.add_constraint(pymzm.Expression.sum(items) == 711)
-        model.add_constraint(pymzm.Expression.product(items) == 711 * 100 * 100 * 100)
-        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-        model.generate()
-        
-        result = minizinc.Instance(self.gecode, model).solve(all_solutions=False)
+        result = pr711(self.model, self.gecode, n)
 
+        # Assert that solution is correct
         self.assertTrue(result.solution is not None)
         rs = [result[f"item_{i}"] / 100 for i in range(n)]
         self.assertTrue(sum(rs) == 7.11)
         self.assertTrue(math.prod(rs) == 7.11)
 
     def test_bibd(self):
-        model = self.model
+        from examples.bibd import bibd
         # BIBD generation is described in most standard textbooks on combinatorics. 
         # A BIBD is defined as an arrangement of v  distinct objects into b blocks 
         # such that each block contains exactly k distinct objects, each object 
@@ -101,25 +87,10 @@ class TestExamples(unittest.TestCase):
         k = 3
         l = 1
 
-        # Create a MiniZinc model
-        xs = model.add_variables("x", indices=[(i, j) for i in range(v) for j in range(b)], vtype=pymzm.Variable.VTYPE_BOOL, val_min=0, val_max=1) # bool if object v is in block b
+        result = bibd(self.model, self.gecode, v, b, r, k, l)
 
-        for i in range(b):
-            model.add_constraint(pymzm.Expression.sum(xs[i, j] for j in range(v)) == r)
-        for i in range(v):
-            model.add_constraint(pymzm.Expression.sum(xs[j, i] for j in range(b)) == k)
-
-        for i in range(b):
-            for j in range(i):
-                model.add_constraint(pymzm.Expression.sum(xs[i, k] * xs[j, k] for k in range(v)) == l)
-
-        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-        model.generate()
-        
-        result = minizinc.Instance(self.gecode, model).solve(all_solutions=False)
-
+        # Assert that solution is correct
         self.assertTrue(result.solution is not None)
-
         for j in range(b):
             self.assertTrue(sum(result[f"x_{i}_{j}"] for i in range(v)) == r)
         for i in range(v):
@@ -129,11 +100,11 @@ class TestExamples(unittest.TestCase):
                 self.assertTrue(sum(result[f"x_{i}_{k}"] * result[f"x_{j}_{k}"] for k in range(v)) == l)
 
     def test_magicsquare(self):
-        from pymzmaker.examples.magicsquare import magicsquare
+        from examples.magicsquare import magicsquare
         n = 3
-        result = magicsquare(self.model, n)
+        result = magicsquare(self.model, self.gecode, n)
 
-        # Assert that constrains are correct
+        # Assert that solution is correct
         y_sol = int(n * (n * n + 1) / 2)
         self.assertEqual(result["y"], y_sol)
         self.assertEqual(sum(result[f"x_{i}_{i}"] for i in range(n)), y_sol)
@@ -148,3 +119,6 @@ class TestExamples(unittest.TestCase):
 
     def test_sat(self):
         pass
+
+if __name__ == "__main__":
+    unittest.main()

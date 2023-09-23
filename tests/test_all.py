@@ -8,10 +8,6 @@ from test_misc import TestMisc
 if __name__ == "__main__":
     print("".join("\n" for _ in range(10)))
 
-    suite = unittest.TestSuite([
-        TestExpression("expression"),
-        TestExamples("examples"),
-        TestMisc("misc")
-    ])
+    suite = unittest.TestLoader().discover("tests", "test_*.py")
 
     unittest.TextTestRunner().run(suite)

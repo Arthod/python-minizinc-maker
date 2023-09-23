@@ -1,7 +1,7 @@
 import pymzm
 import minizinc
 
-def magicsquare(model, n):
+def magicsquare(model, solver, n):
     xs = model.add_variables("x", [(i, j) for i in range(n) for j in range(n)], val_min=1, val_max=n * n)
     y = model.add_variable("y", val_min=0, val_max=50000)
 
@@ -22,15 +22,15 @@ def magicsquare(model, n):
     model.generate(debug=False)
 
 
-    gecode = minizinc.Solver.lookup("gecode")
-    result = minizinc.Instance(gecode, model).solve(all_solutions=False)
+    result = minizinc.Instance(solver, model).solve(all_solutions=False)
 
     return result
 
 if __name__ == "__main__":
     n = 3
     model = pymzm.Model()
-    result = magicsquare(model, n)
+    gecode = minizinc.Solver.lookup("gecode")
+    result = magicsquare(model, gecode, n)
 
     for i in range(n):
         print(" ".join([str(result[f"x_{i}_{j}"]) for j in range(n)]))
