@@ -1,5 +1,9 @@
 import pymzm
 import minizinc
+
+# Task 2
+# https://imada.sdu.dk/u/march/Teaching/AY2023-2024/DM841/exercises/sheet02
+
 model = pymzm.Model()
 
 n = 3

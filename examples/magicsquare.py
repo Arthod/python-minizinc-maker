@@ -1,6 +1,9 @@
 import pymzm
 import minizinc
 
+# Task 1
+# https://imada.sdu.dk/u/march/Teaching/AY2023-2024/DM841/exercises/sheet02
+
 def magicsquare(model, solver, n):
     xs = model.add_variables("x", [(i, j) for i in range(n) for j in range(n)], val_min=1, val_max=n * n)
     y = model.add_variable("y", val_min=0, val_max=50000)

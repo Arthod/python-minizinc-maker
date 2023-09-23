@@ -1,6 +1,9 @@
 import pymzm
 import minizinc
 
+# Task 4
+# https://imada.sdu.dk/u/march/Teaching/AY2023-2024/DM841/exercises/sheet02
+
 def nqueens(model, solver, n):
     q = model.add_variables("q", range(n), val_min=0, val_max=n-1)
 
