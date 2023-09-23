@@ -52,7 +52,7 @@ class Expression:
         return False
 
     @staticmethod
-    def ifthenelse(condition: "ExpressionBool", expr1: "Expression", expr2: "Expression"):
+    def ifthenelse(condition: "ExpressionBool", expr1: "Expression", expr2: "Expression") -> "Expression":
         """ifelse: if (condition) then expr1 else expr2:
 
         Args:
@@ -150,119 +150,119 @@ class Expression:
         assert isinstance(expr, ExpressionBool)
         return ExpressionBool._func("not", [expr])
 
-    def __add__(self, other: str):
+    def __add__(self, other: "Expression") -> "Expression":
         assert isinstance(other, (int, float, Expression))
         return Expression._operator("+", [self, other])
     
-    def __radd__(self, other: str):
+    def __radd__(self, other: "Expression") -> "Expression":
         assert isinstance(other, (int, float, Expression))
         return Expression._operator("+", [other, self])
     
-    def __sub__(self, other: str):
+    def __sub__(self, other: "Expression") -> "Expression":
         assert isinstance(other, (int, float, Expression))
         return Expression._operator("-", [self, other])
     
-    def __rsub__(self, other: str):
+    def __rsub__(self, other: "Expression") -> "Expression":
         assert isinstance(other, (int, float, Expression))
         return Expression._operator("-", [other, self])
     
-    def __mul__(self, other: str):
+    def __mul__(self, other: "Expression") -> "Expression":
         assert isinstance(other, (int, float, Expression))
         return Expression._operator("*", [self, other])
     
-    def __rmul__(self, other: str):
+    def __rmul__(self, other: "Expression") -> "Expression":
         assert isinstance(other, (int, float, Expression))
         return Expression._operator("*", [other, self])
     
-    def __truediv__(self, other: str):
+    def __truediv__(self, other: "Expression") -> "Expression":
         assert isinstance(other, (int, float, Expression))
         return Expression._operator("/", [self, other])
     
-    def __rtruediv__(self, other: str):
+    def __rtruediv__(self, other: "Expression") -> "Expression":
         assert isinstance(other, (int, float, Expression))
         return Expression._operator("/", [other, self])
     
-    def __floordiv__(self, other: str):
+    def __floordiv__(self, other: "Expression") -> "Expression":
         assert isinstance(other, (int, float, Expression))
         return Expression._operator("div", [self, other])
     
-    def __rfloordiv__(self, other: str):
+    def __rfloordiv__(self, other: "Expression") -> "Expression":
         assert isinstance(other, (int, float, Expression))
         return Expression._operator("div", [other, self])
     
-    def __mod__(self, other: str):
+    def __mod__(self, other: "Expression") -> "Expression":
         assert isinstance(other, (int, Expression))
         return Expression._operator("mod", [self, other])
     
-    def __rmod__(self, other: str):
+    def __rmod__(self, other: "Expression") -> "Expression":
         assert isinstance(other, (int, Expression))
         return Expression._operator("mod", [other, self])
     
-    def __neg__(self):
+    def __neg__(self) -> "Expression":
         return 0 - self
     #def __pos__(self): return Expression._func("+", [self]) TODO: not allowed in minizinc example: +x == v
     
-    def __eq__(self, other):
+    def __eq__(self, other: "Expression") -> "ExpressionBool":
         assert isinstance(other, (int, float, Expression))
         return ExpressionBool._operator("==", [self, other], bracket=True)
     
-    def __ne__(self, other): 
+    def __ne__(self, other: "Expression") -> "ExpressionBool":
         assert isinstance(other, (int, float, Expression))
         return ExpressionBool._operator("!=", [self, other], bracket=True)
     
-    def __lt__(self, other): 
+    def __lt__(self, other: "Expression") -> "ExpressionBool":
         assert isinstance(other, (int, float, Expression))
         return ExpressionBool._operator("<", [self, other], bracket=True)
     
-    def __le__(self, other): 
+    def __le__(self, other: "Expression") -> "ExpressionBool":
         assert isinstance(other, (int, float, Expression))
         return ExpressionBool._operator("<=", [self, other], bracket=True)
     
-    def __gt__(self, other): 
+    def __gt__(self, other: "Expression") -> "ExpressionBool":
         assert isinstance(other, (int, float, Expression))
         return ExpressionBool._operator(">", [self, other], bracket=True)
     
-    def __ge__(self, other): 
+    def __ge__(self, other: "Expression") -> "ExpressionBool":
         assert isinstance(other, (int, float, Expression))
         return ExpressionBool._operator(">=", [self, other], bracket=True)
     
     
-    def __and__(self, other): 
+    def __and__(self, other: "ExpressionBool") -> "ExpressionBool":
         assert isinstance(other, (bool, Expression))
         return Expression.AND([self, other])
     
-    def __rand__(self, other): 
+    def __rand__(self, other: "ExpressionBool") -> "ExpressionBool":
         assert isinstance(other, (bool, Expression))
         return Expression.AND([other, self])
     
-    def __or__(self, other): 
+    def __or__(self, other: "ExpressionBool") -> "ExpressionBool":
         assert isinstance(other, (bool, Expression))
         return Expression.OR([self, other])
     
-    def __ror__(self, other): 
+    def __ror__(self, other: "ExpressionBool") -> "ExpressionBool":
         assert isinstance(other, (bool, Expression))
         return Expression.OR([other, self])
     
-    def __xor__(self, other):
+    def __xor__(self, other: "ExpressionBool") -> "ExpressionBool":
         assert isinstance(other, (bool, Expression))
         return Expression.xor([self, other])
     
-    def __rxor__(self, other):
+    def __rxor__(self, other: "ExpressionBool") -> "ExpressionBool":
         assert isinstance(other, (bool, Expression))
         return Expression.xor([other, self])
     
-    def __invert__(self):
+    def __invert__(self) -> "ExpressionBool":
         return Expression.NOT(self)
 
-    def __pow__(self, other):
+    def __pow__(self, other: "Expression") -> "Expression":
         assert isinstance(other, (int, float, Expression))
         return Expression._func("pow", [self, other])
     
-    def __rpow__(self, other):
+    def __rpow__(self, other: "Expression") -> "Expression":
         assert isinstance(other, (int, float, Expression))
         return Expression._func("pow", [other, self])
     
-    def __abs__(self):
+    def __abs__(self) -> "Expression":
         return Expression._func("abs", [self])
     # TODO: https://www.minizinc.org/doc-2.7.6/en/lib-stdlib-builtins.html
     # arg max, arg min
