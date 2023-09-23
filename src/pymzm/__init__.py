@@ -118,6 +118,7 @@ class Expression:
     
     @staticmethod
     def iff(exprs: Iterable) -> "ExpressionBool":
+        # <->
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
         return ExpressionBool._operator("<->", exprs, bracket=True)
     
@@ -433,6 +434,12 @@ class Model(minizinc.Model):
 
         self.constraints.append(constraint)
         return constraint
+
+    def add_constraints(self, constraints: list[Constraint]):
+        constraints = list(constraints)
+        assert all(isinstance(constraint, (Constraint, Expression, str, bool)) for constraint in constraints)
+        for constraint in constraints:
+            self.add_constraint(constraint)
 
     def add_constant(self, name: str, value: int=None):
         constant = Constant(name, value)
