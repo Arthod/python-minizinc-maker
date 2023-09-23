@@ -14,8 +14,8 @@ class TestExpression(unittest.TestCase):
         self.val_max = 100
 
         self.model = pymzm.Model()
-        self.x = self.model.add_variable("x", self.val_min, self.val_max)
-        self.xs = self.model.add_variables("xs", range(10), self.val_min, self.val_max)
+        self.x = self.model.add_variable("x", val_min=self.val_min, val_max=self.val_max)
+        self.xs = self.model.add_variables("xs", range(10), val_min=self.val_min, val_max=self.val_max)
 
     def operator_case_single(self, func, positive_only=False, val_max: int=None):
         model = pymzm.Model()

@@ -67,7 +67,7 @@ class Expression:
         assert isinstance(expr1, (Expression, Variable, int, float))
         assert isinstance(expr2, (Expression, Variable, int, float))
         assert type(expr1) == type(expr2)
-        return Expression(f"if {condition} then {expr1} else {expr2}")
+        return Expression(f"(if {condition} then {expr1} else {expr2} endif)")
 
     @staticmethod
     def product(exprs: list["Expression"]) -> "Expression":
@@ -305,6 +305,10 @@ class Variable(Expression):
             self.val_min = 0
             self.val_max = 1
             self.__class__ = VariableBool
+        elif (vtype == Variable.VTYPE_STRING):
+            raise NotImplementedError()
+        else:
+            raise Exception(f"Invalid variable type vtype={vtype}")
     
     def __str__(self):
         return self.name
