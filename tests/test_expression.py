@@ -35,7 +35,7 @@ class TestExpression(unittest.TestCase):
                     sols.append(i)
             except ZeroDivisionError:
                 pass
-        if (len(sols) == 0): print(inspect.getsource(func))
+        #if (len(sols) == 0): print(inspect.getsource(func))
 
         results = minizinc.Instance(self.solver, model).solve(all_solutions=True)
 
