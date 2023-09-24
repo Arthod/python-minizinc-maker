@@ -14,16 +14,26 @@ def bin_packing(model: pymzm.Model, solver, cap, sizes):
     bins_lb = sum(sizes) // cap + 1
     bins_ub = len(sizes)
 
-    bins = model.add_variables("bin", range(bins_ub), val_min=0, val_max=cap)
-    items = model.add_variables("item", range(n), val_min=0, val_max=bins_ub - 1) # which bin item items_i goes in to
+    bin_loads = model.add_variables("bin_load", range(bins_ub), val_min=0, val_max=cap)
+    model.add_constraint(pymzm.Constraint.decreasing(bin_loads))
+    model.add_constraint(bin_loads[0] > 0)
 
-    for i in range(len(bins)):
-        model.add_constraint(bins[i] == pymzm.Expression.sum(pymzm.Expression.ifthenelse(items[j] == i, sizes[j], 0) for j in range(n)))
-    model.add_constraint(pymzm.Constraint.decreasing(bins))
-    model.add_constraint(bins[0] > 0)
+    # Formulation 1
+    #items = model.add_variables("item", range(n), val_min=0, val_max=bins_ub - 1) # which bin item items_i goes in to
 
-    model.set_solve_criteria(pymzm.SOLVE_MINIMIZE, pymzm.Expression.sum(bins > 0))
+    #for i in range(len(bin_loads)):
+    #    model.add_constraint(bin_loads[i] == pymzm.Expression.sum(pymzm.Expression.ifthenelse(items[j] == i, sizes[j], 0) for j in range(n)))
+    
+    # Formulation 2
+    # Boolean if bin i has item j
+    bin_items = model.add_variables("bin_item", [(i, j) for i in range(bins_ub) for j in range(n)], vtype=pymzm.Variable.VTYPE_BOOL)
+    for i in range(len(bin_loads)):
+        model.add_constraint(bin_loads[i] == pymzm.Expression.sum(bin_items[i, j] * sizes[j] for j in range(n)))
+
+    # Solve
+    model.set_solve_criteria(pymzm.SOLVE_MINIMIZE, pymzm.Expression.sum(bin_loads > 0))
     model.generate(debug=False)
+    model.write("out.mzn")
     result = minizinc.Instance(gecode, model).solve(all_solutions=False)
 
     return result
