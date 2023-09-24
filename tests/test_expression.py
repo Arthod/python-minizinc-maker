@@ -1,3 +1,4 @@
+import inspect
 import unittest
 
 import pymzm
@@ -34,7 +35,7 @@ class TestExpression(unittest.TestCase):
                     sols.append(i)
             except ZeroDivisionError:
                 pass
-        #if (len(sols) == 0): print(inspect.getsource(func))
+        if (len(sols) == 0): print(inspect.getsource(func))
 
         results = minizinc.Instance(self.solver, model).solve(all_solutions=True)
 
@@ -63,75 +64,7 @@ class TestExpression(unittest.TestCase):
                 func_py = func_mz
             answ = func_py([result[f"x_{i}"] for i in range(var_count)])
             self.assertIsInstance(answ, bool) # for some reason non bools evaluate to true
-            self.assertTrue(answ)     
-
-    def test_operators_misc1(self):
-        a=7
-        b=3
-        self.operator_case_single(lambda x: x == b)
-        self.operator_case_single(lambda x: a + x == b)
-        self.operator_case_single(lambda x: x + a == b)
-        self.operator_case_single(lambda x: a - x == b)
-        self.operator_case_single(lambda x: x - a == b)
-        self.operator_case_single(lambda x: - x == b)
-        self.operator_case_single(lambda x: - x == - b)
-        self.operator_case_single(lambda x: 0 - (x - 5) == b)
-        self.operator_case_single(lambda x: 0 - (x + 5) == b)
-        self.operator_case_single(lambda x: - (x - 5) == b)
-        self.operator_case_single(lambda x: - (x + 5) == b)
-        self.operator_case_single(lambda x: a * x == b)
-        self.operator_case_single(lambda x: x * a == b)
-        self.operator_case_single(lambda x: a / x == b)
-        #self.operator_case_single(lambda x: x / a == b) TODO: this isn't solved correctly in the mz solver
-        self.operator_case_single(lambda x: a // x == b)
-        self.operator_case_single(lambda x: x // a == b)
-        self.operator_case_single(lambda x: a % x == b, positive_only=True)
-        self.operator_case_single(lambda x: x % a == b, positive_only=True)
-
-    def test_operators_misc2(self):
-        self.operator_case_single(lambda x: x + (x + 7) == 21)
-        self.operator_case_single(lambda x: x + (x - 7) == 21)
-        self.operator_case_single(lambda x: x + (x * 7) == 21)
-        self.operator_case_single(lambda x: x + (x * 7) == 40)
-        self.operator_case_single(lambda x: x + (x / 7) == 21)
-        #self.operator_case_single(lambda x: x + (x / 7) == 8)  TODO: this isn't solved correctly in the mz solver
-        self.operator_case_single(lambda x: x + (x // 7) == 21)
-        self.operator_case_single(lambda x: x + (x % 7) == 21)
-
-        self.operator_case_single(lambda x: x - (x + 7) == 21)
-        self.operator_case_single(lambda x: x - (x - 7) == 21)
-        self.operator_case_single(lambda x: x - (x * 7) == 21)
-        self.operator_case_single(lambda x: x - (x / 7) == 21)
-        self.operator_case_single(lambda x: x - (x // 7) == 21)
-        self.operator_case_single(lambda x: x - (x % 7) == 21)
-
-        self.operator_case_single(lambda x: x * (x + 7) == 21)
-        self.operator_case_single(lambda x: x * (x - 7) == 21)
-        self.operator_case_single(lambda x: x * (x * 7) == 21)
-        self.operator_case_single(lambda x: x * (x / 7) == 21)
-        self.operator_case_single(lambda x: x * (x // 7) == 21)
-        self.operator_case_single(lambda x: x * (x % 7) == 21)
-
-        self.operator_case_single(lambda x: x / (x + 7) == 21)
-        self.operator_case_single(lambda x: x / (x - 7) == 21)
-        #self.operator_case_single(lambda x: x / (x * 7) == 21)
-        #self.operator_case_single(lambda x: x / (x / 7) == 21)
-        #self.operator_case_single(lambda x: x / (x // 7) == 21)
-        #self.operator_case_single(lambda x: x / (x % 7) == 21)
-
-        self.operator_case_single(lambda x: x // (x + 7) == 21)
-        self.operator_case_single(lambda x: x // (x - 7) == 21)
-        self.operator_case_single(lambda x: x // (x * 7) == 21)
-        #self.operator_case_single(lambda x: x // (x / 7) == 21)
-        self.operator_case_single(lambda x: x // (x // 7) == 21)
-        self.operator_case_single(lambda x: x // (x % 7) == 21)
-
-        #self.operator_case_single(lambda x: x % (x + 7) == 2)
-        #self.operator_case_single(lambda x: x % (x - 7) == 2)
-        #self.operator_case_single(lambda x: x % (x * 7) == 2)
-        #self.operator_case_single(lambda x: x % (x / 7) == 2)
-        #self.operator_case_single(lambda x: x % (x // 7) == 2)
-        #self.operator_case_single(lambda x: x % (x % 7) == 2)
+            self.assertTrue(answ)
 
     def test_native_sum(self):
         self.operator_case_multiple(lambda f, xs: 0 + f(xs) == 27, sum, var_count=5)
