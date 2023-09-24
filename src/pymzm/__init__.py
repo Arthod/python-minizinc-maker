@@ -25,6 +25,29 @@ class ValueDict(dict):
     def __sub__(self, other):
         raise NotImplementedError()
 
+    def __eq__(self, other: "Expression") -> "ExpressionBool":
+        assert isinstance(other, (int, float, Expression))
+        return [s == other for s in self]
+    
+    def __ne__(self, other: "Expression") -> "ExpressionBool":
+        assert isinstance(other, (int, float, Expression))
+        return [s != other for s in self]
+    
+    def __lt__(self, other: "Expression") -> "ExpressionBool":
+        assert isinstance(other, (int, float, Expression))
+        return [s < other for s in self]
+    
+    def __le__(self, other: "Expression") -> "ExpressionBool":
+        assert isinstance(other, (int, float, Expression))
+        return [s <= other for s in self]
+    
+    def __gt__(self, other: "Expression") -> "ExpressionBool":
+        assert isinstance(other, (int, float, Expression))
+        return [s > other for s in self]
+    
+    def __ge__(self, other: "Expression") -> "ExpressionBool":
+        assert isinstance(other, (int, float, Expression))
+        return [s >= other for s in self]
 
 class Method:
     def __init__(self, s: str):
@@ -94,12 +117,10 @@ class Expression:
         return Expression._func("max", [exprs])
 
     @classmethod
-    def _operator(cls, symbol: str, exprs, bracket=False):
+    def _operator(cls, symbol: str, exprs):
         exprs = [expr.name if isinstance(expr, Expression) else expr for expr in exprs]
         out = f" {symbol} ".join(str(a) for a in exprs)
-
-        if (bracket or True):
-            out = f"({out})"
+        out = f"({out})"
 
         return cls(out)
 
@@ -117,33 +138,33 @@ class Expression:
     @staticmethod
     def OR(exprs: Iterable) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
-        return ExpressionBool._operator("\/", exprs, bracket=True)
+        return ExpressionBool._operator("\/", exprs)
     
     @staticmethod
     def AND(exprs: Iterable) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
-        return ExpressionBool._operator("/\\", exprs, bracket=True)
+        return ExpressionBool._operator("/\\", exprs)
     
     @staticmethod
     def onlyIf(exprs: Iterable) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
-        return ExpressionBool._operator("<-", exprs, bracket=True)
+        return ExpressionBool._operator("<-", exprs)
     
     @staticmethod
     def implies(exprs: Iterable) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
-        return ExpressionBool._operator("->", exprs, bracket=True)
+        return ExpressionBool._operator("->", exprs)
     
     @staticmethod
     def iff(exprs: Iterable) -> "ExpressionBool":
         # <->
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
-        return ExpressionBool._operator("<->", exprs, bracket=True)
+        return ExpressionBool._operator("<->", exprs)
     
     @staticmethod
     def xor(exprs: Iterable) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
-        return ExpressionBool._operator("xor", exprs, bracket=True)
+        return ExpressionBool._operator("xor", exprs)
     
     @staticmethod
     def NOT(expr: "ExpressionBool") -> "ExpressionBool":
@@ -204,27 +225,27 @@ class Expression:
     
     def __eq__(self, other: "Expression") -> "ExpressionBool":
         assert isinstance(other, (int, float, Expression))
-        return ExpressionBool._operator("==", [self, other], bracket=True)
+        return ExpressionBool._operator("==", [self, other])
     
     def __ne__(self, other: "Expression") -> "ExpressionBool":
         assert isinstance(other, (int, float, Expression))
-        return ExpressionBool._operator("!=", [self, other], bracket=True)
+        return ExpressionBool._operator("!=", [self, other])
     
     def __lt__(self, other: "Expression") -> "ExpressionBool":
         assert isinstance(other, (int, float, Expression))
-        return ExpressionBool._operator("<", [self, other], bracket=True)
+        return ExpressionBool._operator("<", [self, other])
     
     def __le__(self, other: "Expression") -> "ExpressionBool":
         assert isinstance(other, (int, float, Expression))
-        return ExpressionBool._operator("<=", [self, other], bracket=True)
+        return ExpressionBool._operator("<=", [self, other])
     
     def __gt__(self, other: "Expression") -> "ExpressionBool":
         assert isinstance(other, (int, float, Expression))
-        return ExpressionBool._operator(">", [self, other], bracket=True)
+        return ExpressionBool._operator(">", [self, other])
     
     def __ge__(self, other: "Expression") -> "ExpressionBool":
         assert isinstance(other, (int, float, Expression))
-        return ExpressionBool._operator(">=", [self, other], bracket=True)
+        return ExpressionBool._operator(">=", [self, other])
     
     
     def __and__(self, other: "ExpressionBool") -> "ExpressionBool":
@@ -380,12 +401,12 @@ class Constraint:
     
     @staticmethod
     def increasing(exprs: Iterable[Expression]):
-        # Requires that the array x is in increasing order (duplicates are allowed).
+        # Requires that the array x is in (non-strictly) increasing order (duplicates are allowed).
         return Constraint.from_global_constraint("increasing", Constraint.CTYPE_INCREASING, exprs)
 
     @staticmethod
     def decreasing(exprs: Iterable[Expression]):
-        # Requires that the array x is in decreasing order (duplicates are allowed).
+        # Requires that the array x is in (non-strictly) decreasing order (duplicates are allowed).
         return Constraint.from_global_constraint("decreasing", Constraint.CTYPE_DECREASING, exprs)
 
     
@@ -396,6 +417,7 @@ class Model(minizinc.Model):
         self.solve_criteria = None
         self.solve_expression = None
         self.solve_method = None
+        self.model_mzn_str = None
 
         self.global_constraints = set()
 
