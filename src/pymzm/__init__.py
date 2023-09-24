@@ -407,8 +407,10 @@ class Model(minizinc.Model):
 
         if (criteria == SOLVE_MAXIMIZE or criteria == SOLVE_MINIMIZE):
             assert expr is not None
-        else:
+        elif (criteria == SOLVE_SATISFY):
             assert expr is None
+        else:
+            raise Exception(f"Invalid solve criteria: {criteria}")
 
     def set_solve_method(self, method: Method):
         self.solve_method = method
