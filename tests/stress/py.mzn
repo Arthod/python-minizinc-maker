@@ -1,0 +1,14 @@
+include "decreasing.mzn";
+var 0..2: bin_load_0;
+var 0..2: bin_load_1;
+var bool: bin_item_0_0;
+var bool: bin_item_0_1;
+var bool: bin_item_1_0;
+var bool: bin_item_1_1;
+constraint decreasing([bin_load_0, bin_load_1]);
+constraint (bin_load_0 > 0);
+constraint (bin_load_0 == sum([(bin_item_0_0 * 1), (bin_item_0_1 * 1)]));
+constraint (bin_load_1 == sum([(bin_item_1_0 * 1), (bin_item_1_1 * 1)]));
+constraint (sum([bin_item_0_0, bin_item_1_0]) == 1);
+constraint (sum([bin_item_0_1, bin_item_1_1]) == 1);
+solve minimize sum([(bin_load_0 > 0), (bin_load_1 > 0)]);

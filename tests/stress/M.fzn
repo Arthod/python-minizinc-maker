@@ -1,0 +1,7 @@
+predicate fzn_decreasing_int(array [int] of var int: x);
+int: X_INTRODUCED_5_ = 1;
+var 1..1: bins_used;
+var 1..1: X_INTRODUCED_3_ ::var_is_introduced  = 1;
+array [1..1] of var int: bin_loads = [1];
+constraint fzn_decreasing_int(bin_loads);
+solve  minimize X_INTRODUCED_5_;

@@ -1,0 +1,7 @@
+output ["bin_load_0 = ",showDzn(bin_load_0),";\n","bin_load_1 = ",showDzn(bin_load_1),";\n","bin_item_0_0 = ",showDzn(bin_item_0_0),";\n","bin_item_0_1 = ",showDzn(bin_item_0_1),";\n","bin_item_1_0 = ",showDzn(bin_item_1_0),";\n","bin_item_1_1 = ",showDzn(bin_item_1_1),";\n"];
+bool: bin_item_1_1;
+bool: bin_item_1_0;
+bool: bin_item_0_1;
+bool: bin_item_0_0;
+int: bin_load_1;
+int: bin_load_0;

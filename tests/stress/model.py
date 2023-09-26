@@ -5,7 +5,7 @@ import pymzm
 
 
 def get_instance(n, seed=5):
-    random.seed(seed)
+    random.seed(n)
     cap = n
     sizes = [random.randint(1, n) for _ in range(n)]
     random.seed(None)

@@ -1,0 +1,2 @@
+output [show(bins_used)];
+int: bins_used = 1;
