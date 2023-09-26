@@ -1,27 +1,33 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "\\..\\..")
 
+from functools import partial
 import pymzm
 import minizinc
-from examples.bin_packing import bin_packing
-import random
+from model import bin_packing, get_instance
 
-def get_instance(n, seed=5):
-    random.seed(seed)
-    cap = n
-    sizes = [random.randint(1, n) for _ in range(n)]
-    random.seed(None)
+import time
 
-    return cap, sizes
+# Pymzm time tests:
+## Python -> MZN
+## MZN -> FZN
+## FZN Runtime
+## Total
+
+# MZ time tests:
+## MZN -> FZN
+## FZN Runtime
+## Total
+
+def time_diff(func):
+    start_time = time.time()
+    func()
+    return time.time() - start_time
 
 if __name__ == "__main__":
     gecode = minizinc.Solver.lookup("gecode")
 
     i = 1
     while True:
-        cap, sizes = get_instance(i)
         model = pymzm.Model()
-        result = bin_packing(model, gecode, cap, sizes)
-        print(result)
+        result = bin_packing(model, gecode, *get_instance(i))
+        print(i, len(model.model_mzn_str), result.objective)
         i += 1
