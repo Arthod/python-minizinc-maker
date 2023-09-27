@@ -3,7 +3,7 @@ import minizinc
 import sympy
 from collections.abc import Iterable
 import types
-from typing import Generator, Iterator
+from typing import Generator, Iterator, List
 
 SOLVE_MAXIMIZE = "maximize"
 SOLVE_MINIMIZE = "minimize"
@@ -56,7 +56,7 @@ class Method:
         return self.s
 
     @staticmethod
-    def int_search(arr: list[str], varchoice: str, constrainchoice: str):
+    def int_search(arr: List[str], varchoice: str, constrainchoice: str):
         method = Method(f"int_search({arr}, {varchoice}, {constrainchoice})")
         return method
 
@@ -92,25 +92,25 @@ class Expression:
         return Expression(f"(if {condition} then {expr1} else {expr2} endif)")
 
     @staticmethod
-    def product(exprs: list["Expression"]) -> "Expression":
+    def product(exprs: List["Expression"]) -> "Expression":
         exprs = list(exprs)
         assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
         return Expression._func("product", [exprs])
 
     @staticmethod
-    def sum(exprs: list["Expression"]) -> "Expression":
+    def sum(exprs: List["Expression"]) -> "Expression":
         exprs = list(exprs)
         assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
         return Expression._func("sum", [exprs])
 
     @staticmethod
-    def min(exprs: list["Expression"]) -> "Expression":
+    def min(exprs: List["Expression"]) -> "Expression":
         exprs = list(exprs)
         assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
         return Expression._func("min", [exprs])
 
     @staticmethod
-    def max(exprs: list["Expression"]) -> "Expression":
+    def max(exprs: List["Expression"]) -> "Expression":
         exprs = list(exprs)
         assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
         return Expression._func("max", [exprs])
@@ -387,7 +387,7 @@ class Constraint:
         return Constraint.from_global_constraint("alldifferent", Constraint.CTYPE_ALLDIFFERENT, exprs)
     
     @staticmethod
-    def among(n: int, exprs: Iterable[Expression], values: list[int]):
+    def among(n: int, exprs: Iterable[Expression], values: List[int]):
         return Constraint.from_global_constraint("among", Constraint.CTYPE_AMONG, n, exprs, values)
     
     @staticmethod
@@ -441,7 +441,7 @@ class Model(minizinc.Model):
         self.variables.append(variable)
         return variable
     
-    def add_variables(self, name: str, indices: list[tuple[int]], vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None) -> ValueDict:
+    def add_variables(self, name: str, indices: List[tuple[int]], vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None) -> ValueDict:
         variables = ValueDict()
         for idx in indices:
             idx_str = str(idx).replace(", ", "_").replace("(", "").replace(")", "")
@@ -465,7 +465,7 @@ class Model(minizinc.Model):
         self.constraints.append(constraint)
         return constraint
 
-    def add_constraints(self, constraints: list[Constraint]):
+    def add_constraints(self, constraints: List[Constraint]):
         constraints = list(constraints)
         assert all(isinstance(constraint, (Constraint, Expression, str, bool)) for constraint in constraints)
         for constraint in constraints:
