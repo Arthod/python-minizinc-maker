@@ -3,7 +3,7 @@ import minizinc
 import sympy
 from collections.abc import Iterable
 import types
-from typing import Generator, Iterator, List
+from typing import Generator, Iterator, List, Tuple
 
 SOLVE_MAXIMIZE = "maximize"
 SOLVE_MINIMIZE = "minimize"
@@ -441,7 +441,7 @@ class Model(minizinc.Model):
         self.variables.append(variable)
         return variable
     
-    def add_variables(self, name: str, indices: List[tuple[int]], vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None) -> ValueDict:
+    def add_variables(self, name: str, indices: List[Tuple[int]], vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None) -> ValueDict:
         variables = ValueDict()
         for idx in indices:
             idx_str = str(idx).replace(", ", "_").replace("(", "").replace(")", "")
