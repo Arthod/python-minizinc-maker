@@ -135,33 +135,33 @@ class Expression:
         return cls(f"{func_symbol}({out})")
 
     @staticmethod
-    def OR(exprs: List[ExpressionBool]) -> "ExpressionBool":
+    def OR(exprs: List["ExpressionBool"]) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
         return ExpressionBool._operator("\/", exprs)
     
     @staticmethod
-    def AND(exprs: List[ExpressionBool]) -> "ExpressionBool":
+    def AND(exprs: List["ExpressionBool"]) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
         return ExpressionBool._operator("/\\", exprs)
     
     @staticmethod
-    def onlyIf(exprs: List[ExpressionBool]) -> "ExpressionBool":
+    def onlyIf(exprs: List["ExpressionBool"]) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
         return ExpressionBool._operator("<-", exprs)
     
     @staticmethod
-    def implies(exprs: List[ExpressionBool]) -> "ExpressionBool":
+    def implies(exprs: List["ExpressionBool"]) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
         return ExpressionBool._operator("->", exprs)
     
     @staticmethod
-    def iff(exprs: List[ExpressionBool]) -> "ExpressionBool":
+    def iff(exprs: List["ExpressionBool"]) -> "ExpressionBool":
         # <->
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
         return ExpressionBool._operator("<->", exprs)
     
     @staticmethod
-    def xor(exprs: List[ExpressionBool]) -> "ExpressionBool":
+    def xor(exprs: List["ExpressionBool"]) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
         return ExpressionBool._operator("xor", exprs)
     
