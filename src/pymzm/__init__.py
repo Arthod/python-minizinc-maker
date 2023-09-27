@@ -1,6 +1,5 @@
 import math
 import minizinc
-import chess
 import sympy
 from collections.abc import Iterable
 import types

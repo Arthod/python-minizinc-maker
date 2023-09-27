@@ -44,9 +44,10 @@ if __name__ == "__main__":
     fzn_size = []
     mzn_size = []
 
-    times = 20
+    timess = [20 for _ in range(10)] + [10 for _ in range(5)] + [3 for _ in range(1000)]
 
     for n in range(1, 10):
+        times = timess[n]
         X = get_instance(n)
         # Py to MZN
         p2mzn_list.append(time_diff([partial(funcs.gen_model, *X) for _ in range(times)]))
