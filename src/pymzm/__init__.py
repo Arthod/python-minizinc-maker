@@ -92,7 +92,7 @@ class Expression:
         return Expression(f"(if {condition} then {expr1} else {expr2} endif)")
 
     @staticmethod
-    def product(exprs: List["Expression"]) -> "Expression":
+    def product(exprs) -> "Expression":
         exprs = list(exprs)
         assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
         return Expression._func("product", [exprs])
@@ -135,33 +135,33 @@ class Expression:
         return cls(f"{func_symbol}({out})")
 
     @staticmethod
-    def OR(exprs: Iterable) -> "ExpressionBool":
+    def OR(exprs: List[ExpressionBool]) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
         return ExpressionBool._operator("\/", exprs)
     
     @staticmethod
-    def AND(exprs: Iterable) -> "ExpressionBool":
+    def AND(exprs: List[ExpressionBool]) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
         return ExpressionBool._operator("/\\", exprs)
     
     @staticmethod
-    def onlyIf(exprs: Iterable) -> "ExpressionBool":
+    def onlyIf(exprs: List[ExpressionBool]) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
         return ExpressionBool._operator("<-", exprs)
     
     @staticmethod
-    def implies(exprs: Iterable) -> "ExpressionBool":
+    def implies(exprs: List[ExpressionBool]) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
         return ExpressionBool._operator("->", exprs)
     
     @staticmethod
-    def iff(exprs: Iterable) -> "ExpressionBool":
+    def iff(exprs: List[ExpressionBool]) -> "ExpressionBool":
         # <->
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
         return ExpressionBool._operator("<->", exprs)
     
     @staticmethod
-    def xor(exprs: Iterable) -> "ExpressionBool":
+    def xor(exprs: List[ExpressionBool]) -> "ExpressionBool":
         assert all(isinstance(expr, ExpressionBool) for expr in exprs)
         return ExpressionBool._operator("xor", exprs)
     
@@ -375,11 +375,11 @@ class Constraint:
         return Constraint(f"{func}({', '.join(str(a) for a in args)})", ctype)
 
     @staticmethod
-    def alldifferent(exprs: Iterable[Expression]) -> "Constraint":
-        """Constrain the elements in the passed Iterable to be pairwise different.
+    def alldifferent(exprs: List[Expression]) -> "Constraint":
+        """Constrain the elements in the passed List to be pairwise different.
 
         Args:
-            variables (Iterable[Expression]): Passed Iterable of expressions
+            variables (List[Expression]): Passed List of expressions
 
         Returns:
             Constraint: Alldifferent constraint
@@ -387,24 +387,24 @@ class Constraint:
         return Constraint.from_global_constraint("alldifferent", Constraint.CTYPE_ALLDIFFERENT, exprs)
     
     @staticmethod
-    def among(n: int, exprs: Iterable[Expression], values: List[int]):
+    def among(n: int, exprs: List[Expression], values: List[int]):
         return Constraint.from_global_constraint("among", Constraint.CTYPE_AMONG, n, exprs, values)
     
     @staticmethod
-    def all_equal(exprs: Iterable[Expression]):
+    def all_equal(exprs: List[Expression]):
         return Constraint.from_global_constraint("all_equal", Constraint.CTYPE_ALL_EQUAL, exprs)
     
     @staticmethod
-    def count(exprs: Iterable[Expression], val: int, count: int):
+    def count(exprs: List[Expression], val: int, count: int):
         return Constraint.from_global_constraint("count", Constraint.CTYPE_COUNT, exprs, val, count)
     
     @staticmethod
-    def increasing(exprs: Iterable[Expression]):
+    def increasing(exprs: List[Expression]):
         # Requires that the array x is in (non-strictly) increasing order (duplicates are allowed).
         return Constraint.from_global_constraint("increasing", Constraint.CTYPE_INCREASING, exprs)
 
     @staticmethod
-    def decreasing(exprs: Iterable[Expression]):
+    def decreasing(exprs: List[Expression]):
         # Requires that the array x is in (non-strictly) decreasing order (duplicates are allowed).
         return Constraint.from_global_constraint("decreasing", Constraint.CTYPE_DECREASING, exprs)
 
@@ -497,7 +497,7 @@ class Model(minizinc.Model):
         with open(fn, "w") as f:
             f.write(self.model_mzn_str)
 
-def _variableIterable2Str(variables: Iterable[Variable]) -> str:
+def _variableIterable2Str(variables: List[Variable]) -> str:
     return str([v.name if isinstance(v, Expression) else v for v in variables]).replace("'", "")
 
 
