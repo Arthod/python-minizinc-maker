@@ -85,33 +85,78 @@ class Expression:
         Returns:
             Expression: the main if then else expression 
         """
-        assert isinstance(condition, (ExpressionBool, bool))
-        assert isinstance(expr1, (Expression, Variable, int, float))
-        assert isinstance(expr2, (Expression, Variable, int, float))
-        assert type(expr1) == type(expr2)
+        if (not isinstance(condition, (ExpressionBool, bool))):
+            raise PymzmValueIsNotCondition("condition", condition)
+        
+        if (not isinstance(expr1, (Expression, int, float))):
+            raise PymzmValueIsNotExpression("expr1", expr1)
+        
+        if (not isinstance(expr2, (Expression, int, float))):
+            raise PymzmValueIsNotExpression("expr2", expr2)
+        
         return Expression(f"(if {condition} then {expr1} else {expr2} endif)")
 
     @staticmethod
-    def product(exprs) -> "Expression":
+    def sum(exprs: List["Expression"]) -> "Expression":
+        if (not isinstance(exprs, Iterable)):
+            raise PymzmValueIsNotExpression("exprs", exprs)
+        
         exprs = list(exprs)
+        if (not len(exprs)):
+            raise PymzmNoValues("exprs")
+
+        for expr in exprs:
+            if (not isinstance(expr, (Expression, int, float))):
+                raise PymzmValueIsNotExpression("exprs", exprs)
+
+        assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
+        return Expression._func("sum", [exprs])
+    
+    @staticmethod
+    def product(exprs) -> "Expression":
+        if (not isinstance(exprs, Iterable)):
+            raise PymzmValueIsNotExpression("exprs", exprs)
+        
+        exprs = list(exprs)
+        if (not len(exprs)):
+            raise PymzmNoValues("exprs")
+
+        for expr in exprs:
+            if (not isinstance(expr, (Expression, int, float))):
+                raise PymzmValueIsNotExpression("exprs", exprs)
+
         assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
         return Expression._func("product", [exprs])
 
     @staticmethod
-    def sum(exprs: List["Expression"]) -> "Expression":
-        exprs = list(exprs)
-        assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
-        return Expression._func("sum", [exprs])
-
-    @staticmethod
     def min(exprs: List["Expression"]) -> "Expression":
+        if (not isinstance(exprs, Iterable)):
+            raise PymzmValueIsNotExpression("exprs", exprs)
+        
         exprs = list(exprs)
+        if (not len(exprs)):
+            raise PymzmNoValues("exprs")
+
+        for expr in exprs:
+            if (not isinstance(expr, (Expression, int, float))):
+                raise PymzmValueIsNotExpression("exprs", exprs)
+
         assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
         return Expression._func("min", [exprs])
 
     @staticmethod
     def max(exprs: List["Expression"]) -> "Expression":
+        if (not isinstance(exprs, Iterable)):
+            raise PymzmValueIsNotExpression("exprs", exprs)
+        
         exprs = list(exprs)
+        if (not len(exprs)):
+            raise PymzmNoValues("exprs")
+
+        for expr in exprs:
+            if (not isinstance(expr, (Expression, int, float))):
+                raise PymzmValueIsNotExpression("exprs", exprs)
+
         assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
         return Expression._func("max", [exprs])
 
@@ -500,6 +545,32 @@ class Model(minizinc.Model):
 def _variableIterable2Str(variables: List[Variable]) -> str:
     return str([v.name if isinstance(v, Expression) else v for v in variables]).replace("'", "")
 
+
+class PymzmException(Exception):
+    pass
+
+class PymzmValueIsNotCondition(PymzmException):
+    def __init__(self, argname, expr):
+        self.argname = argname
+        self.expr = expr
+
+    def __str__(self):
+        return f"Argument \"{self.argname}\": {repr(self.expr)} (type={type(self.expr)}) is not valid as a condition."
+
+class PymzmValueIsNotExpression(PymzmException):
+    def __init__(self, argname, expr):
+        self.argname = argname
+        self.expr = expr
+
+    def __str__(self):
+        return f"Argument \"{self.argname}\": {repr(self.expr)} (type={type(self.expr)}) is not valid as a expression."
+
+class PymzmNoValues(PymzmException):
+    def __init__(self, argname):
+        self.argname = argname
+
+    def __str__(self):
+        return f"Argument \"{self.argname}, expected iterable but has no values.\""
 
 if __name__ == "__main__":
     pass
