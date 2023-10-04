@@ -575,13 +575,17 @@ class Model(minizinc.Model):
         self.model_mzn_str += "".join(a._to_mz() for a in self.constants + self.variables + self.constraints)
         
         assert self.solve_criteria is not None
+        # TODO clean this up as to not be spaghetti code.
         if (self.solve_method is None):
             if (self.solve_expression is None):
                 self.model_mzn_str += f"solve {self.solve_criteria};\n"
             else:
                 self.model_mzn_str += f"solve {self.solve_criteria} {self.solve_expression};\n"
         else:
-            self.model_mzn_str += f"solve :: {self.solve_method} {self.solve_criteria};\n"
+            if (self.solve_expression is None):
+                self.model_mzn_str += f"solve :: {self.solve_method} {self.solve_criteria};\n"
+            else:
+                self.model_mzn_str += f"solve :: {self.solve_method} {self.solve_criteria} {self.solve_expression};\n"
             
         self.add_string(self.model_mzn_str)
         if (debug):
