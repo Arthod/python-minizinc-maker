@@ -395,7 +395,8 @@ class Constraint:
         CTYPE_ALL_EQUAL,
         CTYPE_COUNT,
         CTYPE_INCREASING,
-        CTYPE_DECREASING
+        CTYPE_DECREASING,
+        CTYPE_DISJUNCTIVE
     ] = [
         "normal",
         "alldifferent",
@@ -403,7 +404,8 @@ class Constraint:
         "all_equal",
         "count",
         "increasing",
-        "decreasing"
+        "decreasing",
+        "disjunctive"
     ]
     def __init__(self, cstr: str, ctype: str=CTYPE_NORMAL):
         self.cstr = cstr
@@ -452,6 +454,18 @@ class Constraint:
     def decreasing(exprs: List[Expression]):
         # Requires that the array x is in (non-strictly) decreasing order (duplicates are allowed).
         return Constraint.from_global_constraint("decreasing", Constraint.CTYPE_DECREASING, exprs)
+    
+    @staticmethod
+    def disjunctive(s: List[Expression], d: List[Expression]):
+        # Requires that a set of tasks given by start times s and durations d do not overlap in time. 
+        # Tasks with duration 0 can be scheduled at any time, even in the middle of other tasks.
+        return Constraint.from_global_constraint("disjunctive", Constraint.CTYPE_DISJUNCTIVE, s, d)
+    
+    @staticmethod
+    def disjunctive_strict(s: List[Expression], d: List[Expression]):
+        # Requires that a set of tasks given by start times s and durations d do not overlap in time. 
+        # Tasks with duration 0 CANNOT be scheduled at any time, but only when no other task is running.
+        return Constraint.from_global_constraint("disjunctive_strict", Constraint.CTYPE_DISJUNCTIVE, s, d)
 
     
 class Model(minizinc.Model):
