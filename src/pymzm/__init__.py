@@ -341,6 +341,7 @@ class Expression:
 class ExpressionBool(Expression):
     pass
 
+    
 
 class Variable(Expression):
     VTYPES = [
@@ -349,7 +350,7 @@ class Variable(Expression):
         VTYPE_BOOL,
         VTYPE_STRING,
     ] = [
-        "integer",
+        "int",
         "float",
         "bool",
         "string",
@@ -387,6 +388,29 @@ class Variable(Expression):
 class VariableBool(ExpressionBool, Variable):
     pass
     
+class Constant:
+    def __init__(self, name: str, value, vtype=Variable.VTYPE_INTEGER):
+        self.name = name
+        self.value = value
+        self.vtype = vtype
+        
+        if (self.value is None):
+            raise Exception("Non-initialized constant is not supported by pymzm.")
+        
+    def __getitem__(self, other: Expression):
+        # TODO boolean expression
+        return Expression(f"{self.name}[{str(other)} + 1]")
+
+    def __str__(self):
+        return self.name
+    
+    def _to_mz(self):
+        if (isinstance(self.value, list)):
+            return f"array[1..{len(self.value)}] of {self.vtype}: {self.name} = {self.value};\n"
+
+        elif (isinstance(self.value, int)):
+            return f"{self.vtype}: {self.name} = {self.value};\n"
+
 class Constraint:
     CTYPES = [
         CTYPE_NORMAL,
@@ -477,6 +501,7 @@ class Constraint:
     
 class Model(minizinc.Model):
     def __init__(self):
+        self.constants = []
         self.variables = []
         self.constraints = []
         self.solve_criteria = None
@@ -501,6 +526,11 @@ class Model(minizinc.Model):
 
     def set_solve_method(self, method: Method):
         self.solve_method = method
+
+    def add_constant(self, name: str, value, vtype=Variable.VTYPE_INTEGER):
+        constant = Constant(name, value)
+        self.constants.append(constant)
+        return constant
 
     def add_variable(self, name: str, vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None):
         variable = Variable(name, vtype, val_min, val_max)
@@ -542,7 +572,7 @@ class Model(minizinc.Model):
         for gconst in self.global_constraints:
             self.model_mzn_str += f'include \"{gconst}.mzn\";\n'
 
-        self.model_mzn_str += "".join(a._to_mz() for a in self.variables + self.constraints)
+        self.model_mzn_str += "".join(a._to_mz() for a in self.constants + self.variables + self.constraints)
         
         assert self.solve_criteria is not None
         if (self.solve_method is None):
