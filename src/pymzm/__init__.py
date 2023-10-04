@@ -396,7 +396,8 @@ class Constraint:
         CTYPE_COUNT,
         CTYPE_INCREASING,
         CTYPE_DECREASING,
-        CTYPE_DISJUNCTIVE
+        CTYPE_DISJUNCTIVE,
+        CTYPE_ARG_SORT,
     ] = [
         "normal",
         "alldifferent",
@@ -405,7 +406,8 @@ class Constraint:
         "count",
         "increasing",
         "decreasing",
-        "disjunctive"
+        "disjunctive",
+        "arg_sort",
     ]
     def __init__(self, cstr: str, ctype: str=CTYPE_NORMAL):
         self.cstr = cstr
@@ -466,6 +468,11 @@ class Constraint:
         # Requires that a set of tasks given by start times s and durations d do not overlap in time. 
         # Tasks with duration 0 CANNOT be scheduled at any time, but only when no other task is running.
         return Constraint.from_global_constraint("disjunctive_strict", Constraint.CTYPE_DISJUNCTIVE, s, d)
+    
+    @staticmethod
+    def arg_sort(x: List[Expression], p: List[Expression]):
+        # Constrains p to be the permutation which causes x to be in sorted order hence x[p[i]] <= x[p[i+1]].
+        return Constraint.from_global_constraint("arg_sort", Constraint.CTYPE_ARG_SORT, x, p)
 
     
 class Model(minizinc.Model):
