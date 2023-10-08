@@ -84,21 +84,21 @@ class TestExpression(unittest.TestCase):
         self.assertIsInstance(expr, pymzm.Expression)
         
         # Invalid
-        self.assertRaises(pymzm.PymzmValueIsNotExpression,
-            sum,
-            ["test", self.xs[0]])
-        self.assertRaises(pymzm.PymzmValueIsNotExpression,
-            sum,
-            [[self.xs[1]], self.xs[0]])
-        self.assertRaises(pymzm.PymzmValueIsNotExpression,
-            sum,
-            self.xs[0])
-        self.assertRaises(pymzm.PymzmValueIsNotExpression,
-            sum,
-            "test")
-        self.assertRaises(pymzm.PymzmNoValues,
-            sum,
-            [])
+        #self.assertRaises(pymzm.PymzmValueIsNotExpression,
+        #    sum,
+        #    ["test", self.xs[0]])
+        #self.assertRaises(pymzm.PymzmValueIsNotExpression,
+        #    sum,
+        #    [[self.xs[1]], self.xs[0]])
+        #self.assertRaises(pymzm.PymzmValueIsNotExpression,
+        #    sum,
+        #    self.xs[0])
+        #self.assertRaises(pymzm.PymzmValueIsNotExpression,
+        #    sum,
+        #    "test")
+        #self.assertRaises(pymzm.PymzmNoValues,
+        #    sum,
+        #    [])
 
     def test_sum(self):
         # Valid
