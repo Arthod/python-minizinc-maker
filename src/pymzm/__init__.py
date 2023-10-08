@@ -57,6 +57,23 @@ class AnnotationValueChoice:
         "indomain_interval",
     ]
 
+class AnnotationConstraint:
+    ANNOTATIONS = [
+        ANNOTATION_BOUNDS,
+        ANNOTATION_BOUNDS_Z,
+        ANNOTATION_BOUNDS_R,
+        ANNOTATION_BOUNDS_D,
+        ANNOTATION_DOMAIN,
+        ANNOTATION_VALUE_PROPAGATION,
+        # Priority(k)
+    ] = [
+        "bounds",
+        "boundsZ",
+        "boundsR",
+        "boundsD",
+        "domain",
+        "value_propagation",
+    ]
 
 
 class ValueDict(dict):
@@ -66,6 +83,7 @@ class ValueDict(dict):
 
     def __str__(self):
         return _variableIterable2Str(self)
+    
     
     def __invert__(self):
         raise NotImplementedError()
@@ -151,7 +169,7 @@ class Expression:
 
     def __str__(self):
         return self.name
-
+    
     def __repr__(self):
         return self.name
 
@@ -518,9 +536,19 @@ class Constraint:
         "disjunctive",
         "arg_sort",
     ]
-    def __init__(self, cstr: str, ctype: str=CTYPE_NORMAL):
+    def __init__(self, cstr: ExpressionBool, ctype: str=CTYPE_NORMAL, annotation: str=None):
         self.cstr = cstr
-        self.ctype = ctype
+        if (not isinstance(self.cstr, (ExpressionBool, bool, str))):
+            raise PymzmValueIsNotCondition("cstr", self.cstr)
+
+        self.ctype = ctype # This variable shouldn't be changed by the user
+        if (self.ctype not in Constraint.CTYPES):
+            raise PymzmInvalidConstraintType("ctype")
+
+        self.annotation = annotation
+        if (self.annotation is not None):
+            if (self.annotation not in AnnotationConstraint.ANNOTATIONS):
+                raise PymzmInvalidConstraintAnnotation("annotation")
 
     def __str__(self):
         return self.cstr
@@ -529,7 +557,7 @@ class Constraint:
         return f"constraint {self.cstr};\n"
 
     @staticmethod
-    def from_global_constraint(func: str, ctype: str, *args):
+    def _from_global_constraint(func: str, ctype: str, *args):
         return Constraint(f"{func}({', '.join(str(a) for a in args)})", ctype)
 
     @staticmethod
@@ -542,46 +570,46 @@ class Constraint:
         Returns:
             Constraint: Alldifferent constraint
         """
-        return Constraint.from_global_constraint("alldifferent", Constraint.CTYPE_ALLDIFFERENT, exprs)
+        return Constraint._from_global_constraint("alldifferent", Constraint.CTYPE_ALLDIFFERENT, exprs)
     
     @staticmethod
     def among(n: int, exprs: List[Expression], values: List[int]):
-        return Constraint.from_global_constraint("among", Constraint.CTYPE_AMONG, n, exprs, values)
+        return Constraint._from_global_constraint("among", Constraint.CTYPE_AMONG, n, exprs, values)
     
     @staticmethod
     def all_equal(exprs: List[Expression]):
-        return Constraint.from_global_constraint("all_equal", Constraint.CTYPE_ALL_EQUAL, exprs)
+        return Constraint._from_global_constraint("all_equal", Constraint.CTYPE_ALL_EQUAL, exprs)
     
     @staticmethod
     def count(exprs: List[Expression], val: int, count: int):
-        return Constraint.from_global_constraint("count", Constraint.CTYPE_COUNT, exprs, val, count)
+        return Constraint._from_global_constraint("count", Constraint.CTYPE_COUNT, exprs, val, count)
     
     @staticmethod
     def increasing(exprs: List[Expression]):
         # Requires that the array x is in (non-strictly) increasing order (duplicates are allowed).
-        return Constraint.from_global_constraint("increasing", Constraint.CTYPE_INCREASING, exprs)
+        return Constraint._from_global_constraint("increasing", Constraint.CTYPE_INCREASING, exprs)
 
     @staticmethod
     def decreasing(exprs: List[Expression]):
         # Requires that the array x is in (non-strictly) decreasing order (duplicates are allowed).
-        return Constraint.from_global_constraint("decreasing", Constraint.CTYPE_DECREASING, exprs)
+        return Constraint._from_global_constraint("decreasing", Constraint.CTYPE_DECREASING, exprs)
     
     @staticmethod
     def disjunctive(s: List[Expression], d: List[Expression]):
         # Requires that a set of tasks given by start times s and durations d do not overlap in time. 
         # Tasks with duration 0 can be scheduled at any time, even in the middle of other tasks.
-        return Constraint.from_global_constraint("disjunctive", Constraint.CTYPE_DISJUNCTIVE, s, d)
+        return Constraint._from_global_constraint("disjunctive", Constraint.CTYPE_DISJUNCTIVE, s, d)
     
     @staticmethod
     def disjunctive_strict(s: List[Expression], d: List[Expression]):
         # Requires that a set of tasks given by start times s and durations d do not overlap in time. 
         # Tasks with duration 0 CANNOT be scheduled at any time, but only when no other task is running.
-        return Constraint.from_global_constraint("disjunctive_strict", Constraint.CTYPE_DISJUNCTIVE, s, d)
+        return Constraint._from_global_constraint("disjunctive_strict", Constraint.CTYPE_DISJUNCTIVE, s, d)
     
     @staticmethod
     def arg_sort(x: List[Expression], p: List[Expression]):
         # Constrains p to be the permutation which causes x to be in sorted order hence x[p[i]] <= x[p[i+1]].
-        return Constraint.from_global_constraint("arg_sort", Constraint.CTYPE_ARG_SORT, x, p)
+        return Constraint._from_global_constraint("arg_sort", Constraint.CTYPE_ARG_SORT, x, p)
 
     
 class Model(minizinc.Model):
@@ -687,6 +715,13 @@ def _variableIterable2Str(variables: List[Variable]) -> str:
 class PymzmException(Exception):
     pass
 
+class PymzmInvalidConstraintType(PymzmException):
+    def __init__(self, argname):
+        self.argname = argname
+
+    def __str__(self):
+        return f"Argument \"{self.argname}\" is not a valid constraint type."
+
 class PymzmValueIsNotCondition(PymzmException):
     def __init__(self, argname, expr):
         self.argname = argname
@@ -716,6 +751,13 @@ class PymzmInvalidVarchoiceAnnotation(PymzmException):
 
     def __str__(self):
         return f"Argument \"{self.argname}\" is not valid as a varchoice annotation."
+    
+class PymzmInvalidConstraintAnnotation(PymzmException):
+    def __init__(self, argname):
+        self.argname = argname
+
+    def __str__(self):
+        return f"Argument \"{self.argname}\" is not valid as a constraint annotation."
     
 class PymzmInvalidValchoiceAnnotation(PymzmException):
     def __init__(self, argname):
