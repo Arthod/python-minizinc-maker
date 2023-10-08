@@ -136,7 +136,7 @@ class Model(minizinc.Model):
         self.solve_method = method
 
     def add_constant(self, name: str, value, vtype=Variable.VTYPE_INTEGER):
-        constant = Constant(name, value)
+        constant = Constant(name, value, vtype)
         self.constants.append(constant)
         return constant
 
