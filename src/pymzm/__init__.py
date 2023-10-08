@@ -93,27 +93,39 @@ class ValueDict(dict):
         raise NotImplementedError()
 
     def __eq__(self, other: "Expression") -> "ExpressionBool":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return [s == other for s in self]
     
     def __ne__(self, other: "Expression") -> "ExpressionBool":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return [s != other for s in self]
     
     def __lt__(self, other: "Expression") -> "ExpressionBool":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return [s < other for s in self]
     
     def __le__(self, other: "Expression") -> "ExpressionBool":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return [s <= other for s in self]
     
     def __gt__(self, other: "Expression") -> "ExpressionBool":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return [s > other for s in self]
     
     def __ge__(self, other: "Expression") -> "ExpressionBool":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return [s >= other for s in self]
 
 class SeqSearch:
@@ -211,8 +223,7 @@ class Expression:
         for expr in exprs:
             if (not isinstance(expr, (Expression, int, float))):
                 raise PymzmValueIsNotExpression("exprs", exprs)
-
-        assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
+            
         return Expression._func("sum", [exprs])
     
     @staticmethod
@@ -227,8 +238,7 @@ class Expression:
         for expr in exprs:
             if (not isinstance(expr, (Expression, int, float))):
                 raise PymzmValueIsNotExpression("exprs", exprs)
-
-        assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
+            
         return Expression._func("product", [exprs])
 
     @staticmethod
@@ -243,8 +253,7 @@ class Expression:
         for expr in exprs:
             if (not isinstance(expr, (Expression, int, float))):
                 raise PymzmValueIsNotExpression("exprs", exprs)
-
-        assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
+            
         return Expression._func("min", [exprs])
 
     @staticmethod
@@ -259,8 +268,7 @@ class Expression:
         for expr in exprs:
             if (not isinstance(expr, (Expression, int, float))):
                 raise PymzmValueIsNotExpression("exprs", exprs)
-
-        assert all(isinstance(expr, (Expression, int, float)) for expr in exprs)
+            
         return Expression._func("max", [exprs])
 
     @classmethod
@@ -284,86 +292,130 @@ class Expression:
 
     @staticmethod
     def OR(exprs: List["ExpressionBool"]) -> "ExpressionBool":
-        assert all(isinstance(expr, ExpressionBool) for expr in exprs)
+        for expr in exprs:
+            if (not isinstance(expr, ExpressionBool)):
+                raise PymzmValueIsNotCondition("exprs", expr)
+
         return ExpressionBool._operator("\/", exprs)
     
     @staticmethod
     def AND(exprs: List["ExpressionBool"]) -> "ExpressionBool":
-        assert all(isinstance(expr, ExpressionBool) for expr in exprs)
+        for expr in exprs:
+            if (not isinstance(expr, ExpressionBool)):
+                raise PymzmValueIsNotCondition("exprs", expr)
+
         return ExpressionBool._operator("/\\", exprs)
     
     @staticmethod
     def onlyIf(exprs: List["ExpressionBool"]) -> "ExpressionBool":
-        assert all(isinstance(expr, ExpressionBool) for expr in exprs)
+        for expr in exprs:
+            if (not isinstance(expr, ExpressionBool)):
+                raise PymzmValueIsNotCondition("exprs", expr)
+
         return ExpressionBool._operator("<-", exprs)
     
     @staticmethod
     def implies(exprs: List["ExpressionBool"]) -> "ExpressionBool":
-        assert all(isinstance(expr, ExpressionBool) for expr in exprs)
+        for expr in exprs:
+            if (not isinstance(expr, ExpressionBool)):
+                raise PymzmValueIsNotCondition("exprs", expr)
+
         return ExpressionBool._operator("->", exprs)
     
     @staticmethod
     def iff(exprs: List["ExpressionBool"]) -> "ExpressionBool":
         # <->
-        assert all(isinstance(expr, ExpressionBool) for expr in exprs)
+        for expr in exprs:
+            if (not isinstance(expr, ExpressionBool)):
+                raise PymzmValueIsNotCondition("exprs", expr)
+
         return ExpressionBool._operator("<->", exprs)
     
     @staticmethod
     def xor(exprs: List["ExpressionBool"]) -> "ExpressionBool":
-        assert all(isinstance(expr, ExpressionBool) for expr in exprs)
+        for expr in exprs:
+            if (not isinstance(expr, ExpressionBool)):
+                raise PymzmValueIsNotCondition("exprs", expr)
+
         return ExpressionBool._operator("xor", exprs)
     
     @staticmethod
     def NOT(expr: "ExpressionBool") -> "ExpressionBool":
-        assert isinstance(expr, ExpressionBool)
+        if (not isinstance(expr, ExpressionBool)):
+            raise PymzmValueIsNotCondition("exprs", expr)
+
         return ExpressionBool._func("not", [expr])
 
     def __add__(self, other: "Expression") -> "Expression":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return Expression._operator("+", [self, other])
     
     def __radd__(self, other: "Expression") -> "Expression":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return Expression._operator("+", [other, self])
     
     def __sub__(self, other: "Expression") -> "Expression":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return Expression._operator("-", [self, other])
     
     def __rsub__(self, other: "Expression") -> "Expression":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return Expression._operator("-", [other, self])
     
     def __mul__(self, other: "Expression") -> "Expression":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return Expression._operator("*", [self, other])
     
     def __rmul__(self, other: "Expression") -> "Expression":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return Expression._operator("*", [other, self])
     
     def __truediv__(self, other: "Expression") -> "Expression":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return Expression._operator("/", [self, other])
     
     def __rtruediv__(self, other: "Expression") -> "Expression":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return Expression._operator("/", [other, self])
     
     def __floordiv__(self, other: "Expression") -> "Expression":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return Expression._operator("div", [self, other])
     
     def __rfloordiv__(self, other: "Expression") -> "Expression":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return Expression._operator("div", [other, self])
     
     def __mod__(self, other: "Expression") -> "Expression":
-        assert isinstance(other, (int, Expression))
+        if (not isinstance(other, (int, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return Expression._operator("mod", [self, other])
     
     def __rmod__(self, other: "Expression") -> "Expression":
-        assert isinstance(other, (int, Expression))
+        if (not isinstance(other, (int, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return Expression._operator("mod", [other, self])
     
     def __neg__(self) -> "Expression":
@@ -371,63 +423,91 @@ class Expression:
     #def __pos__(self): return Expression._func("+", [self]) TODO: not allowed in minizinc example: +x == v
     
     def __eq__(self, other: "Expression") -> "ExpressionBool":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return ExpressionBool._operator("==", [self, other])
     
     def __ne__(self, other: "Expression") -> "ExpressionBool":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return ExpressionBool._operator("!=", [self, other])
     
     def __lt__(self, other: "Expression") -> "ExpressionBool":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return ExpressionBool._operator("<", [self, other])
     
     def __le__(self, other: "Expression") -> "ExpressionBool":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return ExpressionBool._operator("<=", [self, other])
     
     def __gt__(self, other: "Expression") -> "ExpressionBool":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return ExpressionBool._operator(">", [self, other])
     
     def __ge__(self, other: "Expression") -> "ExpressionBool":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return ExpressionBool._operator(">=", [self, other])
     
     
     def __and__(self, other: "ExpressionBool") -> "ExpressionBool":
-        assert isinstance(other, (bool, Expression))
+        if (not isinstance(other, (bool, Expression))):
+            raise PymzmValueIsNotCondition("other", other)
+
         return Expression.AND([self, other])
     
     def __rand__(self, other: "ExpressionBool") -> "ExpressionBool":
-        assert isinstance(other, (bool, Expression))
+        if (not isinstance(other, (bool, Expression))):
+            raise PymzmValueIsNotCondition("other", other)
+
         return Expression.AND([other, self])
     
     def __or__(self, other: "ExpressionBool") -> "ExpressionBool":
-        assert isinstance(other, (bool, Expression))
+        if (not isinstance(other, (bool, Expression))):
+            raise PymzmValueIsNotCondition("other", other)
+
         return Expression.OR([self, other])
     
     def __ror__(self, other: "ExpressionBool") -> "ExpressionBool":
-        assert isinstance(other, (bool, Expression))
+        if (not isinstance(other, (bool, Expression))):
+            raise PymzmValueIsNotCondition("other", other)
+
         return Expression.OR([other, self])
     
     def __xor__(self, other: "ExpressionBool") -> "ExpressionBool":
-        assert isinstance(other, (bool, Expression))
+        if (not isinstance(other, (bool, Expression))):
+            raise PymzmValueIsNotCondition("other", other)
+
         return Expression.xor([self, other])
     
     def __rxor__(self, other: "ExpressionBool") -> "ExpressionBool":
-        assert isinstance(other, (bool, Expression))
+        if (not isinstance(other, (bool, Expression))):
+            raise PymzmValueIsNotCondition("other", other)
+
         return Expression.xor([other, self])
     
     def __invert__(self) -> "ExpressionBool":
         return Expression.NOT(self)
 
     def __pow__(self, other: "Expression") -> "Expression":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+
         return Expression._func("pow", [self, other])
     
     def __rpow__(self, other: "Expression") -> "Expression":
-        assert isinstance(other, (int, float, Expression))
+        if (not isinstance(other, (int, float, Expression))):
+            raise PymzmValueIsNotExpression("other", other)
+        
         return Expression._func("pow", [other, self])
     
     def __abs__(self) -> "Expression":
