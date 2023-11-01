@@ -3,7 +3,7 @@ import minizinc
 
 model = pymzm.Model()
 
-xs = model.add_variables("x", range(10), vtype=pymzm.Variable.VTYPE_INTEGER, val_min=1, val_max=10)
+xs = model.add_variables("x", range(10), vtype=pymzm.Variable.VTYPE_INTEGER, domain=range(1, 10 + 1))
 
 model.add_constraint(pymzm.Constraint.alldifferent(xs))
 model.set_solve_criteria(pymzm.SOLVE_SATISFY)
