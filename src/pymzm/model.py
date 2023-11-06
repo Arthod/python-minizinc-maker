@@ -160,7 +160,6 @@ class Model(minizinc.Model):
             assert set(domains.keys()) == set(indices)
             domains = {idx: domains[idx] for idx in indices}
 
-
         variables = ValueDict()
         for idx in indices:
             idx_str = str(idx).replace(", ", "_").replace("(", "").replace(")", "")

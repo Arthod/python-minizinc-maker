@@ -126,6 +126,13 @@ class Variable(Expression):
             else:
                 return f"var set of {self.domain}: {self.name};\n"
 
+    def __len__(self):
+        assert self.vtype == Variable.VTYPE_SET
+        return Expression._func("card", [self])
+    
+    @staticmethod
+    def min(var):
+        return Expression._func("min", [var])
     
 class VariableBool(ExpressionBool, Variable):
     pass
