@@ -61,11 +61,13 @@ class Variable(Expression):
         VTYPE_FLOAT,
         VTYPE_BOOL,
         VTYPE_STRING,
+        VTYPE_SET,
     ] = [
         "int",
         "float",
         "bool",
         "string",
+        "set"
     ]
     def __init__(self, name: str, vtype: int=VTYPE_INTEGER, val_min: int=None, val_max: int=None, domain=None):
         self.name = name
@@ -74,7 +76,7 @@ class Variable(Expression):
         self.val_max = val_max
         self.domain = domain
 
-        if (vtype == Variable.VTYPE_INTEGER or vtype == Variable.VTYPE_FLOAT):
+        if (vtype == Variable.VTYPE_INTEGER or vtype == Variable.VTYPE_SET):
             if (domain is None):
                 assert self.val_min is not None
                 assert self.val_max is not None
@@ -85,6 +87,11 @@ class Variable(Expression):
                 #assert isinstance(domain, set)
                 self.domain = set(domain)
                 assert len(self.domain) > 0
+
+        elif (vtype == Variable.VTYPE_FLOAT):
+            assert self.domain is None
+            assert self.val_min is not None
+            assert self.val_max is not None
 
         elif (vtype == Variable.VTYPE_BOOL):
             assert self.val_min is None or self.val_min == 0
@@ -103,11 +110,22 @@ class Variable(Expression):
     def _to_mz(self):
         if (self.vtype == Variable.VTYPE_BOOL):
             return f"var bool: {self.name};\n"
-        else:
+        
+        elif (self.vtype == Variable.VTYPE_INTEGER):
             if (self.domain is None):
                 return f"var {self.val_min}..{self.val_max}: {self.name};\n"
             else:
                 return f"var {self.domain}: {self.name};\n"
+            
+        elif (self.vtype == Variable.VTYPE_FLOAT):
+            return f"var {self.val_min}..{self.val_max}: {self.name};\n"
+            
+        elif (self.vtype == Variable.VTYPE_SET):
+            if (self.domain is None):
+                return f"var set of {self.val_min}..{self.val_max}: {self.name};\n"
+            else:
+                return f"var set of {self.domain}: {self.name};\n"
+
     
 class VariableBool(ExpressionBool, Variable):
     pass
