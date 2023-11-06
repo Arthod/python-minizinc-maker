@@ -72,7 +72,7 @@ class Variable(Expression):
         self.vtype = vtype
         self.val_min = val_min
         self.val_max = val_max
-        self.domain = set(domain)
+        self.domain = domain
 
         if (vtype == Variable.VTYPE_INTEGER or vtype == Variable.VTYPE_FLOAT):
             if (domain is None):
@@ -83,7 +83,8 @@ class Variable(Expression):
                 assert self.val_min is None
                 assert self.val_max is None
                 #assert isinstance(domain, set)
-                assert len(domain) > 0
+                self.domain = set(domain)
+                assert len(self.domain) > 0
 
         elif (vtype == Variable.VTYPE_BOOL):
             assert self.val_min is None or self.val_min == 0

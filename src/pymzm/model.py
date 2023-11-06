@@ -145,11 +145,26 @@ class Model(minizinc.Model):
         self.variables.append(variable)
         return variable
     
-    def add_variables(self, name: str, indices: List[Tuple[int]], vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None, domain: set=None) -> ValueDict:
+    def add_variables(self, name: str, indices: List[Tuple[int]], vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None, domains: set=None) -> ValueDict:
+
+        # Domain
+        if (domains is None):
+            domains = {}
+        elif (type(domains) is set):
+            domains = {idx: domains for idx in indices}
+        elif (type(domains) is list):
+            assert len(domains) == len(indices)
+            domains = {idx: domains[i] for i, idx in enumerate(indices)}
+        elif (type(domains) is dict):
+            assert len(domains) == len(indices)
+            assert set(domains.keys()) == set(indices)
+            domains = {idx: domains[idx] for idx in indices}
+
+
         variables = ValueDict()
         for idx in indices:
             idx_str = str(idx).replace(", ", "_").replace("(", "").replace(")", "")
-            variable = Variable(f"{name}_{idx_str}", vtype, val_min, val_max, domain)
+            variable = Variable(f"{name}_{idx_str}", vtype, val_min, val_max, domains.get(idx, None))
             self.variables.append(variable)
             variables[idx] = variable
 
