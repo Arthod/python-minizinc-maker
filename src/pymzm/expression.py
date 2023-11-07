@@ -45,8 +45,9 @@ class Expression:
         if (not isinstance(exprs, Iterable)):
             raise PymzmValueIsNotExpression("exprs", exprs)
         
-        exprs = list(exprs)
+        #exprs = list(exprs)
         if (not len(exprs)):
+            return Expression("0")
             raise PymzmNoValues("exprs")
 
         for expr in exprs:
