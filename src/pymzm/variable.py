@@ -132,7 +132,17 @@ class Variable(Expression):
     
     @staticmethod
     def min(var):
+        assert var.vtype == Variable.VTYPE_SET
         return Expression._func("min", [var])
+    
+    @staticmethod
+    def max(var):
+        assert var.vtype == Variable.VTYPE_SET
+        return Expression._func("max", [var])
+    
+    def contains(self, content):
+        assert self.vtype == Variable.VTYPE_SET
+        return ExpressionBool(f"({content} in {self})")
     
 class VariableBool(ExpressionBool, Variable):
     pass
