@@ -162,7 +162,7 @@ class Model(minizinc.Model):
 
         variables = ValueDict()
         for idx in indices:
-            idx_str = str(idx).replace(", ", "_").replace("(", "").replace(")", "")
+            idx_str = str(idx).replace(", ", "_").replace("(", "").replace(")", "").replace("'", "")
             variable = Variable(f"{name}_{idx_str}", vtype, val_min, val_max, domains.get(idx, None))
             self.variables.append(variable)
             variables[idx] = variable
