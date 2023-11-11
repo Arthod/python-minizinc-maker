@@ -144,5 +144,11 @@ class Variable(Expression):
         assert self.vtype == Variable.VTYPE_SET
         return ExpressionBool(f"({content} in {self})")
     
+    @staticmethod
+    def intersection_length(v1, v2):
+        assert v1.vtype == Variable.VTYPE_SET
+        assert v2.vtype == Variable.VTYPE_SET
+        return Expression(f"(card({v1} intersect {v2}))")
+    
 class VariableBool(ExpressionBool, Variable):
     pass
