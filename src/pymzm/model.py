@@ -162,20 +162,20 @@ class Model(minizinc.Model):
 
         variables = ValueDict()
         for idx in indices:
-            idx_str = str(idx).replace(", ", "_").replace("(", "").replace(")", "").replace("'", "")
+            idx_str = str(idx).replace(", ", "_").replace("(", "").replace(")", "").replace("'", "").replace("-", "_")
             variable = Variable(f"{name}_{idx_str}", vtype, val_min, val_max, domains.get(idx, None))
             self.variables.append(variable)
             variables[idx] = variable
 
         return variables
 
-    def add_constraint(self, constraint: ExpressionBool):
+    def add_constraint(self, constraint: ExpressionBool, is_redundant=False):
         if (isinstance(constraint, Constraint)):
             if (constraint.ctype != Constraint.CTYPE_NORMAL):
                 self.global_constraints.add(constraint.ctype)
 
         elif (isinstance(constraint, ExpressionBool)):
-            constraint = Constraint(constraint.name)
+            constraint = Constraint(constraint.name, is_redundant=is_redundant)
 
         else:
             raise Exception("invalid constraint type")
@@ -183,11 +183,11 @@ class Model(minizinc.Model):
         self.constraints.append(constraint)
         return constraint
 
-    def add_constraints(self, constraints: List[Constraint]):
+    def add_constraints(self, constraints: List[Constraint], is_redundant=False):
         constraints = list(constraints)
         assert all(isinstance(constraint, (Constraint, Expression, str, bool)) for constraint in constraints)
         for constraint in constraints:
-            self.add_constraint(constraint)
+            self.add_constraint(constraint, is_redundant=is_redundant)
 
     def generate(self, debug=False):
         self.model_mzn_str = ""

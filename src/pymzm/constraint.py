@@ -44,7 +44,7 @@ class Constraint:
         "disjunctive",
         "arg_sort",
     ]
-    def __init__(self, cstr: ExpressionBool, ctype: str=CTYPE_NORMAL, annotation: str=None):
+    def __init__(self, cstr: ExpressionBool, ctype: str=CTYPE_NORMAL, annotation: str=None, is_redundant=False):
         self.cstr = cstr
         if (not isinstance(self.cstr, (ExpressionBool, bool, str))):
             raise PymzmValueIsNotCondition("cstr", self.cstr)
@@ -57,12 +57,17 @@ class Constraint:
         if (self.annotation is not None):
             if (self.annotation not in AnnotationConstraint.ANNOTATIONS):
                 raise PymzmInvalidConstraintAnnotation("annotation")
+            
+        self.is_redundant = is_redundant
 
     def __str__(self):
         return self.cstr
     
     def _to_mz(self):
-        return f"constraint {self.cstr};\n"
+        if (self.is_redundant):
+            return f"constraint redundant_constraint({self.cstr});\n"
+        else:
+            return f"constraint {self.cstr};\n"
 
     @staticmethod
     def _from_global_constraint(func: str, ctype: str, *args):
