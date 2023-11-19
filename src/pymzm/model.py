@@ -53,7 +53,10 @@ class BoolSearch(SearchAnnotation):
 
 class SetSearch(SearchAnnotation):
     def __init__(self, variables: List["Expression"], varchoice: str, valchoice: str):
-        raise NotImplementedError()
+        if (not all(isinstance(v, Variable) or not all(v.vtype == Variable.VTYPE_SET) for v in variables)):
+            raise PymzmInvalidVariableError("variables", "Atleast one variable is not a set.")
+        
+        super().__init__("set_search", variables, varchoice, valchoice)
 
 class FloatSearch(SearchAnnotation):
     def __init__(self, variables: List["Expression"], precision: float, varchoice: str, valchoice: str):
@@ -171,6 +174,7 @@ class Model(minizinc.Model):
 
     def add_constraint(self, constraint: ExpressionBool, is_redundant=False):
         if (isinstance(constraint, Constraint)):
+            constraint.is_redundant = is_redundant
             if (constraint.ctype != Constraint.CTYPE_NORMAL):
                 self.global_constraints.add(constraint.ctype)
 
