@@ -12,6 +12,36 @@ SOLVE_MAXIMIZE = "maximize"
 SOLVE_MINIMIZE = "minimize"
 SOLVE_SATISFY = "satisfy"
 
+class RestartStrategy:
+    def __init__(self, restart_type: str, scale: int):
+        self.restart_type = restart_type
+        self.scale = scale
+
+    def __str__(self):
+        return f"{self.restart_type}({self.scale})"
+
+class RestartConstant(RestartStrategy):
+    def __init__(self, scale):
+        super().__init__("restart_constant", scale)
+
+class RestartLinear(RestartStrategy):
+    def __init__(self, scale):
+        super().__init__("restart_linear", scale)
+
+class RestartGeometric(RestartStrategy):
+    def __init__(self, base, scale):
+        self.base = base
+        super().__init__("restart_geometric", scale)
+
+    def __str__(self):
+        return f"{self.restart_type}({self.base}, {self.scale})"
+
+class RestartLuby(RestartStrategy):
+    def __init__(self, scale):
+        super().__init__("restart_luby", scale)
+
+
+
 class SeqSearch:
     def __init__(self, search_annotations: list["SearchAnnotation"]):
         self.search_annotations = search_annotations
@@ -134,9 +164,12 @@ class Model(minizinc.Model):
         else:
             raise Exception(f"Invalid solve criteria: {criteria}")
 
-    def set_solve_method(self, method: SearchAnnotation):
+    def set_solve_method(self, method: SearchAnnotation, restart_strategy: RestartStrategy=None):
         assert isinstance(method, (SeqSearch, SearchAnnotation))
+        if (restart_strategy is not None):
+            assert isinstance(restart_strategy, RestartStrategy)
         self.solve_method = method
+        self.restart_strategy = restart_strategy
 
     def add_constant(self, name: str, value, vtype=Variable.VTYPE_INTEGER):
         constant = Constant(name, value, vtype)
@@ -203,13 +236,18 @@ class Model(minizinc.Model):
         assert self.solve_criteria is not None
         _solve_method_str = ""
         if (self.solve_method is not None):
-            _solve_method_str += f":: {self.solve_method} "
+            _solve_method_str += f":: {self.solve_method}\n"
+            
+            if (self.restart_strategy is not None):
+                _solve_method_str += f"      :: {self.restart_strategy}\n "
+
         _solve_method_str += f"{self.solve_criteria}"
 
         if (self.solve_expression is not None):
             _solve_method_str += f" {self.solve_expression}"
             
         self.model_mzn_str += f"solve {_solve_method_str};\n"
+
         self.add_string(self.model_mzn_str)
         if (debug):
             print(self.model_mzn_str)
