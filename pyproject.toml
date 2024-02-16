@@ -9,7 +9,7 @@ readme = "README.md"
 requires-python = ">=3.8.0"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: Apache-2.0 license",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 
