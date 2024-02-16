@@ -3,7 +3,7 @@
 Create pure Minizinc .mzn files from Python using [python-minizinc-maker](https://github.com/Arthod/python-minizinc-maker/).
 
 ## Install
-Installed using [pip](pypihttps://pypi.org/project/pymzm/0.0.1/)
+Installed with pip from [pypi](https://pypi.org/project/pymzm/0.0.1/)
 ```
 pip3 install pymzm
 ```
