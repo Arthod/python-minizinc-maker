@@ -1,6 +1,6 @@
 # python-minizinc-maker
 
-Create pure Minizinc .mzn files from Python using python-minizinc-maker and [minizinc-python](https://github.com/MiniZinc/minizinc-python).
+Create pure Minizinc .mzn files from Python using [python-minizinc-maker](https://github.com/Arthod/python-minizinc-maker/).
 
 ## Install
 Installed using [pip](pypihttps://pypi.org/project/pymzm/0.0.1/)
