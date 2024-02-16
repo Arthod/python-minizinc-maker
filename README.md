@@ -2,6 +2,11 @@
 
 Create pure Minizinc .mzn files from Python using python-minizinc-maker and [minizinc-python](https://github.com/MiniZinc/minizinc-python).
 
+## Install
+Installed using [pip](pypihttps://pypi.org/project/pymzm/0.0.1/)
+```
+pip3 install pymzm
+```
 
 ## Model
 Model: `model = pymzm.Model()` \
