@@ -33,6 +33,7 @@ class Constraint:
         CTYPE_DECREASING,
         CTYPE_DISJUNCTIVE,
         CTYPE_ARG_SORT,
+        CTYPE_DIFFN,
     ] = [
         "normal",
         "alldifferent",
@@ -43,6 +44,7 @@ class Constraint:
         "decreasing",
         "disjunctive",
         "arg_sort",
+        "diffn"
     ]
     def __init__(self, cstr: ExpressionBool, ctype: str=CTYPE_NORMAL, annotation: str=None, is_redundant=False):
         self.cstr = cstr
@@ -123,3 +125,9 @@ class Constraint:
     def arg_sort(x: List[Expression], p: List[Expression]):
         # Constrains p to be the permutation which causes x to be in sorted order hence x[p[i]] <= x[p[i+1]].
         return Constraint._from_global_constraint("arg_sort", Constraint.CTYPE_ARG_SORT, x, p)
+    
+    @staticmethod
+    def diffn(x: List[Expression], y: List[Expression], dx: List[Expression], dy: List[Expression]):
+        # Constrains rectangles i, given by their origins (x[i], y[i]) and sizes (dx[i], dy[i]),
+        # to be non-overlapping. Zero-width rectangles can still not overlap with any other rectangle.
+        return Constraint._from_global_constraint("diffn", Constraint.CTYPE_DIFFN, x, y, dx, dy)
