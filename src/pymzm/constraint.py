@@ -34,7 +34,8 @@ class Constraint:
         CTYPE_DISJUNCTIVE,
         CTYPE_ARG_SORT,
         CTYPE_DIFFN,
-        CTYPE_CONNECTED
+        CTYPE_CONNECTED,
+        CTYPE_REACHABLE
     ] = [
         "normal",
         "alldifferent",
@@ -46,7 +47,8 @@ class Constraint:
         "disjunctive",
         "arg_sort",
         "diffn",
-        "connected"
+        "connected",
+        "reachable"
     ]
     def __init__(self, cstr: ExpressionBool, ctype: str=CTYPE_NORMAL, annotation: str=None, is_redundant=False):
         self.cstr = cstr
@@ -138,3 +140,9 @@ class Constraint:
     def connected(node_from: List[int], node_to: List[int], ns: List[ExpressionBool], es: List[ExpressionBool]):
         # Constrains the subgraph ns and es of a given undirected graph to be connected.
         return Constraint._from_global_constraint("connected", Constraint.CTYPE_CONNECTED, node_from, node_to, ns, es)
+    
+    @staticmethod
+    def reachable(node_from: List[int], node_to: List[int], r: List[Expression], ns: List[ExpressionBool], es: List[ExpressionBool]):
+        # Constrains the subgraph ns and es of a given undirected graph to be reachable from r.
+        # TODO: this can have other parameters.
+        return Constraint._from_global_constraint("reachable", Constraint.CTYPE_REACHABLE, node_from, node_to, r, ns, es)
