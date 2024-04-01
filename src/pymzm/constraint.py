@@ -34,6 +34,7 @@ class Constraint:
         CTYPE_DISJUNCTIVE,
         CTYPE_ARG_SORT,
         CTYPE_DIFFN,
+        CTYPE_CONNECTED
     ] = [
         "normal",
         "alldifferent",
@@ -44,7 +45,8 @@ class Constraint:
         "decreasing",
         "disjunctive",
         "arg_sort",
-        "diffn"
+        "diffn",
+        "connected"
     ]
     def __init__(self, cstr: ExpressionBool, ctype: str=CTYPE_NORMAL, annotation: str=None, is_redundant=False):
         self.cstr = cstr
@@ -131,3 +133,8 @@ class Constraint:
         # Constrains rectangles i, given by their origins (x[i], y[i]) and sizes (dx[i], dy[i]),
         # to be non-overlapping. Zero-width rectangles can still not overlap with any other rectangle.
         return Constraint._from_global_constraint("diffn", Constraint.CTYPE_DIFFN, x, y, dx, dy)
+    
+    @staticmethod
+    def connected(node_from: List[int], node_to: List[int], ns: List[ExpressionBool], es: List[ExpressionBool]):
+        # Constrains the subgraph ns and es of a given undirected graph to be connected.
+        return Constraint._from_global_constraint("connected", Constraint.CTYPE_CONNECTED, node_from, node_to, ns, es)

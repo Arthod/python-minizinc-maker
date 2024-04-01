@@ -11,11 +11,19 @@ class ValueDict(dict):
     def __str__(self):
         return variableIterable2Str(self)
     
-    
     def __invert__(self):
         raise NotImplementedError()
+    
     def __add__(self, other):
-        raise NotImplementedError()
+        if (not isinstance(other, ValueDict)):
+            raise PymzmValueIsNotExpression("other", other)
+
+        v = ValueDict()
+        v.update(other)
+        v.update(self)
+        
+        return v
+    
     def __sub__(self, other):
         raise NotImplementedError()
 
