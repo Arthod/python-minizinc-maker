@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+- family-names: "Othman"
+  given-names: "Ahmad M."
+  orcid: "https://orcid.org/0009-0008-9458-5973"
+title: "Python MiniZinc Maker"
+version: 1.0.0
+date-released: 2017-09-07
+url: "https://github.com/Arthod/python-minizinc-maker"
