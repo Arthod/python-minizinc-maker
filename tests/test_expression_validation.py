@@ -167,6 +167,70 @@ class TestExpressionValidation(unittest.TestCase):
         self.assertRaises(pymzm.PymzmNoValues, pymzm.Expression.set_comprehension, 1, [])
         self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.set_comprehension, object(), [("i", [1])])
 
+    def test_quantifiers_support_multi_generators_and_filters(self):
+        q_forall = pymzm.Expression.forall_over(
+            [
+                ("i", range(1, 4), lambda i: i >= 2),
+                ("j", [1, 2]),
+            ],
+            lambda i, j: i >= j,
+        )
+        q_exists = pymzm.Expression.exists_over(
+            [
+                ("i", "1..3"),
+                ("j", [1, 2, 3], lambda j: j >= 2),
+            ],
+            lambda i, j: i == j,
+        )
+
+        self.assertEqual(
+            str(q_forall),
+            "forall (i in 1..3 where (i >= 2), j in {1, 2}) ((i >= j))",
+        )
+        self.assertEqual(
+            str(q_exists),
+            "exists (i in 1..3, j in {1, 2, 3} where (j >= 2)) ((i == j))",
+        )
+
+    def test_quantifier_existing_api_still_works(self):
+        q_forall = pymzm.Expression.forall("i", range(1, 4), lambda i: i >= 1)
+        q_exists = pymzm.Expression.exists("i", [1, 2, 3], lambda i: i == 2)
+
+        self.assertEqual(str(q_forall), "forall (i in 1..3) ((i >= 1))")
+        self.assertEqual(str(q_exists), "exists (i in {1, 2, 3}) ((i == 2))")
+
+    def test_quantifiers_validate_inputs(self):
+        self.assertRaises(pymzm.PymzmNoValues, pymzm.Expression.forall_over, [], True)
+        self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.forall_over, ["bad"], True)
+        self.assertRaises(pymzm.PymzmValueIsNotCondition, pymzm.Expression.forall_over, [("i", [1])], 7)
+
+        self.assertRaises(pymzm.PymzmNoValues, pymzm.Expression.exists_over, [], True)
+        self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.exists_over, ["bad"], True)
+        self.assertRaises(pymzm.PymzmValueIsNotCondition, pymzm.Expression.exists_over, [("i", [1])], object())
+
+    def test_quantifiers_can_be_embedded_in_model(self):
+        model = pymzm.Model()
+        x = model.add_variable("x", val_min=0, val_max=10)
+
+        model.add_constraint(
+            pymzm.Expression.forall_over(
+                [("i", range(1, 4), lambda i: i >= 2)],
+                lambda i: x >= i,
+            )
+        )
+        model.add_constraint(
+            pymzm.Expression.exists_over(
+                [("j", [1, 2, 3])],
+                lambda j: x == j,
+            )
+        )
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+        model.generate()
+
+        self.assertIn("forall (i in 1..3 where (i >= 2)) ((x >= i))", model.model_mzn_str)
+        self.assertIn("exists (j in {1, 2, 3}) ((x == j))", model.model_mzn_str)
+        assert_valid_mzn(self, model.model_mzn_str)
+
 
 if __name__ == "__main__":
     unittest.main()

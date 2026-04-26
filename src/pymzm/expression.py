@@ -257,13 +257,35 @@ class Expression:
         raise PymzmValueIsNotExpression("expr", expr)
 
     @staticmethod
-    def array_comprehension(expr, generators):
+    def _quantifier_predicate_to_mz(predicate, generator_var_names):
+        if (isinstance(predicate, Callable)):
+            vars_expr = [Expression(name) for name in generator_var_names]
+            if (len(vars_expr) == 1):
+                predicate = predicate(vars_expr[0])
+            else:
+                predicate = predicate(*vars_expr)
+
+        if (isinstance(predicate, bool)):
+            return "true" if predicate else "false"
+        if (isinstance(predicate, ExpressionBool)):
+            return str(predicate)
+
+        raise PymzmValueIsNotCondition("predicate", predicate)
+
+    @staticmethod
+    def _normalize_generators(generators, arg_name: str="generators"):
         if (not isinstance(generators, Iterable) or isinstance(generators, (str, bytes))):
-            raise PymzmValueIsNotExpression("generators", generators)
+            raise PymzmValueIsNotExpression(arg_name, generators)
 
         generators = list(generators)
         if (not len(generators)):
-            raise PymzmNoValues("generators")
+            raise PymzmNoValues(arg_name)
+
+        return generators
+
+    @staticmethod
+    def array_comprehension(expr, generators):
+        generators = Expression._normalize_generators(generators, "generators")
 
         clauses = [Expression._generator_clause_to_mz(g) for g in generators]
         expr_mz = Expression._comprehension_expr_to_mz(expr, [g[0] for g in generators])
@@ -271,12 +293,7 @@ class Expression:
 
     @staticmethod
     def set_comprehension(expr, generators):
-        if (not isinstance(generators, Iterable) or isinstance(generators, (str, bytes))):
-            raise PymzmValueIsNotExpression("generators", generators)
-
-        generators = list(generators)
-        if (not len(generators)):
-            raise PymzmNoValues("generators")
+        generators = Expression._normalize_generators(generators, "generators")
 
         clauses = [Expression._generator_clause_to_mz(g) for g in generators]
         expr_mz = Expression._comprehension_expr_to_mz(expr, [g[0] for g in generators])
@@ -298,21 +315,25 @@ class Expression:
 
     @staticmethod
     def forall(var_name: str, domain, predicate: "ExpressionBool") -> "ExpressionBool":
-        if (not isinstance(var_name, str) or not var_name.strip()):
-            raise PymzmValueIsNotExpression("var_name", var_name)
-
-        domain_mz = Expression._domain_to_mz(domain)
-        predicate_mz = Expression._predicate_to_mz(var_name, predicate)
-        return ExpressionBool(f"forall ({var_name} in {domain_mz}) ({predicate_mz})")
+        return Expression.forall_over([(var_name, domain)], predicate)
 
     @staticmethod
     def exists(var_name: str, domain, predicate: "ExpressionBool") -> "ExpressionBool":
-        if (not isinstance(var_name, str) or not var_name.strip()):
-            raise PymzmValueIsNotExpression("var_name", var_name)
+        return Expression.exists_over([(var_name, domain)], predicate)
 
-        domain_mz = Expression._domain_to_mz(domain)
-        predicate_mz = Expression._predicate_to_mz(var_name, predicate)
-        return ExpressionBool(f"exists ({var_name} in {domain_mz}) ({predicate_mz})")
+    @staticmethod
+    def forall_over(generators, predicate: "ExpressionBool") -> "ExpressionBool":
+        generators = Expression._normalize_generators(generators, "generators")
+        clauses = [Expression._generator_clause_to_mz(g) for g in generators]
+        predicate_mz = Expression._quantifier_predicate_to_mz(predicate, [g[0] for g in generators])
+        return ExpressionBool(f"forall ({', '.join(clauses)}) ({predicate_mz})")
+
+    @staticmethod
+    def exists_over(generators, predicate: "ExpressionBool") -> "ExpressionBool":
+        generators = Expression._normalize_generators(generators, "generators")
+        clauses = [Expression._generator_clause_to_mz(g) for g in generators]
+        predicate_mz = Expression._quantifier_predicate_to_mz(predicate, [g[0] for g in generators])
+        return ExpressionBool(f"exists ({', '.join(clauses)}) ({predicate_mz})")
 
     @staticmethod
     def sum(exprs: List["Expression"]) -> "Expression":
