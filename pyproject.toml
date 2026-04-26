@@ -7,6 +7,9 @@ authors = [
 description = "Create pure Minizinc .mzn files from Python using python-minizinc-maker library."
 readme = "README.md"
 requires-python = ">=3.8.0"
+dependencies = [
+  "minizinc",
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
