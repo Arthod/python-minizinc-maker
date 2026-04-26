@@ -1,5 +1,6 @@
 import minizinc
 import pymzm
+import unittest
 
 
 DEFAULT_SOLVER_TAG = "gecode"
@@ -8,7 +9,12 @@ DEFAULT_THREADS = 1
 
 
 def lookup_default_solver(tag: str = DEFAULT_SOLVER_TAG):
-    return minizinc.Solver.lookup(tag)
+    try:
+        return minizinc.Solver.lookup(tag)
+    except AssertionError as exc:
+        raise unittest.SkipTest(
+            "MiniZinc runtime/driver is not available; integration tests are skipped."
+        ) from exc
 
 
 def deterministic_solver_config(

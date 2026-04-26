@@ -91,12 +91,12 @@ class Constraint:
 
         self.ctype = ctype # This variable shouldn't be changed by the user
         if (self.ctype not in Constraint.CTYPES):
-            raise PymzmInvalidConstraintType("ctype")
+            raise PymzmInvalidConstraintType("ctype", self.ctype)
 
         self.annotation = annotation
         if (self.annotation is not None):
             if (self.annotation not in AnnotationConstraint.ANNOTATIONS):
-                raise PymzmInvalidConstraintAnnotation("annotation")
+                raise PymzmInvalidConstraintAnnotation("annotation", self.annotation)
             
         self.is_redundant = is_redundant
         self.enabled = enabled

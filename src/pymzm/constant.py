@@ -1,5 +1,6 @@
 
 from .expression import Expression
+from .exceptions import PymzmIndexingScalarValue, PymzmInvalidScalarType, PymzmNonInitializedConstant
 from .variable import *
 from .misc import *
 from .data_encoder import encode_scalar, encode_array, infer_shape
@@ -11,7 +12,7 @@ class Constant(Expression):
         self.name = name
         self.value = value
         if (self.value is None):
-            raise Exception("Non-initialized constant is not supported by pymzm.")
+            raise PymzmNonInitializedConstant(name)
         
         self.vtype = vtype
         self.is_enum_type = (
@@ -19,7 +20,7 @@ class Constant(Expression):
             and self.vtype not in [Variable.VTYPE_INTEGER, Variable.VTYPE_BOOL, Variable.VTYPE_FLOAT, Variable.VTYPE_STRING]
         )
         if (not self.is_enum_type and self.vtype not in [Variable.VTYPE_INTEGER, Variable.VTYPE_BOOL, Variable.VTYPE_FLOAT, Variable.VTYPE_STRING]):
-            raise Exception("Invalid vtype for constant. Supported scalar types are int, bool, float, string, and enum type names")
+            raise PymzmInvalidScalarType("constant", self.vtype)
         
         self.shape = self._infer_shape(value)
 
@@ -30,7 +31,7 @@ class Constant(Expression):
     def __getitem__(self, other: Expression):
         # TODO boolean expression
         if (self.shape is None):
-            raise Exception("Constant cant be indexed as it is a single value")
+            raise PymzmIndexingScalarValue(self.name)
         
         if (len(self.shape) == 1):
             return Expression(f"{self.name}[{str(other)} + 1]")
@@ -69,7 +70,7 @@ class Parameter(Constant):
             and self.vtype not in [Variable.VTYPE_INTEGER, Variable.VTYPE_BOOL, Variable.VTYPE_FLOAT, Variable.VTYPE_STRING]
         )
         if (not self.is_enum_type and self.vtype not in [Variable.VTYPE_INTEGER, Variable.VTYPE_BOOL, Variable.VTYPE_FLOAT, Variable.VTYPE_STRING]):
-            raise Exception("Invalid vtype for parameter. Supported scalar types are int, bool, float, string, and enum type names")
+            raise PymzmInvalidScalarType("parameter", self.vtype)
         self.shape = None
 
     def _to_mz(self):

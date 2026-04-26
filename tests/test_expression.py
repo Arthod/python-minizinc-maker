@@ -1,9 +1,16 @@
 import inspect
+import sys
 import unittest
+from pathlib import Path
 import pytest
 
 import pymzm
 import minizinc
+
+repo_root = Path(__file__).resolve().parents[1]
+if (str(repo_root) not in sys.path):
+    sys.path.insert(0, str(repo_root))
+
 from tests.solver_utils import deterministic_instance_solve, lookup_default_solver
 
 import equiv

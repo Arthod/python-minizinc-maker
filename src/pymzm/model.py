@@ -136,11 +136,11 @@ class SearchAnnotation:
 
         self.varchoice = varchoice
         if (self.varchoice not in AnnotationVariableChoice.VARCHOICES):
-            raise PymzmInvalidVarchoiceAnnotation("varchoice")
+            raise PymzmInvalidVarchoiceAnnotation("varchoice", varchoice)
         
         self.valchoice = valchoice
         if (self.valchoice not in AnnotationValueChoice.VALCHOICES):
-            raise PymzmInvalidValchoiceAnnotation("valchoice")
+            raise PymzmInvalidValchoiceAnnotation("valchoice", valchoice)
         
     def __str__(self) -> str:
         return f"{self.search_type}({self.variables}, {self.varchoice}, {self.valchoice})"
@@ -266,7 +266,7 @@ class Model(minizinc.Model):
         elif (criteria == SOLVE_SATISFY):
             assert expr is None
         else:
-            raise Exception(f"Invalid solve criteria: {criteria}")
+            raise PymzmInvalidSolveCriteria(criteria)
 
     def set_solve_method(self, method: SearchAnnotation, restart_strategy: Optional[RestartStrategy]=None) -> None:
         assert isinstance(method, (SeqSearch, SearchAnnotation))
@@ -393,7 +393,7 @@ class Model(minizinc.Model):
             constraint = Constraint(constraint.name, is_redundant=is_redundant, enabled=enabled)
 
         else:
-            raise Exception("invalid constraint type")
+            raise PymzmInvalidConstraintType("constraint", type(constraint).__name__)
 
         self.constraints.append(constraint)
         return constraint

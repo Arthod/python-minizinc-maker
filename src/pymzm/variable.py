@@ -132,8 +132,7 @@ class Variable(Expression):
             assert self.val_min is None
             assert self.val_max is None
         else:
-            raise Exception(f"Invalid variable type vtype={vtype}")
-    
+            raise PymzmUnsupportedVariableType(vtype)
     def __str__(self):
         return self.name
 

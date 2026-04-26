@@ -1,69 +1,136 @@
 
-
 class PymzmException(Exception):
+    """Base exception for all pymzm-specific failures."""
+
+
+class PymzmValidationError(PymzmException):
+    """Base class for invalid input or invalid model state errors."""
+
+
+class PymzmArgumentError(PymzmValidationError):
+    def __init__(self, argname, message):
+        self.argname = argname
+        self.message = message
+
+    def __str__(self):
+        return f"Invalid argument '{self.argname}': {self.message}"
+
+
+class PymzmModelStateError(PymzmValidationError):
     pass
 
-class PymzmInvalidConstraintType(PymzmException):
-    def __init__(self, argname):
-        self.argname = argname
 
-    def __str__(self):
-        return f"Argument \"{self.argname}\" is not a valid constraint type."
+class PymzmConfigurationError(PymzmValidationError):
+    pass
 
-class PymzmValueIsNotCondition(PymzmException):
+
+class PymzmInvalidConstraintType(PymzmArgumentError):
+    def __init__(self, argname, value=None):
+        self.value = value
+        message = "expected one of Constraint.CTYPES"
+        if (value is not None):
+            message += f", got {value!r}"
+        super().__init__(argname, message)
+
+
+class PymzmValueIsNotCondition(PymzmArgumentError):
     def __init__(self, argname, expr):
-        self.argname = argname
         self.expr = expr
+        expr_type = type(expr).__name__
+        super().__init__(argname, f"expected a boolean condition expression, got {expr!r} (type={expr_type})")
 
-    def __str__(self):
-        return f"Argument \"{self.argname}\": {repr(self.expr)} (type={type(self.expr)}) is not valid as a condition."
 
-class PymzmValueIsNotExpression(PymzmException):
+class PymzmValueIsNotExpression(PymzmArgumentError):
     def __init__(self, argname, expr):
-        self.argname = argname
         self.expr = expr
+        expr_type = type(expr).__name__
+        super().__init__(argname, f"expected an expression-compatible value, got {expr!r} (type={expr_type})")
 
-    def __str__(self):
-        return f"Argument \"{self.argname}\": {repr(self.expr)} (type={type(self.expr)}) is not valid as a expression."
 
-class PymzmNoValues(PymzmException):
+class PymzmNoValues(PymzmArgumentError):
     def __init__(self, argname):
-        self.argname = argname
+        super().__init__(argname, "expected a non-empty iterable")
 
-    def __str__(self):
-        return f"Argument \"{self.argname}\", expected iterable but has no values."
-    
-class PymzmInvalidVarchoiceAnnotation(PymzmException):
-    def __init__(self, argname):
-        self.argname = argname
 
-    def __str__(self):
-        return f"Argument \"{self.argname}\" is not valid as a varchoice annotation."
-    
-class PymzmInvalidConstraintAnnotation(PymzmException):
-    def __init__(self, argname):
-        self.argname = argname
+class PymzmInvalidVarchoiceAnnotation(PymzmArgumentError):
+    def __init__(self, argname, value=None):
+        self.value = value
+        message = "expected one of AnnotationVariableChoice.VARCHOICES"
+        if (value is not None):
+            message += f", got {value!r}"
+        super().__init__(argname, message)
 
-    def __str__(self):
-        return f"Argument \"{self.argname}\" is not valid as a constraint annotation."
-    
-class PymzmInvalidValchoiceAnnotation(PymzmException):
-    def __init__(self, argname):
-        self.argname = argname
 
-    def __str__(self):
-        return f"Argument \"{self.argname}\" is not valid as a valchoice annotation."
-    
-class PymzmInvalidVariableError(PymzmException):
+class PymzmInvalidConstraintAnnotation(PymzmArgumentError):
+    def __init__(self, argname, value=None):
+        self.value = value
+        message = "expected one of AnnotationConstraint.ANNOTATIONS"
+        if (value is not None):
+            message += f", got {value!r}"
+        super().__init__(argname, message)
+
+
+class PymzmInvalidValchoiceAnnotation(PymzmArgumentError):
+    def __init__(self, argname, value=None):
+        self.value = value
+        message = "expected one of AnnotationValueChoice.VALCHOICES"
+        if (value is not None):
+            message += f", got {value!r}"
+        super().__init__(argname, message)
+
+
+class PymzmInvalidVariableError(PymzmArgumentError):
     def __init__(self, argname, msg):
-        self.argname = argname
         self.msg = msg
+        super().__init__(argname, msg)
+
+
+class PymzmInvalidSearchAnnotation(PymzmValidationError):
+    def __str__(self):
+        return "Invalid search annotation: expected SearchAnnotation instances in seq_search(...)"
+
+
+class PymzmInvalidSolveCriteria(PymzmConfigurationError):
+    def __init__(self, criteria):
+        self.criteria = criteria
 
     def __str__(self):
-        return f"Argument \"{self.argname}\" error. {self.msg}."
+        return (
+            "Invalid solve criteria: "
+            f"{self.criteria!r}. Expected one of 'satisfy', 'minimize', or 'maximize'."
+        )
 
-class PymzmInvalidSearchAnnotation(PymzmException):
-    def __init__(self):
-        pass
+
+class PymzmUnsupportedVariableType(PymzmArgumentError):
+    def __init__(self, vtype):
+        self.vtype = vtype
+        super().__init__(
+            "vtype",
+            f"unsupported variable type {vtype!r}; expected one of int, float, bool, string, set",
+        )
+
+
+class PymzmNonInitializedConstant(PymzmModelStateError):
+    def __init__(self, name):
+        self.name = name
+
     def __str__(self):
-        return "PymzmInvalidSearchAnnotation."
+        return f"Constant '{self.name}' is not initialized. Use add_parameter(..., value=None) for declaration-only data."
+
+
+class PymzmInvalidScalarType(PymzmArgumentError):
+    def __init__(self, kind, vtype):
+        self.kind = kind
+        self.vtype = vtype
+        super().__init__(
+            "vtype",
+            f"invalid {kind} scalar type {vtype!r}; supported scalar types are int, bool, float, string, or enum type names",
+        )
+
+
+class PymzmIndexingScalarValue(PymzmModelStateError):
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return f"Value '{self.name}' is scalar and cannot be indexed."
