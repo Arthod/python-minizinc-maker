@@ -10,6 +10,7 @@ from .expression import *
 from .constant import *
 from .ir import ModelIR, SolveIR
 from .backends import MznTextBackend
+from .result import SolveResult
 
 SOLVE_MAXIMIZE = "maximize"
 SOLVE_MINIMIZE = "minimize"
@@ -334,7 +335,7 @@ class Model(minizinc.Model):
         self.last_solver = solver_obj
         self.last_solve_result = result
         self.last_solve_status = getattr(result, "status", None)
-        self.last_solve_statistics = getattr(result, "statistics", None)
+        self.last_solve_statistics = result.raw_statistics
 
     def get_last_solve_info(self) -> dict[str, Any]:
         return {
@@ -372,8 +373,9 @@ class Model(minizinc.Model):
             all_solutions=config.all_solutions,
             **config.extra_solve_args,
         )
-        self._record_solve_outcome(solver_obj, result)
-        return result
+        normalized = SolveResult(result)
+        self._record_solve_outcome(solver_obj, normalized)
+        return normalized
 
     def solve_with(self, config: SolverConfig):
         return self.solve(solver=config)

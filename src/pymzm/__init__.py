@@ -7,4 +7,5 @@ from .variable import *
 from .constraint import *
 from .ir import *
 from .backends import *
+from .result import *
 
