@@ -84,7 +84,7 @@ class Variable(Expression):
         self.val_max = val_max
         self.domain = domain
 
-        if (vtype == Variable.VTYPE_INTEGER or vtype == Variable.VTYPE_SET):
+        if (vtype == Variable.VTYPE_INTEGER):
             if (domain is None):
                 assert self.val_min is not None
                 assert self.val_max is not None
@@ -92,9 +92,24 @@ class Variable(Expression):
             else:
                 assert self.val_min is None
                 assert self.val_max is None
-                #assert isinstance(domain, set)
-                self.domain = set(domain)
-                assert len(self.domain) > 0
+                if (isinstance(domain, (str, Expression))):
+                    self.domain = domain
+                else:
+                    self.domain = set(domain)
+                    assert len(self.domain) > 0
+
+        elif (vtype == Variable.VTYPE_SET):
+            if (domain is None):
+                assert self.val_min is not None
+                assert self.val_max is not None
+            else:
+                assert self.val_min is None
+                assert self.val_max is None
+                if (isinstance(domain, (str, Expression))):
+                    self.domain = domain
+                else:
+                    self.domain = set(domain)
+                    assert len(self.domain) > 0
 
         elif (vtype == Variable.VTYPE_FLOAT):
             assert self.domain is None
@@ -124,8 +139,10 @@ class Variable(Expression):
         elif (self.vtype == Variable.VTYPE_INTEGER):
             if (self.domain is None):
                 return f"var {self.val_min}..{self.val_max}: {self.name};\n"
-            else:
+            elif (isinstance(self.domain, (str, Expression))):
                 return f"var {self.domain}: {self.name};\n"
+            else:
+                return f"var {set_py2mz(self.domain)}: {self.name};\n"
             
         elif (self.vtype == Variable.VTYPE_FLOAT):
             return f"var {self.val_min}..{self.val_max}: {self.name};\n"
@@ -133,8 +150,10 @@ class Variable(Expression):
         elif (self.vtype == Variable.VTYPE_SET):
             if (self.domain is None):
                 return f"var set of {self.val_min}..{self.val_max}: {self.name};\n"
-            else:
+            elif (isinstance(self.domain, (str, Expression))):
                 return f"var set of {self.domain}: {self.name};\n"
+            else:
+                return f"var set of {set_py2mz(self.domain)}: {self.name};\n"
 
         elif (self.vtype == Variable.VTYPE_STRING):
             return f"var string: {self.name};\n"

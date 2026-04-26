@@ -47,6 +47,37 @@ class TestScalarTypes(unittest.TestCase):
         self.assertIn("float: cf = 3.25;", ir.declarations)
         self.assertIn('string: cs = "hello \\\"mzn\\\"";', ir.declarations)
 
+    def test_set_domains_for_int_and_enum_type(self):
+        model = pymzm.Model()
+
+        set_int = model.add_variable("set_int", vtype=pymzm.Variable.VTYPE_SET, domain={3, 1, 2})
+        set_enum = model.add_variable("set_enum", vtype=pymzm.Variable.VTYPE_SET, domain="Color")
+
+        model.add_constraint(set_int.contains(1))
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+        ir = model.to_ir()
+
+        self.assertIn("var set of {1, 2, 3}: set_int;", ir.declarations)
+        self.assertIn("var set of Color: set_enum;", ir.declarations)
+
+    def test_nd_array_constant_serialization(self):
+        model = pymzm.Model()
+        values = [
+            [[1, 2], [3, 4]],
+            [[5, 6], [7, 8]],
+        ]
+        model.add_constant("a3", values, vtype=pymzm.Variable.VTYPE_INTEGER)
+        x = model.add_variable("x", val_min=0, val_max=10)
+        model.add_constraint(x >= 0)
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+
+        ir = model.to_ir()
+
+        self.assertIn(
+            "array[1..2,1..2,1..2] of int: a3 = array3d(1..2, 1..2, 1..2, [1, 2, 3, 4, 5, 6, 7, 8]);",
+            ir.declarations,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

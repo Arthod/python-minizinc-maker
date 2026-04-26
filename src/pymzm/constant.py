@@ -43,7 +43,7 @@ class Constant:
             return f"{self.vtype}: {self.name} = {self._scalar_to_mz(self.value)};\n"
         
         else:
-            mz_array = array_py2mz(self.value, self.shape)
+            mz_array = array_py2mz(self.value, self.shape, self._scalar_to_mz)
             return f"array[{','.join(f'1..{d}' for d in self.shape)}] of {self.vtype}: {self.name} = {mz_array};\n"
 
     def _scalar_to_mz(self, value):
