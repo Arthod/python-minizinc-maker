@@ -288,7 +288,7 @@ class Model(minizinc.Model):
         self.constants.append(constant)
         return constant
 
-    def add_parameter(self, name: str, value, vtype=Variable.VTYPE_INTEGER):
+    def add_parameter(self, name: str, value=None, vtype=Variable.VTYPE_INTEGER):
         parameter = Parameter(name, value, vtype)
         self.parameters.append(parameter)
         return parameter
@@ -515,12 +515,30 @@ class Model(minizinc.Model):
             return minizinc.Solver.lookup(solver)
         return solver
 
+    def _parameter_default_data(self) -> dict[str, Any]:
+        defaults = {}
+        for parameter in self.parameters:
+            if (getattr(parameter, "has_value", False)):
+                defaults[parameter.name] = parameter.value
+        return defaults
+
+    def _bind_instance_data(self, instance, data: dict[str, Any]):
+        defaults = self._parameter_default_data()
+        merged = {**defaults, **dict(data)}
+        for key, value in merged.items():
+            instance[key] = value
+
     def _create_instance(self, config: SolverConfig):
         solver_obj = self._resolve_solver(config.solver)
         model_text = self._render_model_string()
         runtime_model = minizinc.Model()
         runtime_model.add_string(model_text)
         return minizinc.Instance(solver_obj, runtime_model), solver_obj
+
+    def _create_compiled_instance(self, config: SolverConfig):
+        solver_obj = self._resolve_solver(config.solver)
+        self._sync_compiled_model()
+        return minizinc.Instance(solver_obj, self), solver_obj
 
     def _normalize_solver_config(
         self,
@@ -603,6 +621,42 @@ class Model(minizinc.Model):
 
     def solve_with(self, config: SolverConfig):
         return self.solve(solver=config)
+
+    def solve_with_data(
+        self,
+        data: dict[str, Any],
+        solver: Union[str, Any, SolverConfig, None]=None,
+        timeout=None,
+        random_seed: Optional[int]=None,
+        threads: Optional[int]=None,
+        free_search: bool=False,
+        all_solutions: bool=False,
+        **kwargs,
+    ):
+        config = self._normalize_solver_config(
+            solver=solver,
+            timeout=timeout,
+            random_seed=random_seed,
+            threads=threads,
+            free_search=free_search,
+            all_solutions=all_solutions,
+            **kwargs,
+        )
+
+        instance, solver_obj = self._create_compiled_instance(config=config)
+        self._bind_instance_data(instance, data)
+
+        result = instance.solve(
+            timeout=config.timeout,
+            random_seed=config.random_seed,
+            processes=config.threads,
+            free_search=config.free_search,
+            all_solutions=config.all_solutions,
+            **config.extra_solve_args,
+        )
+        normalized = SolveResult(result)
+        self._record_solve_outcome(solver_obj, normalized)
+        return normalized
 
     def optimize(
         self,

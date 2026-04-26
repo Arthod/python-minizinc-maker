@@ -273,6 +273,46 @@ class TestModelExecution(unittest.TestCase):
         self.assertNotEqual(before, after)
         self.assertEqual(add_string_mock.call_count, 2)
 
+    @patch("pymzm.model.minizinc.Instance")
+    @patch("pymzm.model.minizinc.Solver.lookup")
+    def test_solve_with_data_binds_parameter_values(self, solver_lookup_mock, instance_cls_mock):
+        model = pymzm.Model()
+        n = model.add_parameter("n", vtype=pymzm.Variable.VTYPE_INTEGER)
+        x = model.add_variable("x", val_min=0, val_max=10)
+        model.add_constraint(x <= n)
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+
+        solver_lookup_mock.return_value = "solver-object"
+        instance_mock = MagicMock()
+        instance_mock.solve.return_value = object()
+        instance_cls_mock.return_value = instance_mock
+
+        model.solve_with_data({"n": 4}, solver="gecode")
+
+        instance_mock.__setitem__.assert_called_once_with("n", 4)
+        instance_mock.solve.assert_called_once()
+
+    @patch("pymzm.model.minizinc.Model.add_string")
+    @patch("pymzm.model.minizinc.Instance")
+    @patch("pymzm.model.minizinc.Solver.lookup")
+    def test_solve_with_data_reuses_compiled_structure(self, solver_lookup_mock, instance_cls_mock, add_string_mock):
+        model = pymzm.Model()
+        n = model.add_parameter("n", 2, vtype=pymzm.Variable.VTYPE_INTEGER)
+        x = model.add_variable("x", val_min=0, val_max=10)
+        model.add_constraint(x <= n)
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+
+        solver_lookup_mock.return_value = "solver-object"
+        instance_mock = MagicMock()
+        instance_mock.solve.return_value = object()
+        instance_cls_mock.return_value = instance_mock
+
+        model.solve_with_data({"n": 3}, solver="gecode")
+        model.solve_with_data({"n": 5}, solver="gecode")
+
+        self.assertEqual(add_string_mock.call_count, 1)
+        self.assertEqual(instance_mock.__setitem__.call_count, 2)
+
 
 if __name__ == "__main__":
     unittest.main()

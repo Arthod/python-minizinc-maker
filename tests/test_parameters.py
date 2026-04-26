@@ -62,6 +62,19 @@ class TestParameters(unittest.TestCase):
         self.assertEqual(str(fav), "fav")
         self.assertIn("Color: fav = GREEN;", ir.declarations)
 
+    def test_parameter_can_be_declared_without_default_value(self):
+        model = pymzm.Model()
+
+        n = model.add_parameter("n", vtype=pymzm.Variable.VTYPE_INTEGER)
+        x = model.add_variable("x", val_min=0, val_max=10)
+        model.add_constraint(x <= n)
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+
+        ir = model.to_ir()
+
+        self.assertEqual(str(n), "n")
+        self.assertIn("int: n;", ir.declarations)
+
 
 if __name__ == "__main__":
     unittest.main()

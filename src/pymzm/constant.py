@@ -80,6 +80,27 @@ class Constant(Expression):
 
 
 class Parameter(Constant):
-    pass
+    def __init__(self, name: str, value=None, vtype=Variable.VTYPE_INTEGER):
+        self.has_value = value is not None
+        if (self.has_value):
+            super().__init__(name, value, vtype)
+            return
+
+        Expression.__init__(self, name)
+        self.name = name
+        self.value = None
+        self.vtype = vtype
+        self.is_enum_type = (
+            isinstance(self.vtype, str)
+            and self.vtype not in [Variable.VTYPE_INTEGER, Variable.VTYPE_BOOL, Variable.VTYPE_FLOAT, Variable.VTYPE_STRING]
+        )
+        if (not self.is_enum_type and self.vtype not in [Variable.VTYPE_INTEGER, Variable.VTYPE_BOOL, Variable.VTYPE_FLOAT, Variable.VTYPE_STRING]):
+            raise Exception("Invalid vtype for parameter. Supported scalar types are int, bool, float, string, and enum type names")
+        self.shape = None
+
+    def _to_mz(self):
+        if (not self.has_value):
+            return f"{self.vtype}: {self.name};\n"
+        return super()._to_mz()
         
         
