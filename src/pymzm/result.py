@@ -24,30 +24,30 @@ class SolutionView:
 
     @staticmethod
     def _extract_solution_data(solution: Any) -> dict[str, Any]:
-        if (solution is None):
+        if solution is None:
             return {}
-        if (isinstance(solution, dict)):
+        if isinstance(solution, dict):
             return {k: SolutionView._decode_value(v) for k, v in solution.items()}
-        if (hasattr(solution, "__dict__")):
+        if hasattr(solution, "__dict__"):
             raw = vars(solution)
             return {k: SolutionView._decode_value(v) for k, v in raw.items()}
         raise TypeError("Unsupported solution object type for normalized access.")
 
     @staticmethod
     def _decode_value(value: Any):
-        if (isinstance(value, Enum)):
+        if isinstance(value, Enum):
             return value.name
-        if (isinstance(value, (bool, int, float, str, type(None)))):
+        if isinstance(value, (bool, int, float, str, type(None))):
             return value
-        if (isinstance(value, (set, frozenset))):
+        if isinstance(value, (set, frozenset)):
             return {SolutionView._decode_value(v) for v in value}
-        if (isinstance(value, tuple)):
+        if isinstance(value, tuple):
             return tuple(SolutionView._decode_value(v) for v in value)
-        if (isinstance(value, list)):
+        if isinstance(value, list):
             return [SolutionView._decode_value(v) for v in value]
-        if (isinstance(value, dict)):
+        if isinstance(value, dict):
             return {k: SolutionView._decode_value(v) for k, v in value.items()}
-        if (hasattr(value, "tolist")):
+        if hasattr(value, "tolist"):
             return SolutionView._decode_value(value.tolist())
         return value
 
@@ -58,7 +58,7 @@ class SolutionView:
         return self._data[key]
 
     def __getattr__(self, name: str):
-        if (name in self._data):
+        if name in self._data:
             return self._data[name]
         raise AttributeError(name)
 
@@ -81,15 +81,15 @@ class SolveResult:
 
     @staticmethod
     def _normalize_solutions(solution_container):
-        if (solution_container is None):
+        if solution_container is None:
             return []
-        if (isinstance(solution_container, (list, tuple))):
+        if isinstance(solution_container, (list, tuple)):
             return [SolutionView(solution) for solution in solution_container]
         return [SolutionView(solution_container)]
 
     @staticmethod
     def _normalize_status_code(status) -> str:
-        if (status is None):
+        if status is None:
             return "UNKNOWN"
         status_name = getattr(status, "name", str(status)).upper()
         return _STATUS_MAP.get(status_name, status_name)
@@ -123,21 +123,21 @@ class SolveResult:
         return self.status_code == "OPTIMAL"
 
     def to_dict(self) -> dict[str, Any]:
-        if (not self.solutions):
+        if not self.solutions:
             return {}
         return self.solutions[0].to_dict()
 
     def __getitem__(self, key):
-        if (isinstance(key, int)):
+        if isinstance(key, int):
             return self.solutions[key]
-        if (isinstance(key, slice)):
+        if isinstance(key, slice):
             return self.solutions[key]
-        if (not self.solutions):
+        if not self.solutions:
             raise KeyError(key)
         return self.solutions[0][key]
 
     def __getattr__(self, name: str):
-        if (self.solutions and name in self.solutions[0]):
+        if self.solutions and name in self.solutions[0]:
             return self.solutions[0][name]
         raise AttributeError(name)
 

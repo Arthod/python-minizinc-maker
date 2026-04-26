@@ -26,7 +26,9 @@ class MznTextBackend(BackendAdapter):
 
         solve_text = ""
         if len(solve_annotations):
-            solve_text += " ".join(f":: {annotation}" for annotation in solve_annotations)
+            solve_text += " ".join(
+                f":: {annotation}" for annotation in solve_annotations
+            )
             solve_text += " "
 
         solve_text += solve.criteria

@@ -1,4 +1,3 @@
-
 class PymzmException(Exception):
     """Base exception for all pymzm-specific failures."""
 
@@ -28,7 +27,7 @@ class PymzmInvalidConstraintType(PymzmArgumentError):
     def __init__(self, argname, value=None):
         self.value = value
         message = "expected one of Constraint.CTYPES"
-        if (value is not None):
+        if value is not None:
             message += f", got {value!r}"
         super().__init__(argname, message)
 
@@ -37,14 +36,20 @@ class PymzmValueIsNotCondition(PymzmArgumentError):
     def __init__(self, argname, expr):
         self.expr = expr
         expr_type = type(expr).__name__
-        super().__init__(argname, f"expected a boolean condition expression, got {expr!r} (type={expr_type})")
+        super().__init__(
+            argname,
+            f"expected a boolean condition expression, got {expr!r} (type={expr_type})",
+        )
 
 
 class PymzmValueIsNotExpression(PymzmArgumentError):
     def __init__(self, argname, expr):
         self.expr = expr
         expr_type = type(expr).__name__
-        super().__init__(argname, f"expected an expression-compatible value, got {expr!r} (type={expr_type})")
+        super().__init__(
+            argname,
+            f"expected an expression-compatible value, got {expr!r} (type={expr_type})",
+        )
 
 
 class PymzmNoValues(PymzmArgumentError):
@@ -56,7 +61,7 @@ class PymzmInvalidVarchoiceAnnotation(PymzmArgumentError):
     def __init__(self, argname, value=None):
         self.value = value
         message = "expected one of AnnotationVariableChoice.VARCHOICES"
-        if (value is not None):
+        if value is not None:
             message += f", got {value!r}"
         super().__init__(argname, message)
 
@@ -65,7 +70,7 @@ class PymzmInvalidConstraintAnnotation(PymzmArgumentError):
     def __init__(self, argname, value=None):
         self.value = value
         message = "expected one of AnnotationConstraint.ANNOTATIONS"
-        if (value is not None):
+        if value is not None:
             message += f", got {value!r}"
         super().__init__(argname, message)
 
@@ -74,7 +79,7 @@ class PymzmInvalidValchoiceAnnotation(PymzmArgumentError):
     def __init__(self, argname, value=None):
         self.value = value
         message = "expected one of AnnotationValueChoice.VALCHOICES"
-        if (value is not None):
+        if value is not None:
             message += f", got {value!r}"
         super().__init__(argname, message)
 

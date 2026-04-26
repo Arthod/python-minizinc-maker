@@ -1,8 +1,8 @@
-
 from typing import Sequence, Union
 
 from .exceptions import *
 from .expression import *
+
 
 class AnnotationConstraint:
     ANNOTATIONS = [
@@ -25,6 +25,7 @@ class AnnotationConstraint:
         "domain_propagation",
         "value_propagation",
     ]
+
 
 class Constraint:
     ExprLike = Union[Expression, int, float, bool, str]
@@ -55,7 +56,7 @@ class Constraint:
         CTYPE_ARG_SORT,
         CTYPE_DIFFN,
         CTYPE_CONNECTED,
-        CTYPE_REACHABLE
+        CTYPE_REACHABLE,
     ] = [
         "normal",
         "alldifferent",
@@ -82,38 +83,45 @@ class Constraint:
         "arg_sort",
         "diffn",
         "connected",
-        "reachable"
+        "reachable",
     ]
     # Canonical alias for naming consistency with all_different(...).
     CTYPE_ALL_DIFFERENT = CTYPE_ALLDIFFERENT
     PUBLIC_CTYPES = tuple(CTYPES)
 
-    def __init__(self, cstr: ExpressionBool, ctype: str=CTYPE_NORMAL, annotation: str=None, is_redundant=False, enabled=True):
+    def __init__(
+        self,
+        cstr: ExpressionBool,
+        ctype: str = CTYPE_NORMAL,
+        annotation: str = None,
+        is_redundant=False,
+        enabled=True,
+    ):
         self.cstr = cstr
-        if (not isinstance(self.cstr, (ExpressionBool, bool, str))):
+        if not isinstance(self.cstr, (ExpressionBool, bool, str)):
             raise PymzmValueIsNotCondition("cstr", self.cstr)
 
-        self.ctype = ctype # This variable shouldn't be changed by the user
-        if (self.ctype not in Constraint.CTYPES):
+        self.ctype = ctype  # This variable shouldn't be changed by the user
+        if self.ctype not in Constraint.CTYPES:
             raise PymzmInvalidConstraintType("ctype", self.ctype)
 
         self.annotation = annotation
-        if (self.annotation is not None):
-            if (self.annotation not in AnnotationConstraint.ANNOTATIONS):
+        if self.annotation is not None:
+            if self.annotation not in AnnotationConstraint.ANNOTATIONS:
                 raise PymzmInvalidConstraintAnnotation("annotation", self.annotation)
-            
+
         self.is_redundant = is_redundant
         self.enabled = enabled
 
     def __str__(self):
         return self.cstr
-    
+
     def _to_mz(self):
         annotation_suffix = ""
-        if (self.annotation is not None):
+        if self.annotation is not None:
             annotation_suffix = f" :: {self.annotation}"
 
-        if (self.is_redundant):
+        if self.is_redundant:
             return f"constraint redundant_constraint({self.cstr}){annotation_suffix};\n"
         else:
             return f"constraint {self.cstr}{annotation_suffix};\n"
@@ -130,7 +138,9 @@ class Constraint:
 
     @staticmethod
     def _assert_same_length(arg_name_left: str, left, arg_name_right: str, right):
-        assert len(left) == len(right), f"{arg_name_left} and {arg_name_right} must have the same length"
+        assert len(left) == len(right), (
+            f"{arg_name_left} and {arg_name_right} must have the same length"
+        )
 
     @staticmethod
     def _normalize_and_match(left_name: str, left, right_name: str, right):
@@ -142,124 +152,194 @@ class Constraint:
     @staticmethod
     def alldifferent(exprs: Sequence[ExprLike]) -> "Constraint":
         exprs = Constraint._as_non_empty_list(exprs, "exprs")
-        return Constraint._from_global_constraint("alldifferent", Constraint.CTYPE_ALLDIFFERENT, exprs)
+        return Constraint._from_global_constraint(
+            "alldifferent", Constraint.CTYPE_ALLDIFFERENT, exprs
+        )
 
     @staticmethod
     def all_different(exprs: Sequence[ExprLike]) -> "Constraint":
         return Constraint.alldifferent(exprs)
-    
+
     @staticmethod
-    def among(n: ExprLike, exprs: Sequence[ExprLike], values: Sequence[ExprLike]) -> "Constraint":
+    def among(
+        n: ExprLike, exprs: Sequence[ExprLike], values: Sequence[ExprLike]
+    ) -> "Constraint":
         exprs = Constraint._as_non_empty_list(exprs, "exprs")
         values = Constraint._as_non_empty_list(values, "values")
-        return Constraint._from_global_constraint("among", Constraint.CTYPE_AMONG, n, exprs, values)
-    
+        return Constraint._from_global_constraint(
+            "among", Constraint.CTYPE_AMONG, n, exprs, values
+        )
+
     @staticmethod
     def all_equal(exprs: Sequence[ExprLike]) -> "Constraint":
         exprs = Constraint._as_non_empty_list(exprs, "exprs")
-        return Constraint._from_global_constraint("all_equal", Constraint.CTYPE_ALL_EQUAL, exprs)
-    
+        return Constraint._from_global_constraint(
+            "all_equal", Constraint.CTYPE_ALL_EQUAL, exprs
+        )
+
     @staticmethod
-    def count(exprs: Sequence[ExprLike], val: ExprLike, count: ExprLike) -> "Constraint":
+    def count(
+        exprs: Sequence[ExprLike], val: ExprLike, count: ExprLike
+    ) -> "Constraint":
         exprs = Constraint._as_non_empty_list(exprs, "exprs")
-        return Constraint._from_global_constraint("count", Constraint.CTYPE_COUNT, exprs, val, count)
-    
+        return Constraint._from_global_constraint(
+            "count", Constraint.CTYPE_COUNT, exprs, val, count
+        )
+
     @staticmethod
     def increasing(exprs: Sequence[ExprLike]) -> "Constraint":
         # Requires that the array x is in (non-strictly) increasing order (duplicates are allowed).
         exprs = Constraint._as_non_empty_list(exprs, "exprs")
-        return Constraint._from_global_constraint("increasing", Constraint.CTYPE_INCREASING, exprs)
+        return Constraint._from_global_constraint(
+            "increasing", Constraint.CTYPE_INCREASING, exprs
+        )
 
     @staticmethod
     def strictly_increasing(exprs: Sequence[ExprLike]) -> "Constraint":
         exprs = Constraint._as_non_empty_list(exprs, "exprs")
-        return Constraint._from_global_constraint("strictly_increasing", Constraint.CTYPE_STRICTLY_INCREASING, exprs)
+        return Constraint._from_global_constraint(
+            "strictly_increasing", Constraint.CTYPE_STRICTLY_INCREASING, exprs
+        )
 
     @staticmethod
     def decreasing(exprs: Sequence[ExprLike]) -> "Constraint":
         # Requires that the array x is in (non-strictly) decreasing order (duplicates are allowed).
         exprs = Constraint._as_non_empty_list(exprs, "exprs")
-        return Constraint._from_global_constraint("decreasing", Constraint.CTYPE_DECREASING, exprs)
+        return Constraint._from_global_constraint(
+            "decreasing", Constraint.CTYPE_DECREASING, exprs
+        )
 
     @staticmethod
     def strictly_decreasing(exprs: Sequence[ExprLike]) -> "Constraint":
         exprs = Constraint._as_non_empty_list(exprs, "exprs")
-        return Constraint._from_global_constraint("strictly_decreasing", Constraint.CTYPE_STRICTLY_DECREASING, exprs)
+        return Constraint._from_global_constraint(
+            "strictly_decreasing", Constraint.CTYPE_STRICTLY_DECREASING, exprs
+        )
 
     @staticmethod
-    def element(index: ExprLike, values: Sequence[ExprLike], value: ExprLike) -> "Constraint":
+    def element(
+        index: ExprLike, values: Sequence[ExprLike], value: ExprLike
+    ) -> "Constraint":
         values = Constraint._as_non_empty_list(values, "values")
-        return Constraint._from_global_constraint("element", Constraint.CTYPE_ELEMENT, index, values, value)
+        return Constraint._from_global_constraint(
+            "element", Constraint.CTYPE_ELEMENT, index, values, value
+        )
 
     @staticmethod
-    def table(exprs: Sequence[ExprLike], rows: Sequence[Sequence[ExprLike]]) -> "Constraint":
+    def table(
+        exprs: Sequence[ExprLike], rows: Sequence[Sequence[ExprLike]]
+    ) -> "Constraint":
         exprs = Constraint._as_non_empty_list(exprs, "exprs")
         rows = Constraint._as_non_empty_list(rows, "rows")
-        assert all(len(row) == len(exprs) for row in rows), "all table rows must match exprs width"
-        return Constraint._from_global_constraint("table", Constraint.CTYPE_TABLE, exprs, rows)
+        assert all(len(row) == len(exprs) for row in rows), (
+            "all table rows must match exprs width"
+        )
+        return Constraint._from_global_constraint(
+            "table", Constraint.CTYPE_TABLE, exprs, rows
+        )
 
     @staticmethod
-    def cumulative(s: Sequence[ExprLike], d: Sequence[ExprLike], r: Sequence[ExprLike], b: ExprLike) -> "Constraint":
+    def cumulative(
+        s: Sequence[ExprLike], d: Sequence[ExprLike], r: Sequence[ExprLike], b: ExprLike
+    ) -> "Constraint":
         s = Constraint._as_non_empty_list(s, "s")
         d = Constraint._as_non_empty_list(d, "d")
         r = Constraint._as_non_empty_list(r, "r")
         Constraint._assert_same_length("s", s, "d", d)
         Constraint._assert_same_length("s", s, "r", r)
-        return Constraint._from_global_constraint("cumulative", Constraint.CTYPE_CUMULATIVE, s, d, r, b)
-    
+        return Constraint._from_global_constraint(
+            "cumulative", Constraint.CTYPE_CUMULATIVE, s, d, r, b
+        )
+
     @staticmethod
     def disjunctive(s: Sequence[ExprLike], d: Sequence[ExprLike]) -> "Constraint":
-        # Requires that a set of tasks given by start times s and durations d do not overlap in time. 
+        # Requires that a set of tasks given by start times s and durations d do not overlap in time.
         # Tasks with duration 0 can be scheduled at any time, even in the middle of other tasks.
         s, d = Constraint._normalize_and_match("s", s, "d", d)
-        return Constraint._from_global_constraint("disjunctive", Constraint.CTYPE_DISJUNCTIVE, s, d)
-    
+        return Constraint._from_global_constraint(
+            "disjunctive", Constraint.CTYPE_DISJUNCTIVE, s, d
+        )
+
     @staticmethod
-    def disjunctive_strict(s: Sequence[ExprLike], d: Sequence[ExprLike]) -> "Constraint":
-        # Requires that a set of tasks given by start times s and durations d do not overlap in time. 
+    def disjunctive_strict(
+        s: Sequence[ExprLike], d: Sequence[ExprLike]
+    ) -> "Constraint":
+        # Requires that a set of tasks given by start times s and durations d do not overlap in time.
         # Tasks with duration 0 CANNOT be scheduled at any time, but only when no other task is running.
         s, d = Constraint._normalize_and_match("s", s, "d", d)
-        return Constraint._from_global_constraint("disjunctive_strict", Constraint.CTYPE_DISJUNCTIVE, s, d)
+        return Constraint._from_global_constraint(
+            "disjunctive_strict", Constraint.CTYPE_DISJUNCTIVE, s, d
+        )
 
     @staticmethod
     def circuit(successors: Sequence[ExprLike]) -> "Constraint":
         successors = Constraint._as_non_empty_list(successors, "successors")
-        return Constraint._from_global_constraint("circuit", Constraint.CTYPE_CIRCUIT, successors)
+        return Constraint._from_global_constraint(
+            "circuit", Constraint.CTYPE_CIRCUIT, successors
+        )
 
     @staticmethod
-    def path(successors: Sequence[ExprLike], start: ExprLike, end: ExprLike) -> "Constraint":
+    def path(
+        successors: Sequence[ExprLike], start: ExprLike, end: ExprLike
+    ) -> "Constraint":
         successors = Constraint._as_non_empty_list(successors, "successors")
-        return Constraint._from_global_constraint("path", Constraint.CTYPE_PATH, successors, start, end)
+        return Constraint._from_global_constraint(
+            "path", Constraint.CTYPE_PATH, successors, start, end
+        )
 
     @staticmethod
-    def bin_packing(capacity: ExprLike, bins: Sequence[ExprLike], weights: Sequence[ExprLike]) -> "Constraint":
-        bins, weights = Constraint._normalize_and_match("bins", bins, "weights", weights)
-        return Constraint._from_global_constraint("bin_packing", Constraint.CTYPE_BIN_PACKING, capacity, bins, weights)
+    def bin_packing(
+        capacity: ExprLike, bins: Sequence[ExprLike], weights: Sequence[ExprLike]
+    ) -> "Constraint":
+        bins, weights = Constraint._normalize_and_match(
+            "bins", bins, "weights", weights
+        )
+        return Constraint._from_global_constraint(
+            "bin_packing", Constraint.CTYPE_BIN_PACKING, capacity, bins, weights
+        )
 
     @staticmethod
-    def inverse(forward: Sequence[ExprLike], backward: Sequence[ExprLike]) -> "Constraint":
-        forward, backward = Constraint._normalize_and_match("forward", forward, "backward", backward)
-        return Constraint._from_global_constraint("inverse", Constraint.CTYPE_INVERSE, forward, backward)
+    def inverse(
+        forward: Sequence[ExprLike], backward: Sequence[ExprLike]
+    ) -> "Constraint":
+        forward, backward = Constraint._normalize_and_match(
+            "forward", forward, "backward", backward
+        )
+        return Constraint._from_global_constraint(
+            "inverse", Constraint.CTYPE_INVERSE, forward, backward
+        )
 
     @staticmethod
     def lex_less(left: Sequence[ExprLike], right: Sequence[ExprLike]) -> "Constraint":
         left, right = Constraint._normalize_and_match("left", left, "right", right)
-        return Constraint._from_global_constraint("lex_less", Constraint.CTYPE_LEX_LESS, left, right)
+        return Constraint._from_global_constraint(
+            "lex_less", Constraint.CTYPE_LEX_LESS, left, right
+        )
 
     @staticmethod
     def lex_lesseq(left: Sequence[ExprLike], right: Sequence[ExprLike]) -> "Constraint":
         left, right = Constraint._normalize_and_match("left", left, "right", right)
-        return Constraint._from_global_constraint("lex_lesseq", Constraint.CTYPE_LEX_LESSEQ, left, right)
+        return Constraint._from_global_constraint(
+            "lex_lesseq", Constraint.CTYPE_LEX_LESSEQ, left, right
+        )
 
     @staticmethod
-    def lex_greater(left: Sequence[ExprLike], right: Sequence[ExprLike]) -> "Constraint":
+    def lex_greater(
+        left: Sequence[ExprLike], right: Sequence[ExprLike]
+    ) -> "Constraint":
         left, right = Constraint._normalize_and_match("left", left, "right", right)
-        return Constraint._from_global_constraint("lex_greater", Constraint.CTYPE_LEX_GREATER, left, right)
+        return Constraint._from_global_constraint(
+            "lex_greater", Constraint.CTYPE_LEX_GREATER, left, right
+        )
 
     @staticmethod
-    def lex_greatereq(left: Sequence[ExprLike], right: Sequence[ExprLike]) -> "Constraint":
+    def lex_greatereq(
+        left: Sequence[ExprLike], right: Sequence[ExprLike]
+    ) -> "Constraint":
         left, right = Constraint._normalize_and_match("left", left, "right", right)
-        return Constraint._from_global_constraint("lex_greatereq", Constraint.CTYPE_LEX_GREATEREQ, left, right)
+        return Constraint._from_global_constraint(
+            "lex_greatereq", Constraint.CTYPE_LEX_GREATEREQ, left, right
+        )
 
     @staticmethod
     def regular(
@@ -272,20 +352,29 @@ class Constraint:
     ) -> "Constraint":
         exprs = Constraint._as_non_empty_list(exprs, "exprs")
         d = Constraint._as_non_empty_list(d, "d")
-        if (isinstance(f, set)):
+        if isinstance(f, set):
             assert len(f) > 0, "f cannot be empty"
         else:
             f = Constraint._as_non_empty_list(f, "f")
-        return Constraint._from_global_constraint("regular", Constraint.CTYPE_REGULAR, exprs, q, s, d, q0, f)
-    
+        return Constraint._from_global_constraint(
+            "regular", Constraint.CTYPE_REGULAR, exprs, q, s, d, q0, f
+        )
+
     @staticmethod
     def arg_sort(x: Sequence[ExprLike], p: Sequence[ExprLike]) -> "Constraint":
         # Constrains p to be the permutation which causes x to be in sorted order hence x[p[i]] <= x[p[i+1]].
         x, p = Constraint._normalize_and_match("x", x, "p", p)
-        return Constraint._from_global_constraint("arg_sort", Constraint.CTYPE_ARG_SORT, x, p)
-    
+        return Constraint._from_global_constraint(
+            "arg_sort", Constraint.CTYPE_ARG_SORT, x, p
+        )
+
     @staticmethod
-    def diffn(x: Sequence[ExprLike], y: Sequence[ExprLike], dx: Sequence[ExprLike], dy: Sequence[ExprLike]) -> "Constraint":
+    def diffn(
+        x: Sequence[ExprLike],
+        y: Sequence[ExprLike],
+        dx: Sequence[ExprLike],
+        dy: Sequence[ExprLike],
+    ) -> "Constraint":
         # Constrains rectangles i, given by their origins (x[i], y[i]) and sizes (dx[i], dy[i]),
         # to be non-overlapping. Zero-width rectangles can still not overlap with any other rectangle.
         x = Constraint._as_non_empty_list(x, "x")
@@ -295,8 +384,10 @@ class Constraint:
         Constraint._assert_same_length("x", x, "y", y)
         Constraint._assert_same_length("x", x, "dx", dx)
         Constraint._assert_same_length("x", x, "dy", dy)
-        return Constraint._from_global_constraint("diffn", Constraint.CTYPE_DIFFN, x, y, dx, dy)
-    
+        return Constraint._from_global_constraint(
+            "diffn", Constraint.CTYPE_DIFFN, x, y, dx, dy
+        )
+
     @staticmethod
     def connected(
         node_from: Sequence[int],
@@ -311,8 +402,10 @@ class Constraint:
         es = Constraint._as_non_empty_list(es, "es")
         Constraint._assert_same_length("node_from", node_from, "node_to", node_to)
         Constraint._assert_same_length("node_from", node_from, "es", es)
-        return Constraint._from_global_constraint("connected", Constraint.CTYPE_CONNECTED, node_from, node_to, ns, es)
-    
+        return Constraint._from_global_constraint(
+            "connected", Constraint.CTYPE_CONNECTED, node_from, node_to, ns, es
+        )
+
     @staticmethod
     def reachable(
         node_from: Sequence[int],
@@ -328,4 +421,6 @@ class Constraint:
         es = Constraint._as_non_empty_list(es, "es")
         Constraint._assert_same_length("node_from", node_from, "node_to", node_to)
         Constraint._assert_same_length("node_from", node_from, "es", es)
-        return Constraint._from_global_constraint("reachable", Constraint.CTYPE_REACHABLE, node_from, node_to, r, ns, es)
+        return Constraint._from_global_constraint(
+            "reachable", Constraint.CTYPE_REACHABLE, node_from, node_to, r, ns, es
+        )
