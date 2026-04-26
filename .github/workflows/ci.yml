@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_integration:
+        description: Run MiniZinc integration tests
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  quality:
+    name: Lint, Type-check, Unit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install project and tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest pytest-cov ruff mypy
+
+      - name: Lint
+        run: ruff check src tests
+
+      - name: Type-check
+        run: mypy src --ignore-missing-imports
+
+      - name: Unit tests with core coverage gate
+        run: python -m pytest -m unit --cov=pymzm.expression --cov=pymzm.model --cov=pymzm.constraint --cov=pymzm.backends --cov-report=term
+
+  integration:
+    name: Optional Integration (MiniZinc)
+    runs-on: ubuntu-latest
+    needs: quality
+    if: github.event_name == 'workflow_dispatch' && inputs.run_integration
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install MiniZinc runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y minizinc
+
+      - name: Install project and test deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest
+
+      - name: Integration tests
+        run: python -m pytest -m integration -q

@@ -24,3 +24,15 @@ markers = [
   "snapshot: deterministic text rendering regression tests",
   "property: equivalence and property-style tests",
 ]
+
+[tool.coverage.run]
+source = ["pymzm"]
+
+[tool.coverage.report]
+include = [
+  "src/pymzm/expression.py",
+  "src/pymzm/model.py",
+  "src/pymzm/constraint.py",
+  "src/pymzm/backends/*.py",
+]
+fail_under = 75
