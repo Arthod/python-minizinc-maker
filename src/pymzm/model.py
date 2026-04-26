@@ -7,6 +7,8 @@ from .variable import *
 from .constraint import *
 from .expression import *
 from .constant import *
+from .ir import ModelIR, SolveIR
+from .backends import MznTextBackend
 
 SOLVE_MAXIMIZE = "maximize"
 SOLVE_MINIMIZE = "minimize"
@@ -147,6 +149,7 @@ class Model(minizinc.Model):
         self.solve_criteria = None
         self.solve_expression = None
         self.solve_method = None
+        self.restart_strategy = None
         self.model_mzn_str = None
 
         self.global_constraints = set()
@@ -227,30 +230,37 @@ class Model(minizinc.Model):
             self.add_constraint(constraint, is_redundant=is_redundant)
 
     def generate(self, debug=False):
-        self.model_mzn_str = ""
-        for gconst in self.global_constraints:
-            self.model_mzn_str += f'include \"{gconst}.mzn\";\n'
-
-        self.model_mzn_str += "".join(a._to_mz() for a in self.constants + self.variables + self.constraints)
-        
-        assert self.solve_criteria is not None
-        _solve_method_str = ""
-        if (self.solve_method is not None):
-            _solve_method_str += f":: {self.solve_method}\n"
-            
-            if (self.restart_strategy is not None):
-                _solve_method_str += f"      :: {self.restart_strategy}\n "
-
-        _solve_method_str += f"{self.solve_criteria}"
-
-        if (self.solve_expression is not None):
-            _solve_method_str += f" {self.solve_expression}"
-            
-        self.model_mzn_str += f"solve {_solve_method_str};\n"
+        model_ir = self.to_ir()
+        self.model_mzn_str = MznTextBackend().render_model(model_ir)
 
         self.add_string(self.model_mzn_str)
         if (debug):
             print(self.model_mzn_str)
+
+    def to_ir(self) -> ModelIR:
+        assert self.solve_criteria is not None
+
+        includes = tuple(sorted(f"{gconst}.mzn" for gconst in self.global_constraints))
+        declarations = tuple(
+            line.rstrip("\n")
+            for line in (a._to_mz() for a in self.constants + self.variables)
+        )
+        constraints = tuple(
+            line.rstrip("\n")
+            for line in (constraint._to_mz() for constraint in self.constraints)
+        )
+        solve = SolveIR(
+            criteria=self.solve_criteria,
+            expression=str(self.solve_expression) if (self.solve_expression is not None) else None,
+            method=str(self.solve_method) if (self.solve_method is not None) else None,
+            restart_strategy=str(self.restart_strategy) if (self.restart_strategy is not None) else None,
+        )
+        return ModelIR(
+            includes=includes,
+            declarations=declarations,
+            constraints=constraints,
+            solve=solve,
+        )
 
     def write(self, fn: str):
         if (self.model_mzn_str is None):
