@@ -2,6 +2,12 @@
 
 Create pure Minizinc .mzn files from Python using [python-minizinc-maker](https://github.com/Arthod/python-minizinc-maker/).
 
+## Compatibility and Migration
+
+- Compatibility policy: [docs/compatibility_policy.md](docs/compatibility_policy.md)
+- Migration notes: [docs/migration_notes.md](docs/migration_notes.md)
+- Test matrix: [docs/test_matrix.md](docs/test_matrix.md)
+
 ## Install
 Installed with pip from [pypi](https://pypi.org/project/pymzm/0.0.1/)
 ```
@@ -21,8 +27,6 @@ alldifferent, among, all_equal, count, increasing, decreasing, ..(more to be add
 ### Solve
 * model.set_solve_criteria(pymzm.SOLVE_MAXIMIZE, pymzm.Expression.sum(xs))
 * model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-
-### 
 
 ## Examples
 ### intfact.py - Integer Factorization example
