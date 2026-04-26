@@ -376,20 +376,38 @@ class Model(minizinc.Model):
 
         return variables
 
-    def add_constraint(self, constraint: ExpressionBool, is_redundant=False):
+    def add_constraint(self, constraint: ExpressionBool, is_redundant=False, enabled=True):
         if (isinstance(constraint, Constraint)):
             constraint.is_redundant = is_redundant
+            constraint.enabled = enabled
             if (constraint.ctype != Constraint.CTYPE_NORMAL):
                 self.global_constraints.add(constraint.ctype)
 
         elif (isinstance(constraint, ExpressionBool)):
-            constraint = Constraint(constraint.name, is_redundant=is_redundant)
+            constraint = Constraint(constraint.name, is_redundant=is_redundant, enabled=enabled)
 
         else:
             raise Exception("invalid constraint type")
 
         self.constraints.append(constraint)
         return constraint
+
+    def add_optional_constraint(self, constraint: ExpressionBool, enabled=False, is_redundant=False):
+        return self.add_constraint(constraint, is_redundant=is_redundant, enabled=enabled)
+
+    def add_assumption(self, constraint: ExpressionBool, enabled=True, is_redundant=False):
+        return self.add_optional_constraint(constraint, enabled=enabled, is_redundant=is_redundant)
+
+    def set_constraint_enabled(self, constraint: Constraint, enabled=True):
+        assert constraint in self.constraints
+        constraint.enabled = enabled
+        return constraint
+
+    def enable_constraint(self, constraint: Constraint):
+        return self.set_constraint_enabled(constraint, True)
+
+    def disable_constraint(self, constraint: Constraint):
+        return self.set_constraint_enabled(constraint, False)
 
     def add_include(self, include_file: str):
         assert isinstance(include_file, str)
@@ -402,11 +420,11 @@ class Model(minizinc.Model):
         for include_file in include_files:
             self.add_include(include_file)
 
-    def add_constraints(self, constraints: List[Constraint], is_redundant=False):
+    def add_constraints(self, constraints: List[Constraint], is_redundant=False, enabled=True):
         constraints = list(constraints)
         assert all(isinstance(constraint, (Constraint, Expression, str, bool)) for constraint in constraints)
         for constraint in constraints:
-            self.add_constraint(constraint, is_redundant=is_redundant)
+            self.add_constraint(constraint, is_redundant=is_redundant, enabled=enabled)
 
     def add_function_declaration(self, declaration: str):
         assert isinstance(declaration, str)
@@ -636,7 +654,16 @@ class Model(minizinc.Model):
     def to_ir(self) -> ModelIR:
         assert self.solve_criteria is not None
 
-        includes = tuple(sorted({*(f"{gconst}.mzn" for gconst in self.global_constraints), *self.includes}))
+        enabled_constraints = tuple(
+            constraint for constraint in self.constraints
+            if constraint.enabled
+        )
+        auto_includes = {
+            f"{constraint.ctype}.mzn"
+            for constraint in enabled_constraints
+            if constraint.ctype != Constraint.CTYPE_NORMAL
+        }
+        includes = tuple(sorted({*auto_includes, *self.includes}))
 
         constants_sorted = sorted(self.constants, key=lambda c: c.name)
         parameters_sorted = sorted(self.parameters, key=lambda p: p.name)
@@ -657,7 +684,7 @@ class Model(minizinc.Model):
         )
         constraints = tuple(
             line.rstrip("\n")
-            for line in (constraint._to_mz() for constraint in self.constraints)
+            for line in (constraint._to_mz() for constraint in enabled_constraints)
         )
         output_items = tuple(self.output_items)
         solve = SolveIR(

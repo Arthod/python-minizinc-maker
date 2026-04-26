@@ -54,7 +54,7 @@ class Constraint:
         "connected",
         "reachable"
     ]
-    def __init__(self, cstr: ExpressionBool, ctype: str=CTYPE_NORMAL, annotation: str=None, is_redundant=False):
+    def __init__(self, cstr: ExpressionBool, ctype: str=CTYPE_NORMAL, annotation: str=None, is_redundant=False, enabled=True):
         self.cstr = cstr
         if (not isinstance(self.cstr, (ExpressionBool, bool, str))):
             raise PymzmValueIsNotCondition("cstr", self.cstr)
@@ -69,6 +69,7 @@ class Constraint:
                 raise PymzmInvalidConstraintAnnotation("annotation")
             
         self.is_redundant = is_redundant
+        self.enabled = enabled
 
     def __str__(self):
         return self.cstr
