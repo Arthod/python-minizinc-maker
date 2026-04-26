@@ -186,6 +186,7 @@ class Model(minizinc.Model):
         self.last_solve_status = None
         self.last_solve_statistics = None
         self.last_solve_result = None
+        self._compiled_model_text = None
 
         super().__init__()
 
@@ -275,16 +276,22 @@ class Model(minizinc.Model):
         self.predicate_declarations.append(declaration.rstrip(";"))
 
     def generate(self, debug=False):
-        model_ir = self.to_ir()
-        self.model_mzn_str = MznTextBackend().render_model(model_ir)
-
-        self.add_string(self.model_mzn_str)
+        self._sync_compiled_model()
         if (debug):
             print(self.model_mzn_str)
 
     def _render_model_string(self) -> str:
         self.model_mzn_str = MznTextBackend().render_model(self.to_ir())
         return self.model_mzn_str
+
+    def _sync_compiled_model(self) -> str:
+        model_text = self._render_model_string()
+        if (self._compiled_model_text != model_text):
+            # Rebuild inherited minizinc.Model state to avoid hidden accumulation.
+            super().__init__()
+            self.add_string(model_text)
+            self._compiled_model_text = model_text
+        return model_text
 
     def _resolve_solver(self, solver: Union[str, Any]):
         if (isinstance(solver, str)):

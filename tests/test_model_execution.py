@@ -241,6 +241,34 @@ class TestModelExecution(unittest.TestCase):
         self.assertEqual(optimal.status_code, "OPTIMAL")
         self.assertTrue(optimal.is_optimal)
 
+    @patch("pymzm.model.minizinc.Model.add_string")
+    def test_generate_does_not_recompile_when_model_text_is_unchanged(self, add_string_mock):
+        model = self._build_satisfy_model()
+
+        model.generate()
+        first_text = model.model_mzn_str
+
+        model.generate()
+        second_text = model.model_mzn_str
+
+        self.assertEqual(first_text, second_text)
+        self.assertEqual(add_string_mock.call_count, 1)
+
+    @patch("pymzm.model.minizinc.Model.add_string")
+    def test_generate_recompiles_after_model_mutation(self, add_string_mock):
+        model = self._build_satisfy_model()
+
+        model.generate()
+        before = model.model_mzn_str
+
+        y = model.add_variable("y", val_min=0, val_max=1)
+        model.add_constraint(y >= 0)
+        model.generate()
+        after = model.model_mzn_str
+
+        self.assertNotEqual(before, after)
+        self.assertEqual(add_string_mock.call_count, 2)
+
 
 if __name__ == "__main__":
     unittest.main()
