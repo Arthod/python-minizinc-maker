@@ -108,7 +108,9 @@ class Variable(Expression):
             self.val_max = 1
             self.__class__ = VariableBool
         elif (vtype == Variable.VTYPE_STRING):
-            raise NotImplementedError()
+            assert self.domain is None
+            assert self.val_min is None
+            assert self.val_max is None
         else:
             raise Exception(f"Invalid variable type vtype={vtype}")
     
@@ -133,6 +135,9 @@ class Variable(Expression):
                 return f"var set of {self.val_min}..{self.val_max}: {self.name};\n"
             else:
                 return f"var set of {self.domain}: {self.name};\n"
+
+        elif (self.vtype == Variable.VTYPE_STRING):
+            return f"var string: {self.name};\n"
 
     def __len__(self):
         assert self.vtype == Variable.VTYPE_SET

@@ -12,8 +12,8 @@ class Constant:
             raise Exception("Non-initialized constant is not supported by pymzm.")
         
         self.vtype = vtype        
-        if (self.vtype not in [Variable.VTYPE_INTEGER, Variable.VTYPE_BOOL]):
-            raise Exception("Invalid vtype for constant. Currently only integer and boolean types are supported")
+        if (self.vtype not in [Variable.VTYPE_INTEGER, Variable.VTYPE_BOOL, Variable.VTYPE_FLOAT, Variable.VTYPE_STRING]):
+            raise Exception("Invalid vtype for constant. Supported scalar types are int, bool, float, and string")
         
         arr = np.array(value)
         if (arr.shape):
@@ -40,10 +40,20 @@ class Constant:
     
     def _to_mz(self):
         if (self.shape is None):
-            return f"{self.vtype}: {self.name} = {self.value};\n"
+            return f"{self.vtype}: {self.name} = {self._scalar_to_mz(self.value)};\n"
         
         else:
             mz_array = array_py2mz(self.value, self.shape)
             return f"array[{','.join(f'1..{d}' for d in self.shape)}] of {self.vtype}: {self.name} = {mz_array};\n"
+
+    def _scalar_to_mz(self, value):
+        if (self.vtype == Variable.VTYPE_BOOL):
+            return "true" if bool(value) else "false"
+
+        if (self.vtype == Variable.VTYPE_STRING):
+            escaped = str(value).replace("\\", "\\\\").replace('"', '\\"')
+            return f'"{escaped}"'
+
+        return str(value)
         
         
