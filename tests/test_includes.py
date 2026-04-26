@@ -4,7 +4,7 @@ import pytest
 import pymzm
 
 
-pytestmark = [pytest.mark.unit, pytest.mark.snapshot]
+pytestmark = [pytest.mark.unit, pytest.mark.snapshot, pytest.mark.no_mzn_verify]
 
 
 class TestIncludes(unittest.TestCase):

@@ -3,21 +3,21 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import pymzm
-from tests.solver_utils import (
-    DEFAULT_RANDOM_SEED,
-    DEFAULT_SOLVER_TAG,
-    DEFAULT_THREADS,
-    deterministic_instance_solve,
-    deterministic_solver_config,
-    lookup_default_solver,
-)
+from tests import solver_utils as solver_utils_module
+
+DEFAULT_RANDOM_SEED = solver_utils_module.DEFAULT_RANDOM_SEED
+DEFAULT_SOLVER_TAG = solver_utils_module.DEFAULT_SOLVER_TAG
+DEFAULT_THREADS = solver_utils_module.DEFAULT_THREADS
+deterministic_instance_solve = solver_utils_module.deterministic_instance_solve
+deterministic_solver_config = solver_utils_module.deterministic_solver_config
+lookup_default_solver = solver_utils_module.lookup_default_solver
 
 
 pytestmark = [pytest.mark.unit]
 
 
 class TestSolverUtils(unittest.TestCase):
-    @patch("tests.solver_utils.minizinc.Solver.lookup")
+    @patch.object(solver_utils_module.minizinc.Solver, "lookup")
     def test_lookup_default_solver_uses_gecode(self, lookup_mock):
         sentinel = object()
         lookup_mock.return_value = sentinel

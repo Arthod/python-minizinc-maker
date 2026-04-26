@@ -27,7 +27,7 @@ def _verify_with_minizinc_cli(model_path: Path):
 
 def verify_mzn_text(mzn_text: str):
     with tempfile.TemporaryDirectory() as tmpdir:
-        model_path = Path(tmpdir) / "model.mzn"
+        model_path = Path(tmpdir) / "pymzm_verify_input.mzn"
         model_path.write_text(mzn_text, encoding="utf-8")
         return _verify_with_minizinc_cli(model_path)
 

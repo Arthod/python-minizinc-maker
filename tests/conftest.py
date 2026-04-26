@@ -24,9 +24,13 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(autouse=True)
-def verify_rendered_mzn_models(monkeypatch):
+def verify_rendered_mzn_models(monkeypatch, request):
     # Keep local/unit workflow fast when CLI is unavailable.
     if (shutil.which("minizinc") is None):
+        yield
+        return
+
+    if (request.node.get_closest_marker("no_mzn_verify") is not None):
         yield
         return
 

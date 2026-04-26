@@ -23,6 +23,7 @@ markers = [
   "integration: tests that require MiniZinc solver/runtime",
   "snapshot: deterministic text rendering regression tests",
   "property: equivalence and property-style tests",
+  "no_mzn_verify: skip global MiniZinc CLI validation for tests that intentionally render unresolved include paths",
 ]
 
 [tool.coverage.run]

@@ -34,8 +34,22 @@ class Constraint:
         CTYPE_ALL_EQUAL,
         CTYPE_COUNT,
         CTYPE_INCREASING,
+        CTYPE_STRICTLY_INCREASING,
         CTYPE_DECREASING,
+        CTYPE_STRICTLY_DECREASING,
+        CTYPE_ELEMENT,
+        CTYPE_TABLE,
+        CTYPE_CUMULATIVE,
         CTYPE_DISJUNCTIVE,
+        CTYPE_CIRCUIT,
+        CTYPE_PATH,
+        CTYPE_BIN_PACKING,
+        CTYPE_INVERSE,
+        CTYPE_LEX_LESS,
+        CTYPE_LEX_LESSEQ,
+        CTYPE_LEX_GREATER,
+        CTYPE_LEX_GREATEREQ,
+        CTYPE_REGULAR,
         CTYPE_ARG_SORT,
         CTYPE_DIFFN,
         CTYPE_CONNECTED,
@@ -47,8 +61,22 @@ class Constraint:
         "all_equal",
         "count",
         "increasing",
+        "strictly_increasing",
         "decreasing",
+        "strictly_decreasing",
+        "element",
+        "table",
+        "cumulative",
         "disjunctive",
+        "circuit",
+        "path",
+        "bin_packing",
+        "inverse",
+        "lex_less",
+        "lex_lesseq",
+        "lex_greater",
+        "lex_greatereq",
+        "regular",
         "arg_sort",
         "diffn",
         "connected",
@@ -99,6 +127,10 @@ class Constraint:
             Constraint: Alldifferent constraint
         """
         return Constraint._from_global_constraint("alldifferent", Constraint.CTYPE_ALLDIFFERENT, exprs)
+
+    @staticmethod
+    def all_different(exprs: List[Expression]) -> "Constraint":
+        return Constraint.alldifferent(exprs)
     
     @staticmethod
     def among(n: int, exprs: List[Expression], values: List[int]):
@@ -118,9 +150,29 @@ class Constraint:
         return Constraint._from_global_constraint("increasing", Constraint.CTYPE_INCREASING, exprs)
 
     @staticmethod
+    def strictly_increasing(exprs: List[Expression]):
+        return Constraint._from_global_constraint("strictly_increasing", Constraint.CTYPE_STRICTLY_INCREASING, exprs)
+
+    @staticmethod
     def decreasing(exprs: List[Expression]):
         # Requires that the array x is in (non-strictly) decreasing order (duplicates are allowed).
         return Constraint._from_global_constraint("decreasing", Constraint.CTYPE_DECREASING, exprs)
+
+    @staticmethod
+    def strictly_decreasing(exprs: List[Expression]):
+        return Constraint._from_global_constraint("strictly_decreasing", Constraint.CTYPE_STRICTLY_DECREASING, exprs)
+
+    @staticmethod
+    def element(index: Expression, values: List[Expression], value: Expression):
+        return Constraint._from_global_constraint("element", Constraint.CTYPE_ELEMENT, index, values, value)
+
+    @staticmethod
+    def table(exprs: List[Expression], rows):
+        return Constraint._from_global_constraint("table", Constraint.CTYPE_TABLE, exprs, rows)
+
+    @staticmethod
+    def cumulative(s: List[Expression], d: List[Expression], r: List[Expression], b: Expression):
+        return Constraint._from_global_constraint("cumulative", Constraint.CTYPE_CUMULATIVE, s, d, r, b)
     
     @staticmethod
     def disjunctive(s: List[Expression], d: List[Expression]):
@@ -133,6 +185,42 @@ class Constraint:
         # Requires that a set of tasks given by start times s and durations d do not overlap in time. 
         # Tasks with duration 0 CANNOT be scheduled at any time, but only when no other task is running.
         return Constraint._from_global_constraint("disjunctive_strict", Constraint.CTYPE_DISJUNCTIVE, s, d)
+
+    @staticmethod
+    def circuit(successors: List[Expression]):
+        return Constraint._from_global_constraint("circuit", Constraint.CTYPE_CIRCUIT, successors)
+
+    @staticmethod
+    def path(successors: List[Expression], start: Expression, end: Expression):
+        return Constraint._from_global_constraint("path", Constraint.CTYPE_PATH, successors, start, end)
+
+    @staticmethod
+    def bin_packing(capacity: Expression, bins: List[Expression], weights: List[Expression]):
+        return Constraint._from_global_constraint("bin_packing", Constraint.CTYPE_BIN_PACKING, capacity, bins, weights)
+
+    @staticmethod
+    def inverse(forward: List[Expression], backward: List[Expression]):
+        return Constraint._from_global_constraint("inverse", Constraint.CTYPE_INVERSE, forward, backward)
+
+    @staticmethod
+    def lex_less(left: List[Expression], right: List[Expression]):
+        return Constraint._from_global_constraint("lex_less", Constraint.CTYPE_LEX_LESS, left, right)
+
+    @staticmethod
+    def lex_lesseq(left: List[Expression], right: List[Expression]):
+        return Constraint._from_global_constraint("lex_lesseq", Constraint.CTYPE_LEX_LESSEQ, left, right)
+
+    @staticmethod
+    def lex_greater(left: List[Expression], right: List[Expression]):
+        return Constraint._from_global_constraint("lex_greater", Constraint.CTYPE_LEX_GREATER, left, right)
+
+    @staticmethod
+    def lex_greatereq(left: List[Expression], right: List[Expression]):
+        return Constraint._from_global_constraint("lex_greatereq", Constraint.CTYPE_LEX_GREATEREQ, left, right)
+
+    @staticmethod
+    def regular(exprs: List[Expression], q: Expression, s: Expression, d, q0: Expression, f):
+        return Constraint._from_global_constraint("regular", Constraint.CTYPE_REGULAR, exprs, q, s, d, q0, f)
     
     @staticmethod
     def arg_sort(x: List[Expression], p: List[Expression]):
