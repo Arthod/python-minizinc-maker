@@ -2,9 +2,13 @@ import unittest
 from enum import Enum
 from types import SimpleNamespace
 from unittest.mock import ANY, MagicMock, patch
+import pytest
 
 import minizinc
 import pymzm
+
+
+pytestmark = [pytest.mark.unit]
 
 
 class TestModelExecution(unittest.TestCase):

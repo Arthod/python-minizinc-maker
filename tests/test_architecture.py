@@ -1,8 +1,12 @@
 import unittest
+import pytest
 
 import pymzm
 
 from pymzm.backends import MznTextBackend
+
+
+pytestmark = [pytest.mark.unit]
 
 
 class TestArchitecture(unittest.TestCase):

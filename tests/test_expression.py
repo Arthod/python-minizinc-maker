@@ -1,11 +1,15 @@
 import inspect
 import unittest
+import pytest
 
 import pymzm
 import minizinc
 
 import equiv
 from functools import partial
+
+
+pytestmark = [pytest.mark.integration, pytest.mark.property]
 
 
 class TestExpression(unittest.TestCase):

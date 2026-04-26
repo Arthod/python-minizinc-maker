@@ -1,6 +1,10 @@
 import unittest
+import pytest
 
 import pymzm
+
+
+pytestmark = [pytest.mark.unit]
 
 
 class TestExpressionValidation(unittest.TestCase):

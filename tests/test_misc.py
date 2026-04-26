@@ -1,7 +1,11 @@
 import unittest
+import pytest
 
 import pymzm
 import minizinc
+
+
+pytestmark = [pytest.mark.integration]
 
 class TestMisc(unittest.TestCase):
     def setUp(self):

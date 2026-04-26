@@ -4,6 +4,10 @@ import minizinc
 import math
 import sys
 import os
+import pytest
+
+
+pytestmark = [pytest.mark.integration]
 
 class TestExamples(unittest.TestCase):
     @classmethod

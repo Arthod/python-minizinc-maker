@@ -16,3 +16,11 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/Arthod/python-minizinc-maker"
 "Bug Tracker" = "https://github.com/Arthod/python-minizinc-maker/issues"
+
+[tool.pytest.ini_options]
+markers = [
+  "unit: fast tests that do not require MiniZinc runtime",
+  "integration: tests that require MiniZinc solver/runtime",
+  "snapshot: deterministic text rendering regression tests",
+  "property: equivalence and property-style tests",
+]
