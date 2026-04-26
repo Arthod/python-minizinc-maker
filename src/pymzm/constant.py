@@ -3,8 +3,6 @@ from .expression import Expression
 from .variable import *
 from .misc import *
 
-import numpy as np
-
 
 class Constant(Expression):
     def __init__(self, name: str, value, vtype=Variable.VTYPE_INTEGER):
@@ -22,14 +20,24 @@ class Constant(Expression):
         if (not self.is_enum_type and self.vtype not in [Variable.VTYPE_INTEGER, Variable.VTYPE_BOOL, Variable.VTYPE_FLOAT, Variable.VTYPE_STRING]):
             raise Exception("Invalid vtype for constant. Supported scalar types are int, bool, float, string, and enum type names")
         
-        arr = np.array(value)
-        if (arr.shape):
-            # Is nd array
-            self.shape = arr.shape
+        self.shape = self._infer_shape(value)
 
-        else:
-            # is single value
-            self.shape = None
+    @staticmethod
+    def _infer_shape(value):
+        if (hasattr(value, "shape")):
+            shape = tuple(int(d) for d in value.shape)
+            return shape if len(shape) > 0 else None
+
+        def _shape_of(v):
+            if (isinstance(v, (list, tuple))):
+                if (len(v) == 0):
+                    return (0,)
+                first_shape = _shape_of(v[0])
+                return (len(v), *first_shape)
+            return ()
+
+        shape = _shape_of(value)
+        return shape if len(shape) > 0 else None
         
     def __getitem__(self, other: Expression):
         # TODO boolean expression
