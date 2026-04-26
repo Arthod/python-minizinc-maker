@@ -52,6 +52,22 @@ class TestExpressionValidation(unittest.TestCase):
         self.assertRaises(pymzm.PymzmValueIsNotExpression, lambda: x + "bad")
         self.assertRaises(pymzm.PymzmValueIsNotCondition, lambda: (x >= 1) & 3)
 
+    def test_let_expression_renders_for_numeric_and_boolean_bodies(self):
+        y = pymzm.Expression("y")
+
+        numeric_let = pymzm.Expression.let(["int: y = 3"], y + 1)
+        boolean_let = pymzm.Expression.let("int: y = 3", y >= 1)
+
+        self.assertEqual(str(numeric_let), "let { int: y = 3; } in ((y + 1))")
+        self.assertEqual(str(boolean_let), "let { int: y = 3; } in ((y >= 1))")
+        self.assertIsInstance(numeric_let, pymzm.Expression)
+        self.assertIsInstance(boolean_let, pymzm.ExpressionBool)
+
+    def test_let_expression_validates_declarations_and_body(self):
+        self.assertRaises(pymzm.PymzmNoValues, pymzm.Expression.let, [], pymzm.Expression("x"))
+        self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.let, [""], pymzm.Expression("x"))
+        self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.let, ["int: y = 1"], object())
+
 
 if __name__ == "__main__":
     unittest.main()

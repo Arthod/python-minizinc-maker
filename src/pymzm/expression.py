@@ -72,6 +72,30 @@ class Expression:
                 raise PymzmValueIsNotExpression(arg_name, annotation)
         return normalized
 
+    @staticmethod
+    def _scalar_to_mz(value):
+        if (isinstance(value, bool)):
+            return "true" if value else "false"
+        return str(value)
+
+    @staticmethod
+    def _normalize_let_declarations(declarations, arg_name: str="declarations"):
+        if (isinstance(declarations, str)):
+            declarations = [declarations]
+
+        if (not isinstance(declarations, Iterable)):
+            raise PymzmValueIsNotExpression(arg_name, declarations)
+
+        normalized = []
+        for declaration in declarations:
+            if (not isinstance(declaration, str) or not declaration.strip()):
+                raise PymzmValueIsNotExpression(arg_name, declaration)
+            normalized.append(declaration.strip().rstrip(";"))
+
+        if (not len(normalized)):
+            raise PymzmNoValues(arg_name)
+        return normalized
+
     def annotate(self, *annotations):
         normalized = Expression._normalize_annotations(annotations, "annotations")
         if (not len(normalized)):
@@ -84,6 +108,20 @@ class Expression:
         if (isinstance(self, ExpressionBool)):
             return ExpressionBool(expression_text)
         return Expression(expression_text)
+
+    @staticmethod
+    def let(declarations, in_expr):
+        declarations = Expression._normalize_let_declarations(declarations, "declarations")
+
+        if (not isinstance(in_expr, (Expression, bool, int, float))):
+            raise PymzmValueIsNotExpression("in_expr", in_expr)
+
+        body = str(in_expr) if isinstance(in_expr, Expression) else Expression._scalar_to_mz(in_expr)
+        let_text = f"let {{ {' '.join(f'{d};' for d in declarations)} }} in ({body})"
+
+        if (isinstance(in_expr, (ExpressionBool, bool))):
+            return ExpressionBool(let_text)
+        return Expression(let_text)
 
     @staticmethod
     def ifthenelse(condition: "ExpressionBool", expr1: "Expression", expr2: "Expression") -> "Expression":
