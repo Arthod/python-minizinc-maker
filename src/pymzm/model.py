@@ -318,19 +318,35 @@ class Model(minizinc.Model):
         if criteria not in SOLVE_CRITERIA:
             raise PymzmInvalidSolveCriteria(criteria)
 
-        if criteria == SOLVE_MAXIMIZE or criteria == SOLVE_MINIMIZE:
-            assert expr is not None
+        if criteria in (SOLVE_MAXIMIZE, SOLVE_MINIMIZE):
+            if expr is None:
+                raise PymzmArgumentError(
+                    "expr",
+                    f"an optimization expression is required when criteria={criteria!r}",
+                )
         else:
-            assert expr is None
+            if expr is not None:
+                raise PymzmArgumentError(
+                    "expr", f"expr must be None for criteria={criteria!r}"
+                )
 
     def set_solve_method(
         self,
         method: SearchAnnotation,
         restart_strategy: Optional[RestartStrategy] = None,
     ) -> None:
-        assert isinstance(method, (SeqSearch, SearchAnnotation))
-        if restart_strategy is not None:
-            assert isinstance(restart_strategy, RestartStrategy)
+        if not isinstance(method, (SeqSearch, SearchAnnotation)):
+            raise PymzmArgumentError(
+                "method",
+                f"expected a SearchAnnotation or SeqSearch, got {type(method).__name__!r}",
+            )
+        if restart_strategy is not None and not isinstance(
+            restart_strategy, RestartStrategy
+        ):
+            raise PymzmArgumentError(
+                "restart_strategy",
+                f"expected a RestartStrategy, got {type(restart_strategy).__name__!r}",
+            )
         self.solve_method = method
         self.restart_strategy = restart_strategy
 
@@ -540,7 +556,8 @@ class Model(minizinc.Model):
     def set_constraint_enabled(
         self, constraint: Constraint, enabled: bool = True
     ) -> Constraint:
-        assert constraint in self.constraints
+        if constraint not in self.constraints:
+            raise PymzmConstraintNotInModel(constraint)
         constraint.enabled = enabled
         return constraint
 
@@ -551,9 +568,9 @@ class Model(minizinc.Model):
         return self.set_constraint_enabled(constraint, False)
 
     def add_include(self, include_file: str) -> None:
-        assert isinstance(include_file, str)
         include_file = include_file.strip()
-        assert len(include_file) > 0
+        if not include_file:
+            raise PymzmArgumentError("include_file", "expected a non-empty string")
         self.includes.add(include_file)
 
     def add_includes(self, include_files: Iterable[str]) -> None:
@@ -568,23 +585,19 @@ class Model(minizinc.Model):
         enabled: bool = True,
     ) -> None:
         constraints = list(constraints)
-        assert all(
-            isinstance(constraint, (Constraint, Expression, str, bool))
-            for constraint in constraints
-        )
         for constraint in constraints:
             self.add_constraint(constraint, is_redundant=is_redundant, enabled=enabled)
 
     def add_function_declaration(self, declaration: str) -> None:
-        assert isinstance(declaration, str)
         declaration = declaration.strip()
-        assert len(declaration) > 0
+        if not declaration:
+            raise PymzmArgumentError("declaration", "expected a non-empty string")
         self.function_declarations.append(declaration.rstrip(";"))
 
     def add_predicate_declaration(self, declaration: str) -> None:
-        assert isinstance(declaration, str)
         declaration = declaration.strip()
-        assert len(declaration) > 0
+        if not declaration:
+            raise PymzmArgumentError("declaration", "expected a non-empty string")
         self.predicate_declarations.append(declaration.rstrip(";"))
 
     def _output_part_to_mz(self, part: OutputPart) -> str:
@@ -613,7 +626,8 @@ class Model(minizinc.Model):
             parts = [parts]
 
         parts = list(parts)
-        assert len(parts) > 0
+        if not parts:
+            raise PymzmNoValues("parts")
 
         rendered_parts = ", ".join(self._output_part_to_mz(part) for part in parts)
         output_item = f"output [{rendered_parts}]"
@@ -883,7 +897,8 @@ class Model(minizinc.Model):
         return result.status in satisfiable_statuses
 
     def to_ir(self) -> ModelIR:
-        assert self.solve_criteria is not None
+        if self.solve_criteria is None:
+            raise PymzmSolveNotConfigured()
 
         enabled_constraints = tuple(
             constraint for constraint in self.constraints if constraint.enabled

@@ -1,5 +1,9 @@
 from .expression import Expression, ExpressionBool
-from .exceptions import PymzmUnsupportedVariableType, PymzmValueIsNotExpression
+from .exceptions import (
+    PymzmUnsupportedVariableType,
+    PymzmValueIsNotExpression,
+    PymzmVariableTypeError,
+)
 from .misc import set_py2mz, variableIterable2Str
 
 
@@ -193,27 +197,33 @@ class Variable(Expression):
             return self._declaration_with_annotations(f"var string: {self.name}")
 
     def __len__(self):
-        assert self.vtype == Variable.VTYPE_SET
+        if self.vtype != Variable.VTYPE_SET:
+            raise PymzmVariableTypeError("self", Variable.VTYPE_SET, self.vtype)
         return Expression._func("card", [self])
 
     @staticmethod
     def min(var):
-        assert var.vtype == Variable.VTYPE_SET
+        if var.vtype != Variable.VTYPE_SET:
+            raise PymzmVariableTypeError("var", Variable.VTYPE_SET, var.vtype)
         return Expression._func("min", [var])
 
     @staticmethod
     def max(var):
-        assert var.vtype == Variable.VTYPE_SET
+        if var.vtype != Variable.VTYPE_SET:
+            raise PymzmVariableTypeError("var", Variable.VTYPE_SET, var.vtype)
         return Expression._func("max", [var])
 
     def contains(self, content):
-        assert self.vtype == Variable.VTYPE_SET
+        if self.vtype != Variable.VTYPE_SET:
+            raise PymzmVariableTypeError("self", Variable.VTYPE_SET, self.vtype)
         return ExpressionBool(f"({content} in {self})")
 
     @staticmethod
     def intersection_length(v1, v2):
-        assert v1.vtype == Variable.VTYPE_SET
-        assert v2.vtype == Variable.VTYPE_SET
+        if v1.vtype != Variable.VTYPE_SET:
+            raise PymzmVariableTypeError("v1", Variable.VTYPE_SET, v1.vtype)
+        if v2.vtype != Variable.VTYPE_SET:
+            raise PymzmVariableTypeError("v2", Variable.VTYPE_SET, v2.vtype)
         return Expression(f"(card({v1} intersect {v2}))")
 
 

@@ -139,3 +139,32 @@ class PymzmIndexingScalarValue(PymzmModelStateError):
 
     def __str__(self):
         return f"Value '{self.name}' is scalar and cannot be indexed."
+
+
+class PymzmSolveNotConfigured(PymzmModelStateError):
+    def __str__(self):
+        return (
+            "Solve criteria not configured. "
+            "Call model.set_solve_criteria(...) before generating or solving."
+        )
+
+
+class PymzmConstraintNotInModel(PymzmModelStateError):
+    def __init__(self, constraint):
+        self.constraint = constraint
+
+    def __str__(self):
+        return (
+            f"Constraint {self.constraint!r} is not registered in this model. "
+            "Only constraints added via model.add_constraint(...) can be toggled."
+        )
+
+
+class PymzmVariableTypeError(PymzmArgumentError):
+    def __init__(self, argname, expected_vtype, actual_vtype):
+        self.expected_vtype = expected_vtype
+        self.actual_vtype = actual_vtype
+        super().__init__(
+            argname,
+            f"operation requires variable type {expected_vtype!r}, got {actual_vtype!r}",
+        )
