@@ -407,6 +407,12 @@ class Model(minizinc.Model):
         assert len(declaration) > 0
         self.predicate_declarations.append(declaration.rstrip(";"))
 
+    def call_predicate(self, name: str, *args) -> ExpressionBool:
+        return Expression.predicate(name, *args)
+
+    def add_predicate_call(self, name: str, *args, is_redundant: bool=False):
+        return self.add_constraint(self.call_predicate(name, *args), is_redundant=is_redundant)
+
     def generate(self, debug=False):
         self._sync_compiled_model()
         if (debug):

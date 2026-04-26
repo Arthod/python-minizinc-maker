@@ -147,6 +147,12 @@ class Expression:
         raise PymzmValueIsNotCondition("predicate", predicate)
 
     @staticmethod
+    def predicate(name: str, *args) -> "ExpressionBool":
+        if (not isinstance(name, str) or not name.strip()):
+            raise PymzmValueIsNotExpression("name", name)
+        return ExpressionBool._func(name.strip(), list(args))
+
+    @staticmethod
     def forall(var_name: str, domain, predicate: "ExpressionBool") -> "ExpressionBool":
         if (not isinstance(var_name, str) or not var_name.strip()):
             raise PymzmValueIsNotExpression("var_name", var_name)
