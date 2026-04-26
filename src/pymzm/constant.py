@@ -1,8 +1,7 @@
 
 from .expression import Expression
 from .exceptions import PymzmIndexingScalarValue, PymzmInvalidScalarType, PymzmNonInitializedConstant
-from .variable import *
-from .misc import *
+from .variable import Variable
 from .data_encoder import encode_scalar, encode_array, infer_shape
 
 

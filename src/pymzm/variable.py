@@ -1,7 +1,6 @@
-
-from .expression import *
-from .exceptions import *
-from .misc import *
+from .expression import Expression, ExpressionBool
+from .exceptions import PymzmUnsupportedVariableType, PymzmValueIsNotExpression
+from .misc import set_py2mz, variableIterable2Str
 
 class ValueDict(dict):
     def __iter__(self):
