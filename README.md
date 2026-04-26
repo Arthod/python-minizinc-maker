@@ -7,8 +7,8 @@ import pymzm
 import minizinc
 
 model = pymzm.Model()
-x = model.add_variable("x", val_min=1, val_max=100)
-y = model.add_variable("y", val_min=1, val_max=100)
+x = model.add_variable("x", val_min=1, val_max=10000)
+y = model.add_variable("y", val_min=1, val_max=10000)
 
 model.add_constraint(x * y == 7829 * 6907)
 model.add_constraint(x > y)
@@ -17,7 +17,7 @@ model.set_solve_criteria(pymzm.SOLVE_SATISFY)
 
 gecode = minizinc.Solver.lookup("gecode")
 result = model.solve(solver=gecode)
-print(result.x, result.y)  # 7829 6907
+print(result["x"], result["y"])  # 7829 6907
 ```
 
 ## Install
@@ -111,8 +111,8 @@ len(result)
 
 **Status:**
 ```python
-result.status       # minizinc.Status
-result.statistics   # solver statistics dict
+result.status       # minizinc.Status enum
+result.statistics   # solver statistics (minizinc.Result.statistics)
 ```
 
 ## Global constraints
