@@ -7,18 +7,22 @@ from .expression import *
 class AnnotationConstraint:
     ANNOTATIONS = [
         ANNOTATION_BOUNDS,
+        ANNOTATION_BOUNDS_PROPAGATION,
         ANNOTATION_BOUNDS_Z,
         ANNOTATION_BOUNDS_R,
         ANNOTATION_BOUNDS_D,
         ANNOTATION_DOMAIN,
+        ANNOTATION_DOMAIN_PROPAGATION,
         ANNOTATION_VALUE_PROPAGATION,
         # Priority(k)
     ] = [
         "bounds",
+        "bounds_propagation",
         "boundsZ",
         "boundsR",
         "boundsD",
         "domain",
+        "domain_propagation",
         "value_propagation",
     ]
 
@@ -70,10 +74,14 @@ class Constraint:
         return self.cstr
     
     def _to_mz(self):
+        annotation_suffix = ""
+        if (self.annotation is not None):
+            annotation_suffix = f" :: {self.annotation}"
+
         if (self.is_redundant):
-            return f"constraint redundant_constraint({self.cstr});\n"
+            return f"constraint redundant_constraint({self.cstr}){annotation_suffix};\n"
         else:
-            return f"constraint {self.cstr};\n"
+            return f"constraint {self.cstr}{annotation_suffix};\n"
 
     @staticmethod
     def _from_global_constraint(func: str, ctype: str, *args):

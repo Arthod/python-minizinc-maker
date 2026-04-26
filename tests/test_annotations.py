@@ -79,6 +79,52 @@ class TestAnnotations(unittest.TestCase):
             rendered,
         )
 
+    def test_extended_search_choices_and_restart_none_render(self):
+        model = pymzm.Model()
+        x = model.add_variable("x", val_min=0, val_max=5)
+
+        method = pymzm.IntSearch(
+            [x],
+            pymzm.AnnotationVariableChoice.VARCHOICE_IMPACT,
+            pymzm.AnnotationValueChoice.VALCHOICE_OUTDOMAIN_MAX,
+        )
+        model.set_solve_method(method, pymzm.RestartNone())
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+
+        rendered = pymzm.MznTextBackend().render_model(model.to_ir())
+        self.assertIn(
+            "solve :: int_search([x], impact, outdomain_max) :: restart_none satisfy;",
+            rendered,
+        )
+
+    def test_warm_start_helpers_render(self):
+        model = pymzm.Model()
+        x = model.add_variable("x", val_min=0, val_max=10)
+        y = model.add_variable("y", val_min=0, val_max=10)
+
+        model.set_warm_start([x, y], [2, None])
+        model.set_warm_start_array([
+            pymzm.Annotation("warm_start", [x], [3]),
+            pymzm.Annotation("warm_start", [y], [4]),
+        ])
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+
+        rendered = pymzm.MznTextBackend().render_model(model.to_ir())
+        self.assertIn(":: warm_start([x, y], [2, <>])", rendered)
+        self.assertIn(":: warm_start_array([warm_start([x], [3]), warm_start([y], [4])])", rendered)
+
+    def test_constraint_annotation_aliases_render(self):
+        model = pymzm.Model()
+        x = model.add_variable("x", val_min=0, val_max=10)
+
+        model.add_constraint(pymzm.Constraint(x >= 0, annotation="domain_propagation"))
+        model.add_constraint(pymzm.Constraint(x <= 10, annotation="bounds_propagation"))
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+
+        rendered = pymzm.MznTextBackend().render_model(model.to_ir())
+        self.assertIn("constraint (x >= 0) :: domain_propagation;", rendered)
+        self.assertIn("constraint (x <= 10) :: bounds_propagation;", rendered)
+
 
 if __name__ == "__main__":
     unittest.main()

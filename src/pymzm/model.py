@@ -107,6 +107,14 @@ class RestartLuby(RestartStrategy):
         super().__init__("restart_luby", scale)
 
 
+class RestartNone(RestartStrategy):
+    def __init__(self):
+        super().__init__("restart_none", 0)
+
+    def __str__(self):
+        return self.restart_type
+
+
 
 class SeqSearch:
     def __init__(self, search_annotations: list["SearchAnnotation"]):
@@ -169,6 +177,7 @@ class AnnotationVariableChoice:
         VARCHOICE_MOST_CONSTRAINED, # Choose the variable with the smallest domain, breaking ties using the number of constraints.
         VARCHOICE_MAX_REGRET, # Choose the variable with the largest difference between the two smallest values in its domain.
         VARCHOICE_DOM_W_DEG, # Choose the variable with the smallest value of domain size divided by weighted degree, where the weighted degree is the number of times the variables been in a constraint which failed
+        VARCHOICE_IMPACT, # Choose the variable with the highest impact during search.
     ] = [
         "input_order",
         "first_fail",
@@ -179,6 +188,7 @@ class AnnotationVariableChoice:
         "most_constrained",
         "max_regret",
         "dom_w_deg",
+        "impact",
     ]
 
 class AnnotationValueChoice:
@@ -192,6 +202,11 @@ class AnnotationValueChoice:
         VALCHOICE_INDOMAIN_SPLIT, # Bisect the variable’s domain, excluding the upper half first.
         VALCHOICE_INDOMAIN_REVERSE_SPLIT, # Bisect the variable’s domain, excluding the lower half first.
         VALCHOICE_INDOMAIN_INTERVAL, # If the variable’s domain consists of several contiguous intervals, reduce the domain to the first interval. Otherwise just split the variable’s domain.
+        VALCHOICE_INDOMAIN_SPLIT_RANDOM, # Bisect the variable's domain and randomly choose the side to exclude first.
+        VALCHOICE_OUTDOMAIN_MIN, # Exclude the smallest value from the variable's domain.
+        VALCHOICE_OUTDOMAIN_MAX, # Exclude the largest value from the variable's domain.
+        VALCHOICE_OUTDOMAIN_MEDIAN, # Exclude the middle value from the variable's domain.
+        VALCHOICE_OUTDOMAIN_RANDOM, # Exclude a random value from the variable's domain.
     ] = [
         "indomain_min",
         "indomain_max",
@@ -202,6 +217,11 @@ class AnnotationValueChoice:
         "indomain_split",
         "indomain_reverse_split",
         "indomain_interval",
+        "indomain_split_random",
+        "outdomain_min",
+        "outdomain_max",
+        "outdomain_median",
+        "outdomain_random",
     ]
 
 
@@ -254,6 +274,12 @@ class Model(minizinc.Model):
 
     def add_solve_annotation(self, annotation):
         self.solve_annotations.extend(Expression._normalize_annotations(annotation, "annotation"))
+
+    def set_warm_start(self, variables, values):
+        self.add_solve_annotation(Annotation("warm_start", list(variables), list(values)))
+
+    def set_warm_start_array(self, warm_start_annotations):
+        self.add_solve_annotation(Annotation("warm_start_array", list(warm_start_annotations)))
 
     def add_constant(self, name: str, value, vtype=Variable.VTYPE_INTEGER):
         constant = Constant(name, value, vtype)

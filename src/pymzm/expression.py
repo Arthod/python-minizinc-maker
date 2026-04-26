@@ -406,4 +406,20 @@ class Annotation:
     def __str__(self):
         if (not len(self.args)):
             return self.name
-        return f"{self.name}({', '.join(str(arg) for arg in self.args)})"
+        return f"{self.name}({', '.join(self._format_arg(arg) for arg in self.args)})"
+
+    @classmethod
+    def _format_arg(cls, arg):
+        if (isinstance(arg, Annotation)):
+            return str(arg)
+        if (isinstance(arg, Expression)):
+            return str(arg)
+        if (arg is None):
+            return "<>"
+        if (isinstance(arg, bool)):
+            return "true" if arg else "false"
+        if (isinstance(arg, (list, tuple))):
+            return "[" + ", ".join(cls._format_arg(a) for a in arg) + "]"
+        if (isinstance(arg, set)):
+            return "{" + ", ".join(sorted(cls._format_arg(a) for a in arg)) + "}"
+        return str(arg)
