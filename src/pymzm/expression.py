@@ -18,6 +18,40 @@ class Expression:
         return False
 
     @staticmethod
+    def _ensure_expression_operand(value, arg_name: str="value"):
+        if (not isinstance(value, (int, float, Expression))):
+            raise PymzmValueIsNotExpression(arg_name, value)
+
+    @staticmethod
+    def _ensure_condition_operand(value, arg_name: str="value"):
+        if (not isinstance(value, (bool, Expression))):
+            raise PymzmValueIsNotCondition(arg_name, value)
+
+    @staticmethod
+    def _normalize_numeric_exprs(exprs, arg_name: str="exprs"):
+        if (not isinstance(exprs, Iterable)):
+            raise PymzmValueIsNotExpression(arg_name, exprs)
+
+        expr_list = list(exprs)
+        if (not len(expr_list)):
+            raise PymzmNoValues(arg_name)
+
+        for expr in expr_list:
+            Expression._ensure_expression_operand(expr, arg_name)
+        return expr_list
+
+    @staticmethod
+    def _normalize_condition_exprs(exprs, arg_name: str="exprs"):
+        if (not isinstance(exprs, Iterable)):
+            raise PymzmValueIsNotCondition(arg_name, exprs)
+
+        expr_list = list(exprs)
+        for expr in expr_list:
+            if (not isinstance(expr, ExpressionBool)):
+                raise PymzmValueIsNotCondition(arg_name, expr)
+        return expr_list
+
+    @staticmethod
     def ifthenelse(condition: "ExpressionBool", expr1: "Expression", expr2: "Expression") -> "Expression":
         """ifelse: if (condition) then expr1 else expr2:
 
@@ -98,62 +132,22 @@ class Expression:
 
     @staticmethod
     def sum(exprs: List["Expression"]) -> "Expression":
-        if (not isinstance(exprs, Iterable)):
-            raise PymzmValueIsNotExpression("exprs", exprs)
-        
-        exprs = list(exprs)
-        if (not len(exprs)):
-            raise PymzmNoValues("exprs")
-
-        for expr in exprs:
-            if (not isinstance(expr, (Expression, int, float))):
-                raise PymzmValueIsNotExpression("exprs", exprs)
-            
+        exprs = Expression._normalize_numeric_exprs(exprs, "exprs")
         return Expression._func("sum", [exprs])
     
     @staticmethod
     def product(exprs) -> "Expression":
-        if (not isinstance(exprs, Iterable)):
-            raise PymzmValueIsNotExpression("exprs", exprs)
-        
-        exprs = list(exprs)
-        if (not len(exprs)):
-            raise PymzmNoValues("exprs")
-
-        for expr in exprs:
-            if (not isinstance(expr, (Expression, int, float))):
-                raise PymzmValueIsNotExpression("exprs", exprs)
-            
+        exprs = Expression._normalize_numeric_exprs(exprs, "exprs")
         return Expression._func("product", [exprs])
 
     @staticmethod
     def min(exprs: List["Expression"]) -> "Expression":
-        if (not isinstance(exprs, Iterable)):
-            raise PymzmValueIsNotExpression("exprs", exprs)
-        
-        exprs = list(exprs)
-        if (not len(exprs)):
-            raise PymzmNoValues("exprs")
-
-        for expr in exprs:
-            if (not isinstance(expr, (Expression, int, float))):
-                raise PymzmValueIsNotExpression("exprs", exprs)
-            
+        exprs = Expression._normalize_numeric_exprs(exprs, "exprs")
         return Expression._func("min", [exprs])
 
     @staticmethod
     def max(exprs: List["Expression"]) -> "Expression":
-        if (not isinstance(exprs, Iterable)):
-            raise PymzmValueIsNotExpression("exprs", exprs)
-        
-        exprs = list(exprs)
-        if (not len(exprs)):
-            raise PymzmNoValues("exprs")
-
-        for expr in exprs:
-            if (not isinstance(expr, (Expression, int, float))):
-                raise PymzmValueIsNotExpression("exprs", exprs)
-            
+        exprs = Expression._normalize_numeric_exprs(exprs, "exprs")
         return Expression._func("max", [exprs])
 
     @classmethod
@@ -177,51 +171,33 @@ class Expression:
 
     @staticmethod
     def OR(exprs: List["ExpressionBool"]) -> "ExpressionBool":
-        for expr in exprs:
-            if (not isinstance(expr, ExpressionBool)):
-                raise PymzmValueIsNotCondition("exprs", expr)
-
-        return ExpressionBool._operator("\/", exprs)
+        exprs = Expression._normalize_condition_exprs(exprs, "exprs")
+        return ExpressionBool._operator("\\/", exprs)
     
     @staticmethod
     def AND(exprs: List["ExpressionBool"]) -> "ExpressionBool":
-        for expr in exprs:
-            if (not isinstance(expr, ExpressionBool)):
-                raise PymzmValueIsNotCondition("exprs", expr)
-
+        exprs = Expression._normalize_condition_exprs(exprs, "exprs")
         return ExpressionBool._operator("/\\", exprs)
     
     @staticmethod
     def onlyIf(exprs: List["ExpressionBool"]) -> "ExpressionBool":
-        for expr in exprs:
-            if (not isinstance(expr, ExpressionBool)):
-                raise PymzmValueIsNotCondition("exprs", expr)
-
+        exprs = Expression._normalize_condition_exprs(exprs, "exprs")
         return ExpressionBool._operator("<-", exprs)
     
     @staticmethod
     def implies(exprs: List["ExpressionBool"]) -> "ExpressionBool":
-        for expr in exprs:
-            if (not isinstance(expr, ExpressionBool)):
-                raise PymzmValueIsNotCondition("exprs", expr)
-
+        exprs = Expression._normalize_condition_exprs(exprs, "exprs")
         return ExpressionBool._operator("->", exprs)
     
     @staticmethod
     def iff(exprs: List["ExpressionBool"]) -> "ExpressionBool":
         # <->
-        for expr in exprs:
-            if (not isinstance(expr, ExpressionBool)):
-                raise PymzmValueIsNotCondition("exprs", expr)
-
+        exprs = Expression._normalize_condition_exprs(exprs, "exprs")
         return ExpressionBool._operator("<->", exprs)
     
     @staticmethod
     def xor(exprs: List["ExpressionBool"]) -> "ExpressionBool":
-        for expr in exprs:
-            if (not isinstance(expr, ExpressionBool)):
-                raise PymzmValueIsNotCondition("exprs", expr)
-
+        exprs = Expression._normalize_condition_exprs(exprs, "exprs")
         return ExpressionBool._operator("xor", exprs)
     
     @staticmethod
@@ -232,62 +208,52 @@ class Expression:
         return ExpressionBool._func("not", [expr])
 
     def __add__(self, other: "Expression") -> "Expression":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return Expression._operator("+", [self, other])
     
     def __radd__(self, other: "Expression") -> "Expression":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return Expression._operator("+", [other, self])
     
     def __sub__(self, other: "Expression") -> "Expression":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return Expression._operator("-", [self, other])
     
     def __rsub__(self, other: "Expression") -> "Expression":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return Expression._operator("-", [other, self])
     
     def __mul__(self, other: "Expression") -> "Expression":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return Expression._operator("*", [self, other])
     
     def __rmul__(self, other: "Expression") -> "Expression":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return Expression._operator("*", [other, self])
     
     def __truediv__(self, other: "Expression") -> "Expression":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return Expression._operator("/", [self, other])
     
     def __rtruediv__(self, other: "Expression") -> "Expression":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return Expression._operator("/", [other, self])
     
     def __floordiv__(self, other: "Expression") -> "Expression":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return Expression._operator("div", [self, other])
     
     def __rfloordiv__(self, other: "Expression") -> "Expression":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return Expression._operator("div", [other, self])
     
@@ -308,75 +274,63 @@ class Expression:
     #def __pos__(self): return Expression._func("+", [self]) TODO: not allowed in minizinc example: +x == v
     
     def __eq__(self, other: "Expression") -> "ExpressionBool":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return ExpressionBool._operator("==", [self, other])
     
     def __ne__(self, other: "Expression") -> "ExpressionBool":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return ExpressionBool._operator("!=", [self, other])
     
     def __lt__(self, other: "Expression") -> "ExpressionBool":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return ExpressionBool._operator("<", [self, other])
     
     def __le__(self, other: "Expression") -> "ExpressionBool":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return ExpressionBool._operator("<=", [self, other])
     
     def __gt__(self, other: "Expression") -> "ExpressionBool":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return ExpressionBool._operator(">", [self, other])
     
     def __ge__(self, other: "Expression") -> "ExpressionBool":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return ExpressionBool._operator(">=", [self, other])
     
     
     def __and__(self, other: "ExpressionBool") -> "ExpressionBool":
-        if (not isinstance(other, (bool, Expression))):
-            raise PymzmValueIsNotCondition("other", other)
+        Expression._ensure_condition_operand(other, "other")
 
         return Expression.AND([self, other])
     
     def __rand__(self, other: "ExpressionBool") -> "ExpressionBool":
-        if (not isinstance(other, (bool, Expression))):
-            raise PymzmValueIsNotCondition("other", other)
+        Expression._ensure_condition_operand(other, "other")
 
         return Expression.AND([other, self])
     
     def __or__(self, other: "ExpressionBool") -> "ExpressionBool":
-        if (not isinstance(other, (bool, Expression))):
-            raise PymzmValueIsNotCondition("other", other)
+        Expression._ensure_condition_operand(other, "other")
 
         return Expression.OR([self, other])
     
     def __ror__(self, other: "ExpressionBool") -> "ExpressionBool":
-        if (not isinstance(other, (bool, Expression))):
-            raise PymzmValueIsNotCondition("other", other)
+        Expression._ensure_condition_operand(other, "other")
 
         return Expression.OR([other, self])
     
     def __xor__(self, other: "ExpressionBool") -> "ExpressionBool":
-        if (not isinstance(other, (bool, Expression))):
-            raise PymzmValueIsNotCondition("other", other)
+        Expression._ensure_condition_operand(other, "other")
 
         return Expression.xor([self, other])
     
     def __rxor__(self, other: "ExpressionBool") -> "ExpressionBool":
-        if (not isinstance(other, (bool, Expression))):
-            raise PymzmValueIsNotCondition("other", other)
+        Expression._ensure_condition_operand(other, "other")
 
         return Expression.xor([other, self])
     
@@ -384,14 +338,12 @@ class Expression:
         return Expression.NOT(self)
 
     def __pow__(self, other: "Expression") -> "Expression":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
 
         return Expression._func("pow", [self, other])
     
     def __rpow__(self, other: "Expression") -> "Expression":
-        if (not isinstance(other, (int, float, Expression))):
-            raise PymzmValueIsNotExpression("other", other)
+        Expression._ensure_expression_operand(other, "other")
         
         return Expression._func("pow", [other, self])
     
