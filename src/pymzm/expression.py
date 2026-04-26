@@ -140,16 +140,6 @@ class Expression:
 
     @staticmethod
     def ifthenelse(condition: "ExpressionBool", expr1: "Expression", expr2: "Expression") -> "Expression":
-        """ifelse: if (condition) then expr1 else expr2:
-
-        Args:
-            condition (Expression): condition of expression
-            expr1 (Expression): expression if condition
-            expr2 (Expression): expression else
-
-        Returns:
-            Expression: the main if then else expression 
-        """
         return Expression.conditional([(condition, expr1)], expr2)
 
     @staticmethod
@@ -491,8 +481,7 @@ class Expression:
     
     def __neg__(self) -> "Expression":
         return 0 - self
-    #def __pos__(self): return Expression._func("+", [self]) TODO: not allowed in minizinc example: +x == v
-    
+
     def __eq__(self, other: "Expression") -> "ExpressionBool":
         Expression._ensure_expression_operand(other, "other")
 
@@ -618,14 +607,7 @@ class Expression:
     def symdiff(self, other) -> "Expression":
         rhs = Expression._set_operand_to_mz(other, "other")
         return Expression(f"(({self} diff {rhs}) union ({rhs} diff {self}))")
-    # TODO: https://www.minizinc.org/doc-2.7.6/en/lib-stdlib-builtins.html
-    # arg max, arg min
-    # max, min
-    # count
-    # exp(x)
-    # log_x, log_2, log_10, ln
-    # trinonometric functions
-    # ..and more!
+
 
 class ExpressionBool(Expression):
     pass

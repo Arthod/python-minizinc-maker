@@ -28,7 +28,6 @@ class Constant(Expression):
         return infer_shape(value)
         
     def __getitem__(self, other: Expression):
-        # TODO boolean expression
         if (self.shape is None):
             raise PymzmIndexingScalarValue(self.name)
         

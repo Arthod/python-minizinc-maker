@@ -141,14 +141,6 @@ class Constraint:
 
     @staticmethod
     def alldifferent(exprs: Sequence[ExprLike]) -> "Constraint":
-        """Constrain the elements in the passed List to be pairwise different.
-
-        Args:
-            variables (List[Expression]): Passed List of expressions
-
-        Returns:
-            Constraint: Alldifferent constraint
-        """
         exprs = Constraint._as_non_empty_list(exprs, "exprs")
         return Constraint._from_global_constraint("alldifferent", Constraint.CTYPE_ALLDIFFERENT, exprs)
 
@@ -330,7 +322,6 @@ class Constraint:
         es: Sequence[ExprLike],
     ) -> "Constraint":
         # Constrains the subgraph ns and es of a given undirected graph to be reachable from r.
-        # TODO: this can have other parameters.
         node_from = Constraint._as_non_empty_list(node_from, "node_from")
         node_to = Constraint._as_non_empty_list(node_to, "node_to")
         ns = Constraint._as_non_empty_list(ns, "ns")
