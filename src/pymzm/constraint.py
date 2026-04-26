@@ -84,6 +84,10 @@ class Constraint:
         "connected",
         "reachable"
     ]
+    # Canonical alias for naming consistency with all_different(...).
+    CTYPE_ALL_DIFFERENT = CTYPE_ALLDIFFERENT
+    PUBLIC_CTYPES = tuple(CTYPES)
+
     def __init__(self, cstr: ExpressionBool, ctype: str=CTYPE_NORMAL, annotation: str=None, is_redundant=False, enabled=True):
         self.cstr = cstr
         if (not isinstance(self.cstr, (ExpressionBool, bool, str))):

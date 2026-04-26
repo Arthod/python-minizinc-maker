@@ -15,6 +15,11 @@ from .result import SolveResult
 SOLVE_MAXIMIZE = "maximize"
 SOLVE_MINIMIZE = "minimize"
 SOLVE_SATISFY = "satisfy"
+SOLVE_CRITERIA = (
+    SOLVE_SATISFY,
+    SOLVE_MINIMIZE,
+    SOLVE_MAXIMIZE,
+)
 
 SolverLike = Union[str, Any]
 ConstraintInput = Union[Constraint, ExpressionBool]
@@ -261,12 +266,13 @@ class Model(minizinc.Model):
         self.solve_criteria = criteria
         self.solve_expression = expr
 
+        if (criteria not in SOLVE_CRITERIA):
+            raise PymzmInvalidSolveCriteria(criteria)
+
         if (criteria == SOLVE_MAXIMIZE or criteria == SOLVE_MINIMIZE):
             assert expr is not None
-        elif (criteria == SOLVE_SATISFY):
-            assert expr is None
         else:
-            raise PymzmInvalidSolveCriteria(criteria)
+            assert expr is None
 
     def set_solve_method(self, method: SearchAnnotation, restart_strategy: Optional[RestartStrategy]=None) -> None:
         assert isinstance(method, (SeqSearch, SearchAnnotation))
