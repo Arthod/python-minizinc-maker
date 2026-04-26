@@ -239,6 +239,7 @@ class Model(minizinc.Model):
         self.model_mzn_str = None
 
         self.global_constraints = set()
+        self.includes = set()
         self.enums = {}
         self.function_declarations = []
         self.predicate_declarations = []
@@ -388,6 +389,17 @@ class Model(minizinc.Model):
 
         self.constraints.append(constraint)
         return constraint
+
+    def add_include(self, include_file: str):
+        assert isinstance(include_file, str)
+        include_file = include_file.strip()
+        assert len(include_file) > 0
+        self.includes.add(include_file)
+
+    def add_includes(self, include_files):
+        include_files = list(include_files)
+        for include_file in include_files:
+            self.add_include(include_file)
 
     def add_constraints(self, constraints: List[Constraint], is_redundant=False):
         constraints = list(constraints)
@@ -583,7 +595,7 @@ class Model(minizinc.Model):
     def to_ir(self) -> ModelIR:
         assert self.solve_criteria is not None
 
-        includes = tuple(sorted(f"{gconst}.mzn" for gconst in self.global_constraints))
+        includes = tuple(sorted({*(f"{gconst}.mzn" for gconst in self.global_constraints), *self.includes}))
 
         constants_sorted = sorted(self.constants, key=lambda c: c.name)
         parameters_sorted = sorted(self.parameters, key=lambda p: p.name)
