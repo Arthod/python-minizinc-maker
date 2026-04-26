@@ -19,3 +19,4 @@ class ModelIR:
     solve: SolveIR
     function_declarations: Tuple[str, ...] = ()
     predicate_declarations: Tuple[str, ...] = ()
+    output_items: Tuple[str, ...] = ()

@@ -34,4 +34,5 @@ class MznTextBackend(BackendAdapter):
             solve_text += f" {solve.expression}"
 
         lines.append(f"solve {solve_text};")
+        lines.extend(model_ir.output_items)
         return "\n".join(lines) + "\n"

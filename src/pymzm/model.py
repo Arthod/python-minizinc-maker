@@ -243,6 +243,7 @@ class Model(minizinc.Model):
         self.enums = {}
         self.function_declarations = []
         self.predicate_declarations = []
+        self.output_items = []
 
         self.last_solver = None
         self.last_solve_status = None
@@ -418,6 +419,46 @@ class Model(minizinc.Model):
         declaration = declaration.strip()
         assert len(declaration) > 0
         self.predicate_declarations.append(declaration.rstrip(";"))
+
+    def _output_part_to_mz(self, part) -> str:
+        if (isinstance(part, str)):
+            escaped = (
+                part
+                .replace("\\", "\\\\")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t")
+                .replace('"', '\\"')
+            )
+            return f'"{escaped}"'
+        if (isinstance(part, bool)):
+            return f"show({'true' if part else 'false'})"
+        if (isinstance(part, (int, float, Expression))):
+            return f"show({part})"
+        raise PymzmValueIsNotExpression("part", part)
+
+    def add_output(self, parts, section: str=None, json_section: str=None):
+        if (isinstance(parts, (str, Expression, int, float, bool))):
+            parts = [parts]
+
+        parts = list(parts)
+        assert len(parts) > 0
+
+        rendered_parts = ", ".join(self._output_part_to_mz(part) for part in parts)
+        output_item = f"output [{rendered_parts}]"
+        if (json_section is not None):
+            output_item += f' :: json_section("{json_section}")'
+        elif (section is not None):
+            output_item += f' :: "{section}"'
+
+        self.output_items.append(output_item + ";")
+
+    def set_output(self, parts, section: str=None, json_section: str=None):
+        self.output_items = []
+        self.add_output(parts, section=section, json_section=json_section)
+
+    def add_output_kv(self, label: str, value, suffix: str=""):
+        self.add_output([f"{label}=", value, suffix])
 
     def call_function(self, name: str, *args, returns_bool: bool=False):
         return Expression.function(name, *args, returns_bool=returns_bool)
@@ -618,6 +659,7 @@ class Model(minizinc.Model):
             line.rstrip("\n")
             for line in (constraint._to_mz() for constraint in self.constraints)
         )
+        output_items = tuple(self.output_items)
         solve = SolveIR(
             criteria=self.solve_criteria,
             expression=str(self.solve_expression) if (self.solve_expression is not None) else None,
@@ -632,6 +674,7 @@ class Model(minizinc.Model):
             predicate_declarations=predicate_declarations,
             constraints=constraints,
             solve=solve,
+            output_items=output_items,
         )
 
     def write(self, fn: str):
