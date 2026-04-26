@@ -128,6 +128,45 @@ class TestExpressionValidation(unittest.TestCase):
 
         assert_valid_mzn(self, model.model_mzn_str)
 
+    def test_array_and_set_comprehension_render_with_filters(self):
+        arr = pymzm.Expression.array_comprehension(
+            lambda i: i + 1,
+            [("i", range(1, 4), lambda i: i >= 2)],
+        )
+        s = pymzm.Expression.set_comprehension(
+            lambda i, j: i + j,
+            [("i", "1..2"), ("j", [1, 2, 3], lambda j: j >= 2)],
+        )
+
+        self.assertEqual(str(arr), "[(i + 1) | i in 1..3 where (i >= 2)]")
+        self.assertEqual(str(s), "{(i + j) | i in 1..2, j in {1, 2, 3} where (j >= 2)}")
+
+    def test_comprehensions_can_be_used_in_model_constraints(self):
+        model = pymzm.Model()
+        x = model.add_variable("x", val_min=0, val_max=10)
+
+        arr = pymzm.Expression.array_comprehension(lambda i: i + x, [("i", range(1, 3))])
+        s = pymzm.Expression.set_comprehension(lambda i: i, [("i", [1, 2, 3], lambda i: i >= 2)])
+
+        model.add_constraint(x >= 0)
+        model.add_constraint(pymzm.Expression._func("sum", [arr]) >= 0)
+        model.add_constraint(pymzm.Expression._func("card", [s]) >= 1)
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+        model.generate()
+
+        self.assertIn("sum([", model.model_mzn_str)
+        self.assertIn("{i | i in {1, 2, 3} where (i >= 2)}", model.model_mzn_str)
+        assert_valid_mzn(self, model.model_mzn_str)
+
+    def test_comprehensions_validate_inputs(self):
+        self.assertRaises(pymzm.PymzmNoValues, pymzm.Expression.array_comprehension, 1, [])
+        self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.array_comprehension, object(), [("i", [1])])
+        self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.array_comprehension, 1, ["bad"])
+        self.assertRaises(pymzm.PymzmValueIsNotCondition, pymzm.Expression.array_comprehension, 1, [("i", [1], 7)])
+
+        self.assertRaises(pymzm.PymzmNoValues, pymzm.Expression.set_comprehension, 1, [])
+        self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.set_comprehension, object(), [("i", [1])])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -220,6 +220,69 @@ class Expression:
         raise PymzmValueIsNotCondition("predicate", predicate)
 
     @staticmethod
+    def _generator_clause_to_mz(generator, arg_name: str="generators") -> str:
+        if (not isinstance(generator, (tuple, list)) or len(generator) not in (2, 3)):
+            raise PymzmValueIsNotExpression(arg_name, generator)
+
+        var_name = generator[0]
+        domain = generator[1]
+        predicate = generator[2] if (len(generator) == 3) else None
+
+        if (not isinstance(var_name, str) or not var_name.strip()):
+            raise PymzmValueIsNotExpression("var_name", var_name)
+
+        domain_mz = Expression._domain_to_mz(domain)
+        clause = f"{var_name} in {domain_mz}"
+        if (predicate is not None):
+            predicate_mz = Expression._predicate_to_mz(var_name, predicate)
+            clause += f" where {predicate_mz}"
+
+        return clause
+
+    @staticmethod
+    def _comprehension_expr_to_mz(expr, generator_var_names):
+        if (isinstance(expr, Callable)):
+            vars_expr = [Expression(name) for name in generator_var_names]
+            if (len(vars_expr) == 1):
+                expr = expr(vars_expr[0])
+            else:
+                expr = expr(*vars_expr)
+
+        if (isinstance(expr, bool)):
+            return "true" if expr else "false"
+
+        if (isinstance(expr, (Expression, int, float))):
+            return str(expr)
+
+        raise PymzmValueIsNotExpression("expr", expr)
+
+    @staticmethod
+    def array_comprehension(expr, generators):
+        if (not isinstance(generators, Iterable) or isinstance(generators, (str, bytes))):
+            raise PymzmValueIsNotExpression("generators", generators)
+
+        generators = list(generators)
+        if (not len(generators)):
+            raise PymzmNoValues("generators")
+
+        clauses = [Expression._generator_clause_to_mz(g) for g in generators]
+        expr_mz = Expression._comprehension_expr_to_mz(expr, [g[0] for g in generators])
+        return Expression(f"[{expr_mz} | {', '.join(clauses)}]")
+
+    @staticmethod
+    def set_comprehension(expr, generators):
+        if (not isinstance(generators, Iterable) or isinstance(generators, (str, bytes))):
+            raise PymzmValueIsNotExpression("generators", generators)
+
+        generators = list(generators)
+        if (not len(generators)):
+            raise PymzmNoValues("generators")
+
+        clauses = [Expression._generator_clause_to_mz(g) for g in generators]
+        expr_mz = Expression._comprehension_expr_to_mz(expr, [g[0] for g in generators])
+        return Expression(f"{{{expr_mz} | {', '.join(clauses)}}}")
+
+    @staticmethod
     def predicate(name: str, *args) -> "ExpressionBool":
         if (not isinstance(name, str) or not name.strip()):
             raise PymzmValueIsNotExpression("name", name)
