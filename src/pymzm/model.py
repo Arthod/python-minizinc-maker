@@ -1,6 +1,6 @@
 
 import minizinc
-from typing import List, Tuple
+from typing import Any, List, Optional, Tuple, Union
 
 from .exceptions import *
 from .variable import *
@@ -236,6 +236,114 @@ class Model(minizinc.Model):
         self.add_string(self.model_mzn_str)
         if (debug):
             print(self.model_mzn_str)
+
+    def _render_model_string(self) -> str:
+        self.model_mzn_str = MznTextBackend().render_model(self.to_ir())
+        return self.model_mzn_str
+
+    def _resolve_solver(self, solver: Union[str, Any, None]):
+        if (solver is None):
+            solver = "gecode"
+
+        if (isinstance(solver, str)):
+            return minizinc.Solver.lookup(solver)
+
+        return solver
+
+    def _create_instance(self, solver: Union[str, Any, None]=None):
+        solver_obj = self._resolve_solver(solver)
+        model_text = self._render_model_string()
+        runtime_model = minizinc.Model()
+        runtime_model.add_string(model_text)
+        return minizinc.Instance(solver_obj, runtime_model)
+
+    def solve(
+        self,
+        solver: Union[str, Any, None]=None,
+        timeout=None,
+        random_seed: Optional[int]=None,
+        threads: Optional[int]=None,
+        free_search: bool=False,
+        all_solutions: bool=False,
+        **kwargs,
+    ):
+        instance = self._create_instance(solver=solver)
+        return instance.solve(
+            timeout=timeout,
+            random_seed=random_seed,
+            processes=threads,
+            free_search=free_search,
+            all_solutions=all_solutions,
+            **kwargs,
+        )
+
+    def solve_all(
+        self,
+        solver: Union[str, Any, None]=None,
+        timeout=None,
+        random_seed: Optional[int]=None,
+        threads: Optional[int]=None,
+        free_search: bool=False,
+        **kwargs,
+    ):
+        return self.solve(
+            solver=solver,
+            timeout=timeout,
+            random_seed=random_seed,
+            threads=threads,
+            free_search=free_search,
+            all_solutions=True,
+            **kwargs,
+        )
+
+    def optimize(
+        self,
+        solver: Union[str, Any, None]=None,
+        timeout=None,
+        random_seed: Optional[int]=None,
+        threads: Optional[int]=None,
+        free_search: bool=False,
+        **kwargs,
+    ):
+        if (self.solve_criteria not in (SOLVE_MAXIMIZE, SOLVE_MINIMIZE)):
+            raise ValueError("Model.optimize() requires solve criteria 'maximize' or 'minimize'.")
+
+        return self.solve(
+            solver=solver,
+            timeout=timeout,
+            random_seed=random_seed,
+            threads=threads,
+            free_search=free_search,
+            all_solutions=False,
+            **kwargs,
+        )
+
+    def check_satisfiable(
+        self,
+        solver: Union[str, Any, None]=None,
+        timeout=None,
+        random_seed: Optional[int]=None,
+        threads: Optional[int]=None,
+        free_search: bool=False,
+        **kwargs,
+    ) -> bool:
+        result = self.solve(
+            solver=solver,
+            timeout=timeout,
+            random_seed=random_seed,
+            threads=threads,
+            free_search=free_search,
+            all_solutions=False,
+            **kwargs,
+        )
+
+        satisfiable_statuses = {
+            minizinc.Status.SATISFIED,
+            minizinc.Status.OPTIMAL_SOLUTION,
+            minizinc.Status.ALL_SOLUTIONS,
+            minizinc.Status.UNBOUNDED,
+        }
+        return result.status in satisfiable_statuses
 
     def to_ir(self) -> ModelIR:
         assert self.solve_criteria is not None
