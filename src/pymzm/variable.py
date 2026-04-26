@@ -77,12 +77,13 @@ class Variable(Expression):
         "string",
         "set"
     ]
-    def __init__(self, name: str, vtype: int=VTYPE_INTEGER, val_min: int=None, val_max: int=None, domain=None):
+    def __init__(self, name: str, vtype: int=VTYPE_INTEGER, val_min: int=None, val_max: int=None, domain=None, annotations=None):
         self.name = name
         self.vtype = vtype
         self.val_min = val_min
         self.val_max = val_max
         self.domain = domain
+        self.annotations = Expression._normalize_annotations(annotations, "annotations")
 
         if (vtype == Variable.VTYPE_INTEGER):
             if (domain is None):
@@ -136,31 +137,40 @@ class Variable(Expression):
     def __str__(self):
         return self.name
 
+    def annotate(self, *annotations):
+        self.annotations.extend(Expression._normalize_annotations(annotations, "annotations"))
+        return self
+
+    def _declaration_with_annotations(self, declaration: str) -> str:
+        if (len(self.annotations)):
+            declaration += " :: " + " :: ".join(self.annotations)
+        return declaration + ";\n"
+
     def _to_mz(self):
         if (self.vtype == Variable.VTYPE_BOOL):
-            return f"var bool: {self.name};\n"
+            return self._declaration_with_annotations(f"var bool: {self.name}")
         
         elif (self.vtype == Variable.VTYPE_INTEGER):
             if (self.domain is None):
-                return f"var {self.val_min}..{self.val_max}: {self.name};\n"
+                return self._declaration_with_annotations(f"var {self.val_min}..{self.val_max}: {self.name}")
             elif (isinstance(self.domain, (str, Expression))):
-                return f"var {self.domain}: {self.name};\n"
+                return self._declaration_with_annotations(f"var {self.domain}: {self.name}")
             else:
-                return f"var {set_py2mz(self.domain)}: {self.name};\n"
+                return self._declaration_with_annotations(f"var {set_py2mz(self.domain)}: {self.name}")
             
         elif (self.vtype == Variable.VTYPE_FLOAT):
-            return f"var {self.val_min}..{self.val_max}: {self.name};\n"
+            return self._declaration_with_annotations(f"var {self.val_min}..{self.val_max}: {self.name}")
             
         elif (self.vtype == Variable.VTYPE_SET):
             if (self.domain is None):
-                return f"var set of {self.val_min}..{self.val_max}: {self.name};\n"
+                return self._declaration_with_annotations(f"var set of {self.val_min}..{self.val_max}: {self.name}")
             elif (isinstance(self.domain, (str, Expression))):
-                return f"var set of {self.domain}: {self.name};\n"
+                return self._declaration_with_annotations(f"var set of {self.domain}: {self.name}")
             else:
-                return f"var set of {set_py2mz(self.domain)}: {self.name};\n"
+                return self._declaration_with_annotations(f"var set of {set_py2mz(self.domain)}: {self.name}")
 
         elif (self.vtype == Variable.VTYPE_STRING):
-            return f"var string: {self.name};\n"
+            return self._declaration_with_annotations(f"var string: {self.name}")
 
     def __len__(self):
         assert self.vtype == Variable.VTYPE_SET

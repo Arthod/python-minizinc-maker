@@ -17,11 +17,17 @@ class MznTextBackend(BackendAdapter):
         lines.extend(model_ir.constraints)
 
         solve = model_ir.solve
-        solve_text = ""
+        solve_annotations = []
         if solve.method is not None:
-            solve_text += f":: {solve.method}\n"
-            if solve.restart_strategy is not None:
-                solve_text += f"      :: {solve.restart_strategy}\n "
+            solve_annotations.append(solve.method)
+        if solve.restart_strategy is not None:
+            solve_annotations.append(solve.restart_strategy)
+        solve_annotations.extend(solve.annotations)
+
+        solve_text = ""
+        if len(solve_annotations):
+            solve_text += " ".join(f":: {annotation}" for annotation in solve_annotations)
+            solve_text += " "
 
         solve_text += solve.criteria
         if solve.expression is not None:

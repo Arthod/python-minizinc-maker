@@ -8,6 +8,7 @@ class SolveIR:
     expression: Optional[str] = None
     method: Optional[str] = None
     restart_strategy: Optional[str] = None
+    annotations: Tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

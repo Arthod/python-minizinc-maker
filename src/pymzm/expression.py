@@ -52,6 +52,40 @@ class Expression:
         return expr_list
 
     @staticmethod
+    def _normalize_annotations(annotations, arg_name: str="annotations"):
+        if (annotations is None):
+            return []
+
+        if (isinstance(annotations, (str, Annotation))):
+            annotations = [annotations]
+
+        if (not isinstance(annotations, Iterable)):
+            raise PymzmValueIsNotExpression(arg_name, annotations)
+
+        normalized = []
+        for annotation in annotations:
+            if (isinstance(annotation, Annotation)):
+                normalized.append(str(annotation))
+            elif (isinstance(annotation, str) and annotation.strip()):
+                normalized.append(annotation.strip())
+            else:
+                raise PymzmValueIsNotExpression(arg_name, annotation)
+        return normalized
+
+    def annotate(self, *annotations):
+        normalized = Expression._normalize_annotations(annotations, "annotations")
+        if (not len(normalized)):
+            raise PymzmNoValues("annotations")
+
+        expression_text = f"{self}"
+        for annotation in normalized:
+            expression_text += f" :: {annotation}"
+
+        if (isinstance(self, ExpressionBool)):
+            return ExpressionBool(expression_text)
+        return Expression(expression_text)
+
+    @staticmethod
     def ifthenelse(condition: "ExpressionBool", expr1: "Expression", expr2: "Expression") -> "Expression":
         """ifelse: if (condition) then expr1 else expr2:
 
@@ -360,3 +394,16 @@ class Expression:
 
 class ExpressionBool(Expression):
     pass
+
+
+class Annotation:
+    def __init__(self, name: str, *args):
+        if (not isinstance(name, str) or not name.strip()):
+            raise PymzmValueIsNotExpression("name", name)
+        self.name = name.strip()
+        self.args = list(args)
+
+    def __str__(self):
+        if (not len(self.args)):
+            return self.name
+        return f"{self.name}({', '.join(str(arg) for arg in self.args)})"

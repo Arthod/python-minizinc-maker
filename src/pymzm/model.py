@@ -215,6 +215,7 @@ class Model(minizinc.Model):
         self.solve_expression = None
         self.solve_method = None
         self.restart_strategy = None
+        self.solve_annotations = []
         self.model_mzn_str = None
 
         self.global_constraints = set()
@@ -247,6 +248,12 @@ class Model(minizinc.Model):
             assert isinstance(restart_strategy, RestartStrategy)
         self.solve_method = method
         self.restart_strategy = restart_strategy
+
+    def set_solve_annotations(self, annotations):
+        self.solve_annotations = Expression._normalize_annotations(annotations, "annotations")
+
+    def add_solve_annotation(self, annotation):
+        self.solve_annotations.extend(Expression._normalize_annotations(annotation, "annotation"))
 
     def add_constant(self, name: str, value, vtype=Variable.VTYPE_INTEGER):
         constant = Constant(name, value, vtype)
@@ -293,12 +300,12 @@ class Model(minizinc.Model):
         self.enums[type_name] = enum_domain
         return enum_domain
 
-    def add_variable(self, name: str, vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None, domain: set=None):
-        variable = Variable(name, vtype, val_min, val_max, domain)
+    def add_variable(self, name: str, vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None, domain: set=None, annotations=None):
+        variable = Variable(name, vtype, val_min, val_max, domain, annotations=annotations)
         self.variables.append(variable)
         return variable
     
-    def add_variables(self, name: str, indices: List[Tuple[int]], vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None, domains: set=None) -> ValueDict:
+    def add_variables(self, name: str, indices: List[Tuple[int]], vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None, domains: set=None, annotations=None) -> ValueDict:
 
         # Domain
         if (domains is None):
@@ -313,10 +320,29 @@ class Model(minizinc.Model):
             assert set(domains.keys()) == set(indices)
             domains = {idx: domains[idx] for idx in indices}
 
+        # Annotations
+        if (annotations is None):
+            annotations = {}
+        elif (isinstance(annotations, (str, Annotation))):
+            annotations = {idx: [annotations] for idx in indices}
+        elif (type(annotations) is list):
+            assert len(annotations) == len(indices)
+            annotations = {idx: annotations[i] for i, idx in enumerate(indices)}
+        elif (type(annotations) is dict):
+            assert set(annotations.keys()) == set(indices)
+            annotations = {idx: annotations[idx] for idx in indices}
+
         variables = ValueDict()
         for idx in indices:
             idx_str = str(idx).replace(", ", "_").replace("(", "").replace(")", "").replace("'", "").replace("-", "_")
-            variable = Variable(f"{name}_{idx_str}", vtype, val_min, val_max, domains.get(idx, None))
+            variable = Variable(
+                f"{name}_{idx_str}",
+                vtype,
+                val_min,
+                val_max,
+                domains.get(idx, None),
+                annotations=annotations.get(idx, None),
+            )
             self.variables.append(variable)
             variables[idx] = variable
 
@@ -547,6 +573,7 @@ class Model(minizinc.Model):
             expression=str(self.solve_expression) if (self.solve_expression is not None) else None,
             method=str(self.solve_method) if (self.solve_method is not None) else None,
             restart_strategy=str(self.restart_strategy) if (self.restart_strategy is not None) else None,
+            annotations=tuple(self.solve_annotations),
         )
         return ModelIR(
             includes=includes,
