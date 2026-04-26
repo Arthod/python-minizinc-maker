@@ -46,7 +46,7 @@ class TestModelExecution(unittest.TestCase):
 
     @patch("pymzm.model.minizinc.Instance")
     @patch("pymzm.model.minizinc.Solver.lookup")
-    def test_solve_all_forces_all_solutions(self, solver_lookup_mock, instance_cls_mock):
+    def test_solve_can_request_all_solutions(self, solver_lookup_mock, instance_cls_mock):
         model = self._build_satisfy_model()
         solver_lookup_mock.return_value = "solver-object"
 
@@ -54,7 +54,7 @@ class TestModelExecution(unittest.TestCase):
         instance_mock.solve.return_value = object()
         instance_cls_mock.return_value = instance_mock
 
-        model.solve_all(solver="gecode")
+        model.solve(solver="gecode", all_solutions=True)
 
         instance_mock.solve.assert_called_once_with(
             timeout=None,
@@ -68,6 +68,30 @@ class TestModelExecution(unittest.TestCase):
         model = self._build_satisfy_model()
         with self.assertRaises(ValueError):
             model.optimize()
+
+    @patch("pymzm.model.minizinc.Model")
+    @patch("pymzm.model.minizinc.Instance")
+    @patch("pymzm.model.minizinc.Solver.lookup")
+    def test_solve_creates_runtime_model_in_memory(self, solver_lookup_mock, instance_cls_mock, runtime_model_cls_mock):
+        model = self._build_satisfy_model()
+        solver_lookup_mock.return_value = "solver-object"
+
+        runtime_model = MagicMock()
+        runtime_model_cls_mock.return_value = runtime_model
+
+        expected_result = object()
+        instance_mock = MagicMock()
+        instance_mock.solve.return_value = expected_result
+        instance_cls_mock.return_value = instance_mock
+
+        result = model.solve(solver="gecode")
+
+        self.assertIs(result, expected_result)
+        runtime_model.add_string.assert_called_once()
+        rendered_text = runtime_model.add_string.call_args.args[0]
+        self.assertIsInstance(rendered_text, str)
+        self.assertIn("solve satisfy;", rendered_text)
+        instance_cls_mock.assert_called_once_with("solver-object", runtime_model)
 
     @patch.object(pymzm.Model, "solve")
     def test_check_satisfiable_status_mapping(self, solve_mock):

@@ -11,10 +11,9 @@ model.add_constraint(pymzm.Expression.AND([
     xs[0] | ~xs[1] | xs[3],
 ]))
 model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-model.generate()
 
 gecode = minizinc.Solver.lookup("gecode")
-result = minizinc.Instance(gecode, model).solve(all_solutions=False)
+result = model.solve(solver=gecode, all_solutions=False)
 
 for i in range(4):
     print(f"x_{i} = {result[f'x_{i}']}")

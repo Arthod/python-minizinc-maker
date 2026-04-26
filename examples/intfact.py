@@ -10,9 +10,7 @@ def intfact(model, solver, n1, n2):
     model.add_constraint(x > y)
 
     model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-    model.generate()
-
-    result = minizinc.Instance(solver, model).solve(all_solutions=True)
+    result = model.solve(solver=solver, all_solutions=True)
 
     return result
 

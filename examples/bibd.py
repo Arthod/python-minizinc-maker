@@ -22,9 +22,7 @@ def bibd(model, solver, v, b, r, k, l):
             model.add_constraint(pymzm.Expression.sum(xs[i, k] * xs[j, k] for k in range(v)) == l)
 
     model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-    model.generate()
-    
-    result = minizinc.Instance(solver, model).solve(all_solutions=False)
+    result = model.solve(solver=solver, all_solutions=False)
 
     return result
 

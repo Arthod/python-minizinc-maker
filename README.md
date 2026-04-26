@@ -39,31 +39,16 @@ model.add_constraint(y > 1)
 model.add_constraint(x > y)
 
 model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-model.generate()
-model.write("model.mzn")
-...
-```
-
-model.mzn
-```mzn
-var 1..99999999: x;
-var 1..99999999: y;
-constraint x * y = 54074903;
-constraint y > 1;
-constraint x > y;
-solve satisfy;
-```
-
-Now you can use the minizinc library to solve the model directly.
-
-intfact.py
-```python
-...
-import minizinc
 gecode = minizinc.Solver.lookup("gecode")
-result = minizinc.Instance(gecode, model).solve(all_solutions=True)
+result = model.solve(solver=gecode, all_solutions=True)
 print(f"x = {result[0].x}")  # x = 7829
 print(f"y = {result[0].y}")  # y = 6907
+```
+
+Optional debug/export workflow:
+```python
+model.generate(debug=True)
+model.write("model.mzn")
 ```
 
 ### bibd.py - Balanced Incomplete Block Design
@@ -87,10 +72,9 @@ for i in range(b):
         model.add_constraint(pymzm.Expression.sum(xs[i, k] * xs[j, k] for k in range(v)) == l)
 
 model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-model.generate()
 
 gecode = minizinc.Solver.lookup("gecode")
-result = minizinc.Instance(gecode, model).solve(all_solutions=False)
+result = model.solve(solver=gecode, all_solutions=False)
 
 for i in range(v):
     print(" ".join([str(int(result[f"x_{i}_{j}"])) for j in range(b)]))
@@ -117,10 +101,9 @@ model.add_constraint(pymzm.Expression.AND([
     xs[0] | ~xs[1] | xs[3],
 ]))
 model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-model.generate()
 
 gecode = minizinc.Solver.lookup("gecode")
-result = minizinc.Instance(gecode, model).solve(all_solutions=False)
+result = model.solve(solver=gecode, all_solutions=False)
 
 for i in range(4):
     print(f"x_{i} = {result[f'x_{i}']}")

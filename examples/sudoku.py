@@ -39,11 +39,12 @@ for i in range(N):
         model.add_constraint(xs[i, j] == sod[i][j])
 
 model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-model.generate(debug=True)
 
+# Optional debug/export path:
+# model.generate(debug=True)
 
 gecode = minizinc.Solver.lookup("gecode")
-result = minizinc.Instance(gecode, model).solve(all_solutions=False)
+result = model.solve(solver=gecode, all_solutions=False)
 
 for i in range(N):
     print(" ".join([str(result[f"x_{i}_{j}"]) for j in range(N)]))

@@ -27,9 +27,7 @@ def bin_packing(model: pymzm.Model, solver, cap, sizes):
 
     # Solve
     model.set_solve_criteria(pymzm.SOLVE_MINIMIZE, pymzm.Expression.sum(bin_loads > 0))
-    model.generate(debug=False)
-    model.write("out.mzn")
-    result = minizinc.Instance(solver, model).solve(all_solutions=False)
+    result = model.solve(solver=solver, all_solutions=False)
 
     return result
 

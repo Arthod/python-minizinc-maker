@@ -32,9 +32,10 @@ model.add_constraint((abs(seats[groom] - seats[bride]) == 1) & (pymzm.Expression
 model.set_solve_criteria(pymzm.SOLVE_MAXIMIZE, pymzm.Expression.sum(
     pymzm.Expression.ifthenelse(pymzm.Expression.iff([seats[c1] <= 6, seats[c2] <= 6]), abs(seats[c1] - seats[c2]), abs(13 - seats[c1] - seats[c2]) + 1) for c1, c2 in hatreds
 ))
-model.generate(debug=True)
+# Optional debug/export path:
+# model.generate(debug=True)
 
 gecode = minizinc.Solver.lookup("gecode")
-result = minizinc.Instance(gecode, model).solve(all_solutions=False)
+result = model.solve(solver=gecode, all_solutions=False)
 
 print(result)

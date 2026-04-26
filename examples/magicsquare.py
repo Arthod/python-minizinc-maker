@@ -22,10 +22,7 @@ def magicsquare(model, solver, n):
 
 
     model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-    model.generate(debug=False)
-
-
-    result = minizinc.Instance(solver, model).solve(all_solutions=False)
+    result = model.solve(solver=solver, all_solutions=False)
 
     return result
 

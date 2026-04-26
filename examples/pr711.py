@@ -7,9 +7,7 @@ def pr711(model, solver, n):
     model.add_constraint(pymzm.Expression.product(items) == 711 * 100 * 100 * 100)
 
     model.set_solve_criteria(pymzm.SOLVE_SATISFY)
-    model.generate()
-    
-    result = minizinc.Instance(solver, model).solve(all_solutions=False)
+    result = model.solve(solver=solver, all_solutions=False)
 
     return result
 

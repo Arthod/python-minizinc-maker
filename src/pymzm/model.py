@@ -291,25 +291,6 @@ class Model(minizinc.Model):
             **kwargs,
         )
 
-    def solve_all(
-        self,
-        solver: Union[str, Any, None]=None,
-        timeout=None,
-        random_seed: Optional[int]=None,
-        threads: Optional[int]=None,
-        free_search: bool=False,
-        **kwargs,
-    ):
-        return self.solve(
-            solver=solver,
-            timeout=timeout,
-            random_seed=random_seed,
-            threads=threads,
-            free_search=free_search,
-            all_solutions=True,
-            **kwargs,
-        )
-
     def optimize(
         self,
         solver: Union[str, Any, None]=None,

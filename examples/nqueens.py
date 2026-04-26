@@ -12,9 +12,7 @@ def nqueens(model, solver, n):
     model.add_constraint(pymzm.Constraint.alldifferent([q[i] - i for i in range(n)]))
 
     model.set_solve_criteria("satisfy")
-    model.generate()
-
-    results = minizinc.Instance(solver, model).solve(all_solutions=True)
+    results = model.solve(solver=solver, all_solutions=True)
 
     return results
 
