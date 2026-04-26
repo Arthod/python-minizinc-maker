@@ -386,7 +386,7 @@ class Expression:
                 exprs2.append(expr.name)
             else:
                 exprs2.append(expr)
-        out = f", ".join(str(a) for a in exprs2)
+        out = ", ".join(str(a) for a in exprs2)
         return cls(f"{func_symbol}({out})")
 
     @staticmethod

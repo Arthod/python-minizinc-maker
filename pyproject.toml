@@ -26,6 +26,37 @@ markers = [
   "no_mzn_verify: skip global MiniZinc CLI validation for tests that intentionally render unresolved include paths",
 ]
 
+[tool.ruff]
+target-version = "py38"
+
+[tool.ruff.lint]
+ignore = [
+  "F403", # package exports and core modules intentionally use wildcard imports
+  "F405", # project relies on re-export style imports in core DSL modules
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+  "F401", # many scenario tests keep exploratory imports
+  "F841", # tests sometimes keep named variables for readability
+  "E741", # legacy variable names in classic combinatorics examples
+  "E712", # explicit boolean equality kept in tests for intent clarity
+]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+no_implicit_optional = false
+disable_error_code = [
+  "override",
+  "assignment",
+  "arg-type",
+  "return-value",
+  "operator",
+  "list-item",
+  "attr-defined",
+]
+
 [tool.coverage.run]
 source = ["pymzm"]
 

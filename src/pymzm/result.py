@@ -1,8 +1,6 @@
 from enum import Enum
 from typing import Any
 
-import minizinc
-
 
 _STATUS_MAP = {
     "SATISFIED": "SAT",

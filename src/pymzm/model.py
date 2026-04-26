@@ -131,11 +131,11 @@ class SearchAnnotation:
         self.variables = variables
 
         self.varchoice = varchoice
-        if (not self.varchoice in AnnotationVariableChoice.VARCHOICES):
+        if (self.varchoice not in AnnotationVariableChoice.VARCHOICES):
             raise PymzmInvalidVarchoiceAnnotation("varchoice")
         
         self.valchoice = valchoice
-        if (not self.valchoice in AnnotationValueChoice.VALCHOICES):
+        if (self.valchoice not in AnnotationValueChoice.VALCHOICES):
             raise PymzmInvalidValchoiceAnnotation("valchoice")
         
     def __str__(self):
@@ -328,25 +328,27 @@ class Model(minizinc.Model):
         self.enums[type_name] = enum_domain
         return enum_domain
 
-    def add_variable(self, name: str, vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None, domain: set=None, annotations=None):
+    def add_variable(self, name: str, vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None, domain=None, annotations=None):
         variable = Variable(name, vtype, val_min, val_max, domain, annotations=annotations)
         self.variables.append(variable)
         return variable
     
-    def add_variables(self, name: str, indices: List[Tuple[int]], vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None, domains: set=None, annotations=None) -> ValueDict:
+    def add_variables(self, name: str, indices: List[Tuple[int]], vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None, domains=None, annotations=None) -> ValueDict:
 
         # Domain
         if (domains is None):
-            domains = {}
+            domain_map = {}
         elif (type(domains) is set):
-            domains = {idx: domains for idx in indices}
+            domain_map = {idx: domains for idx in indices}
         elif (type(domains) is list):
             assert len(domains) == len(indices)
-            domains = {idx: domains[i] for i, idx in enumerate(indices)}
+            domain_map = {idx: domains[i] for i, idx in enumerate(indices)}
         elif (type(domains) is dict):
             assert len(domains) == len(indices)
             assert set(domains.keys()) == set(indices)
-            domains = {idx: domains[idx] for idx in indices}
+            domain_map = {idx: domains[idx] for idx in indices}
+        else:
+            raise TypeError("domains must be None, set, list, or dict")
 
         # Annotations
         if (annotations is None):
@@ -368,7 +370,7 @@ class Model(minizinc.Model):
                 vtype,
                 val_min,
                 val_max,
-                domains.get(idx, None),
+                domain_map.get(idx, None),
                 annotations=annotations.get(idx, None),
             )
             self.variables.append(variable)
