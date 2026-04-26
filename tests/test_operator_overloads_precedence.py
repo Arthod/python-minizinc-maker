@@ -94,6 +94,28 @@ class TestOperatorOverloadsAndPrecedence(unittest.TestCase):
         self.assertRaises(pymzm.PymzmValueIsNotCondition, lambda: (self.x >= 1) & 3)
         self.assertRaises(pymzm.PymzmValueIsNotCondition, lambda: (self.x >= 1) | "bad")
 
+    def test_set_operators_and_membership_helpers(self):
+        a = pymzm.Expression("a")
+        b = pymzm.Expression("b")
+
+        self.assertEqual(str(a.union(b)), "(a union b)")
+        self.assertEqual(str(a.intersection(b)), "(a intersect b)")
+        self.assertEqual(str(a.set_diff(b)), "(a diff b)")
+        self.assertEqual(str(a.symdiff(b)), "((a diff b) union (b diff a))")
+
+        self.assertEqual(str(self.x.in_([1, 2, 3])), "(x in {1, 2, 3})")
+        self.assertEqual(str(self.x.not_in([1, 2, 3])), "(x not in {1, 2, 3})")
+        self.assertEqual(str(a.subset_of(b)), "(a subset b)")
+        self.assertEqual(str(a.superset_of(b)), "(a superset b)")
+
+    def test_array_indexing_semantics(self):
+        arr = pymzm.Expression("arr")
+
+        self.assertEqual(str(arr[0]), "arr[1]")
+        self.assertEqual(str(arr[self.x]), "arr[x + 1]")
+        self.assertEqual(str(arr[0, self.y]), "arr[1, y + 1]")
+        self.assertRaises(pymzm.PymzmValueIsNotExpression, lambda: arr[None])
+
 
 if __name__ == "__main__":
     unittest.main()

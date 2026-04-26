@@ -231,6 +231,29 @@ class TestExpressionValidation(unittest.TestCase):
         self.assertIn("exists (j in {1, 2, 3}) ((x == j))", model.model_mzn_str)
         assert_valid_mzn(self, model.model_mzn_str)
 
+    def test_set_and_indexing_operators_can_be_embedded_in_model(self):
+        model = pymzm.Model()
+        x = model.add_variable("x", val_min=0, val_max=3)
+        y = model.add_variable("y", val_min=0, val_max=3)
+
+        arr = pymzm.Expression.array_comprehension(lambda i: i + x, [("i", range(1, 4))])
+        set1 = pymzm.Expression.set_comprehension(lambda i: i, [("i", [1, 2, 3], lambda i: i >= 2)])
+        set2 = pymzm.Expression.set_comprehension(lambda j: j + 1, [("j", [1, 2])])
+
+        model.add_constraint(x.in_([0, 1, 2, 3]))
+        model.add_constraint(y.not_in([0]))
+        model.add_constraint(set1.subset_of(set1.union(set2)))
+        model.add_constraint((arr[0] >= 0) & (arr[x] >= 0))
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+        model.generate()
+
+        self.assertIn("(x in {0, 1, 2, 3})", model.model_mzn_str)
+        self.assertIn("(y not in {0})", model.model_mzn_str)
+        self.assertIn("subset", model.model_mzn_str)
+        self.assertIn("[1]", model.model_mzn_str)
+        self.assertIn(" + 1]", model.model_mzn_str)
+        assert_valid_mzn(self, model.model_mzn_str)
+
 
 if __name__ == "__main__":
     unittest.main()

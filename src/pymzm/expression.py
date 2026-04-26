@@ -28,6 +28,21 @@ class Expression:
             raise PymzmValueIsNotCondition(arg_name, value)
 
     @staticmethod
+    def _set_operand_to_mz(value, arg_name: str="value") -> str:
+        if (isinstance(value, Expression)):
+            return str(value)
+        if (isinstance(value, str)):
+            if (not value.strip()):
+                raise PymzmValueIsNotExpression(arg_name, value)
+            return value
+        if (isinstance(value, Iterable)):
+            values = list(value)
+            if (not len(values)):
+                raise PymzmNoValues(arg_name)
+            return "{" + ", ".join(str(v) for v in values) + "}"
+        raise PymzmValueIsNotExpression(arg_name, value)
+
+    @staticmethod
     def _normalize_numeric_exprs(exprs, arg_name: str="exprs"):
         if (not isinstance(exprs, Iterable)):
             raise PymzmValueIsNotExpression(arg_name, exprs)
@@ -554,6 +569,55 @@ class Expression:
     
     def __abs__(self) -> "Expression":
         return Expression._func("abs", [self])
+
+    def __getitem__(self, index):
+        def _idx_to_mz(idx):
+            if (isinstance(idx, int)):
+                return str(idx + 1)
+            if (isinstance(idx, Expression)):
+                return f"{idx} + 1"
+            raise PymzmValueIsNotExpression("index", idx)
+
+        if (isinstance(index, (tuple, list))):
+            if (not len(index)):
+                raise PymzmNoValues("index")
+            idx_mz = ", ".join(_idx_to_mz(idx) for idx in index)
+        else:
+            idx_mz = _idx_to_mz(index)
+
+        return Expression(f"{self}[{idx_mz}]")
+
+    def in_(self, container) -> "ExpressionBool":
+        rhs = Expression._set_operand_to_mz(container, "container")
+        return ExpressionBool(f"({self} in {rhs})")
+
+    def not_in(self, container) -> "ExpressionBool":
+        rhs = Expression._set_operand_to_mz(container, "container")
+        return ExpressionBool(f"({self} not in {rhs})")
+
+    def subset_of(self, other) -> "ExpressionBool":
+        rhs = Expression._set_operand_to_mz(other, "other")
+        return ExpressionBool(f"({self} subset {rhs})")
+
+    def superset_of(self, other) -> "ExpressionBool":
+        rhs = Expression._set_operand_to_mz(other, "other")
+        return ExpressionBool(f"({self} superset {rhs})")
+
+    def union(self, other) -> "Expression":
+        rhs = Expression._set_operand_to_mz(other, "other")
+        return Expression(f"({self} union {rhs})")
+
+    def intersection(self, other) -> "Expression":
+        rhs = Expression._set_operand_to_mz(other, "other")
+        return Expression(f"({self} intersect {rhs})")
+
+    def set_diff(self, other) -> "Expression":
+        rhs = Expression._set_operand_to_mz(other, "other")
+        return Expression(f"({self} diff {rhs})")
+
+    def symdiff(self, other) -> "Expression":
+        rhs = Expression._set_operand_to_mz(other, "other")
+        return Expression(f"(({self} diff {rhs}) union ({rhs} diff {self}))")
     # TODO: https://www.minizinc.org/doc-2.7.6/en/lib-stdlib-builtins.html
     # arg max, arg min
     # max, min
