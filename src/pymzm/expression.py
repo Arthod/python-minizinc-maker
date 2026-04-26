@@ -1,5 +1,5 @@
 
-from typing import List
+from typing import List, Callable
 from collections.abc import Iterable
 
 from .exceptions import *
@@ -41,13 +41,68 @@ class Expression:
         return Expression(f"(if {condition} then {expr1} else {expr2} endif)")
 
     @staticmethod
+    def _domain_to_mz(domain) -> str:
+        if (isinstance(domain, range)):
+            if (domain.step != 1):
+                raise PymzmValueIsNotExpression("domain", domain)
+            if (len(domain) == 0):
+                raise PymzmNoValues("domain")
+            return f"{domain.start}..{domain.stop - 1}"
+
+        if (isinstance(domain, Expression)):
+            return str(domain)
+
+        if (isinstance(domain, str)):
+            if (not domain.strip()):
+                raise PymzmValueIsNotExpression("domain", domain)
+            return domain
+
+        if (isinstance(domain, Iterable)):
+            values = list(domain)
+            if (not len(values)):
+                raise PymzmNoValues("domain")
+            return f"{{{', '.join(str(v) for v in values)}}}"
+
+        raise PymzmValueIsNotExpression("domain", domain)
+
+    @staticmethod
+    def _predicate_to_mz(var_name: str, predicate) -> str:
+        if (isinstance(predicate, Callable)):
+            predicate = predicate(Expression(var_name))
+
+        if (isinstance(predicate, bool)):
+            return "true" if predicate else "false"
+
+        if (isinstance(predicate, ExpressionBool)):
+            return str(predicate)
+
+        raise PymzmValueIsNotCondition("predicate", predicate)
+
+    @staticmethod
+    def forall(var_name: str, domain, predicate: "ExpressionBool") -> "ExpressionBool":
+        if (not isinstance(var_name, str) or not var_name.strip()):
+            raise PymzmValueIsNotExpression("var_name", var_name)
+
+        domain_mz = Expression._domain_to_mz(domain)
+        predicate_mz = Expression._predicate_to_mz(var_name, predicate)
+        return ExpressionBool(f"forall ({var_name} in {domain_mz}) ({predicate_mz})")
+
+    @staticmethod
+    def exists(var_name: str, domain, predicate: "ExpressionBool") -> "ExpressionBool":
+        if (not isinstance(var_name, str) or not var_name.strip()):
+            raise PymzmValueIsNotExpression("var_name", var_name)
+
+        domain_mz = Expression._domain_to_mz(domain)
+        predicate_mz = Expression._predicate_to_mz(var_name, predicate)
+        return ExpressionBool(f"exists ({var_name} in {domain_mz}) ({predicate_mz})")
+
+    @staticmethod
     def sum(exprs: List["Expression"]) -> "Expression":
         if (not isinstance(exprs, Iterable)):
             raise PymzmValueIsNotExpression("exprs", exprs)
         
-        #exprs = list(exprs)
+        exprs = list(exprs)
         if (not len(exprs)):
-            return Expression("0")
             raise PymzmNoValues("exprs")
 
         for expr in exprs:

@@ -333,6 +333,75 @@ class TestExpression(unittest.TestCase):
         expr = pymzm.Expression.ifthenelse(self.xs[1] >= self.y, self.y, self.xs[4])
         self.assertIsInstance(expr, pymzm.Expression)
 
+    def test_quantifiers_emit_mzn_loop_syntax(self):
+        model = pymzm.Model()
+        forall_expr = pymzm.Expression.forall("i", range(1, 5), lambda i: i >= 0)
+        exists_expr = pymzm.Expression.exists("j", "1..4", lambda j: j == 3)
+
+        model.add_constraint(forall_expr)
+        model.add_constraint(exists_expr)
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+        model.generate()
+
+        self.assertIn("constraint forall (i in 1..4) ((i >= 0));", model.model_mzn_str)
+        self.assertIn("constraint exists (j in 1..4) ((j == 3));", model.model_mzn_str)
+
+    def test_quantifiers_emit_callable_predicates(self):
+        model = pymzm.Model()
+        x = model.add_variable("x", val_min=0, val_max=10)
+        forall_expr = pymzm.Expression.forall("i", range(1, 5), lambda i: i >= 1)
+        exists_expr = pymzm.Expression.exists("j", [1, 2, 3], lambda j: x >= j)
+
+        model.add_constraint(forall_expr)
+        model.add_constraint(exists_expr)
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+        model.generate()
+
+        self.assertIn("constraint forall (i in 1..4) ((i >= 1));", model.model_mzn_str)
+        self.assertIn("constraint exists (j in {1, 2, 3}) ((x >= j));", model.model_mzn_str)
+
+    def test_quantifiers_emit_bool_literals(self):
+        model = pymzm.Model()
+        model.add_constraint(pymzm.Expression.forall("i", range(1, 3), True))
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+        model.generate()
+
+        self.assertIn("constraint forall (i in 1..2) (true);", model.model_mzn_str)
+
+    def test_quantifiers_invalid_domain(self):
+        self.assertRaises(
+            pymzm.PymzmValueIsNotExpression,
+            pymzm.Expression.forall,
+            "i",
+            range(1, 10, 2),
+            "true"
+        )
+
+    def test_quantifiers_reject_string_predicates(self):
+        self.assertRaises(
+            pymzm.PymzmValueIsNotCondition,
+            pymzm.Expression.forall,
+            "i",
+            range(1, 5),
+            "i >= 0"
+        )
+
+    def test_quantifiers_with_variable_solve_correctly(self):
+        model = pymzm.Model()
+        x = model.add_variable("x", val_min=0, val_max=5)
+
+        # forall pushes lower bound to x >= 3
+        model.add_constraint(pymzm.Expression.forall("i", range(1, 4), lambda i: x >= i))
+        # exists keeps x in {1,2,3}; together with forall this forces x == 3
+        model.add_constraint(pymzm.Expression.exists("j", range(1, 4), lambda j: x == j))
+
+        model.set_solve_criteria(pymzm.SOLVE_SATISFY)
+        model.generate()
+
+        result = minizinc.Instance(self.solver, model).solve(all_solutions=False)
+        self.assertTrue(result.solution is not None)
+        self.assertEqual(result["x"], 3)
+
 if __name__ == "__main__":
     t = TestExpression()
     t.setUpClass()
