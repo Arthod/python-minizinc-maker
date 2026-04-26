@@ -68,6 +68,49 @@ class TestExpressionValidation(unittest.TestCase):
         self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.let, [""], pymzm.Expression("x"))
         self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.let, ["int: y = 1"], object())
 
+    def test_conditional_supports_chained_elseif(self):
+        x = pymzm.Expression("x")
+        y = pymzm.Expression("y")
+
+        expr = pymzm.Expression.conditional(
+            [
+                (x >= 5, x + 1),
+                (x >= 2, y + 3),
+            ],
+            0,
+        )
+
+        self.assertEqual(
+            str(expr),
+            "(if (x >= 5) then (x + 1) elseif (x >= 2) then (y + 3) else 0 endif)",
+        )
+        self.assertIsInstance(expr, pymzm.Expression)
+
+    def test_conditional_returns_bool_expression_for_bool_bodies(self):
+        x = pymzm.Expression("x")
+
+        expr = pymzm.Expression.conditional(
+            [
+                (x >= 1, x >= 2),
+                (False, True),
+            ],
+            False,
+        )
+
+        self.assertEqual(
+            str(expr),
+            "(if (x >= 1) then (x >= 2) elseif false then true else false endif)",
+        )
+        self.assertIsInstance(expr, pymzm.ExpressionBool)
+
+    def test_conditional_validates_branches_and_else(self):
+        x = pymzm.Expression("x")
+        self.assertRaises(pymzm.PymzmNoValues, pymzm.Expression.conditional, [], 0)
+        self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.conditional, ["bad"], 0)
+        self.assertRaises(pymzm.PymzmValueIsNotCondition, pymzm.Expression.conditional, [(x, 1)], 0)
+        self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.conditional, [(x >= 1, object())], 0)
+        self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.conditional, [(x >= 1, 1)], object())
+
 
 if __name__ == "__main__":
     unittest.main()

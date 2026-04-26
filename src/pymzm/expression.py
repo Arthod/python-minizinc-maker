@@ -135,16 +135,51 @@ class Expression:
         Returns:
             Expression: the main if then else expression 
         """
-        if (not isinstance(condition, (ExpressionBool, bool))):
-            raise PymzmValueIsNotCondition("condition", condition)
-        
-        if (not isinstance(expr1, (Expression, int, float))):
-            raise PymzmValueIsNotExpression("expr1", expr1)
-        
-        if (not isinstance(expr2, (Expression, int, float))):
-            raise PymzmValueIsNotExpression("expr2", expr2)
-        
-        return Expression(f"(if {condition} then {expr1} else {expr2} endif)")
+        return Expression.conditional([(condition, expr1)], expr2)
+
+    @staticmethod
+    def conditional(branches, else_expr):
+        if (not isinstance(branches, Iterable)):
+            raise PymzmValueIsNotExpression("branches", branches)
+
+        branches = list(branches)
+        if (not len(branches)):
+            raise PymzmNoValues("branches")
+
+        parts = []
+        for i, branch in enumerate(branches):
+            if (not isinstance(branch, (tuple, list)) or len(branch) != 2):
+                raise PymzmValueIsNotExpression("branches", branch)
+
+            condition, expr = branch
+            if (not isinstance(condition, (ExpressionBool, bool))):
+                raise PymzmValueIsNotCondition(f"condition_{i}", condition)
+            if (not isinstance(expr, (Expression, int, float, bool))):
+                raise PymzmValueIsNotExpression(f"expr_{i}", expr)
+
+            condition_mz = "true" if condition is True else "false" if condition is False else str(condition)
+            expr_mz = "true" if expr is True else "false" if expr is False else str(expr)
+
+            if (i == 0):
+                parts.append(f"if {condition_mz} then {expr_mz}")
+            else:
+                parts.append(f"elseif {condition_mz} then {expr_mz}")
+
+        if (not isinstance(else_expr, (Expression, int, float, bool))):
+            raise PymzmValueIsNotExpression("else_expr", else_expr)
+
+        else_mz = "true" if else_expr is True else "false" if else_expr is False else str(else_expr)
+        parts.append(f"else {else_mz} endif")
+        conditional_text = " ".join(parts)
+
+        has_bool_body = isinstance(else_expr, (ExpressionBool, bool)) and all(
+            isinstance(expr, (ExpressionBool, bool))
+            for _, expr in branches
+        )
+
+        if (has_bool_body):
+            return ExpressionBool(f"({conditional_text})")
+        return Expression(f"({conditional_text})")
 
     @staticmethod
     def _domain_to_mz(domain) -> str:
