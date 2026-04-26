@@ -153,6 +153,14 @@ class Expression:
         return ExpressionBool._func(name.strip(), list(args))
 
     @staticmethod
+    def function(name: str, *args, returns_bool: bool=False):
+        if (not isinstance(name, str) or not name.strip()):
+            raise PymzmValueIsNotExpression("name", name)
+        if (returns_bool):
+            return ExpressionBool._func(name.strip(), list(args))
+        return Expression._func(name.strip(), list(args))
+
+    @staticmethod
     def forall(var_name: str, domain, predicate: "ExpressionBool") -> "ExpressionBool":
         if (not isinstance(var_name, str) or not var_name.strip()):
             raise PymzmValueIsNotExpression("var_name", var_name)

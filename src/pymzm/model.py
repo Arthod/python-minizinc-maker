@@ -407,6 +407,12 @@ class Model(minizinc.Model):
         assert len(declaration) > 0
         self.predicate_declarations.append(declaration.rstrip(";"))
 
+    def call_function(self, name: str, *args, returns_bool: bool=False):
+        return Expression.function(name, *args, returns_bool=returns_bool)
+
+    def add_function_call(self, name: str, *args, is_redundant: bool=False):
+        return self.add_constraint(self.call_function(name, *args, returns_bool=True), is_redundant=is_redundant)
+
     def call_predicate(self, name: str, *args) -> ExpressionBool:
         return Expression.predicate(name, *args)
 
