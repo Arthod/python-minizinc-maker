@@ -16,3 +16,5 @@ class ModelIR:
     declarations: Tuple[str, ...]
     constraints: Tuple[str, ...]
     solve: SolveIR
+    function_declarations: Tuple[str, ...] = ()
+    predicate_declarations: Tuple[str, ...] = ()

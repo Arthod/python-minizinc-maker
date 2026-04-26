@@ -153,6 +153,8 @@ class Model(minizinc.Model):
         self.model_mzn_str = None
 
         self.global_constraints = set()
+        self.function_declarations = []
+        self.predicate_declarations = []
 
         super().__init__()
 
@@ -228,6 +230,18 @@ class Model(minizinc.Model):
         assert all(isinstance(constraint, (Constraint, Expression, str, bool)) for constraint in constraints)
         for constraint in constraints:
             self.add_constraint(constraint, is_redundant=is_redundant)
+
+    def add_function_declaration(self, declaration: str):
+        assert isinstance(declaration, str)
+        declaration = declaration.strip()
+        assert len(declaration) > 0
+        self.function_declarations.append(declaration.rstrip(";"))
+
+    def add_predicate_declaration(self, declaration: str):
+        assert isinstance(declaration, str)
+        declaration = declaration.strip()
+        assert len(declaration) > 0
+        self.predicate_declarations.append(declaration.rstrip(";"))
 
     def generate(self, debug=False):
         model_ir = self.to_ir()
@@ -349,9 +363,18 @@ class Model(minizinc.Model):
         assert self.solve_criteria is not None
 
         includes = tuple(sorted(f"{gconst}.mzn" for gconst in self.global_constraints))
+
+        constants_sorted = sorted(self.constants, key=lambda c: c.name)
+        variables_sorted = sorted(self.variables, key=lambda v: v.name)
         declarations = tuple(
             line.rstrip("\n")
-            for line in (a._to_mz() for a in self.constants + self.variables)
+            for line in (a._to_mz() for a in constants_sorted + variables_sorted)
+        )
+        function_declarations = tuple(
+            f"{line};" for line in sorted(set(self.function_declarations))
+        )
+        predicate_declarations = tuple(
+            f"{line};" for line in sorted(set(self.predicate_declarations))
         )
         constraints = tuple(
             line.rstrip("\n")
@@ -366,6 +389,8 @@ class Model(minizinc.Model):
         return ModelIR(
             includes=includes,
             declarations=declarations,
+            function_declarations=function_declarations,
+            predicate_declarations=predicate_declarations,
             constraints=constraints,
             solve=solve,
         )
