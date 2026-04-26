@@ -94,8 +94,6 @@ class Constraint:
         cstr: ExpressionBool,
         ctype: str = CTYPE_NORMAL,
         annotation: str = None,
-        is_redundant=False,
-        enabled=True,
     ):
         self.cstr = cstr
         if not isinstance(self.cstr, (ExpressionBool, bool, str)):
@@ -110,9 +108,6 @@ class Constraint:
             if self.annotation not in AnnotationConstraint.ANNOTATIONS:
                 raise PymzmInvalidConstraintAnnotation("annotation", self.annotation)
 
-        self.is_redundant = is_redundant
-        self.enabled = enabled
-
     def __str__(self):
         return self.cstr
 
@@ -121,10 +116,7 @@ class Constraint:
         if self.annotation is not None:
             annotation_suffix = f" :: {self.annotation}"
 
-        if self.is_redundant:
-            return f"constraint redundant_constraint({self.cstr}){annotation_suffix};\n"
-        else:
-            return f"constraint {self.cstr}{annotation_suffix};\n"
+        return f"constraint {self.cstr}{annotation_suffix};\n"
 
     @staticmethod
     def _from_global_constraint(func: str, ctype: str, *args) -> "Constraint":

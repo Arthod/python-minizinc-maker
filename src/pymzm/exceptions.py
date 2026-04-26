@@ -149,17 +149,6 @@ class PymzmSolveNotConfigured(PymzmModelStateError):
         )
 
 
-class PymzmConstraintNotInModel(PymzmModelStateError):
-    def __init__(self, constraint):
-        self.constraint = constraint
-
-    def __str__(self):
-        return (
-            f"Constraint {self.constraint!r} is not registered in this model. "
-            "Only constraints added via model.add_constraint(...) can be toggled."
-        )
-
-
 class PymzmVariableTypeError(PymzmArgumentError):
     def __init__(self, argname, expected_vtype, actual_vtype):
         self.expected_vtype = expected_vtype

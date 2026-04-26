@@ -513,59 +513,19 @@ class Model(minizinc.Model):
     def add_constraint(
         self,
         constraint: ConstraintInput,
-        is_redundant: bool = False,
-        enabled: bool = True,
     ) -> Constraint:
         if isinstance(constraint, Constraint):
-            constraint.is_redundant = is_redundant
-            constraint.enabled = enabled
             if constraint.ctype != Constraint.CTYPE_NORMAL:
                 self.global_constraints.add(constraint.ctype)
 
         elif isinstance(constraint, ExpressionBool):
-            constraint = Constraint(
-                constraint.name, is_redundant=is_redundant, enabled=enabled
-            )
+            constraint = Constraint(constraint.name)
 
         else:
             raise PymzmInvalidConstraintType("constraint", type(constraint).__name__)
 
         self.constraints.append(constraint)
         return constraint
-
-    def add_optional_constraint(
-        self,
-        constraint: ConstraintInput,
-        enabled: bool = False,
-        is_redundant: bool = False,
-    ) -> Constraint:
-        return self.add_constraint(
-            constraint, is_redundant=is_redundant, enabled=enabled
-        )
-
-    def add_assumption(
-        self,
-        constraint: ConstraintInput,
-        enabled: bool = True,
-        is_redundant: bool = False,
-    ) -> Constraint:
-        return self.add_optional_constraint(
-            constraint, enabled=enabled, is_redundant=is_redundant
-        )
-
-    def set_constraint_enabled(
-        self, constraint: Constraint, enabled: bool = True
-    ) -> Constraint:
-        if constraint not in self.constraints:
-            raise PymzmConstraintNotInModel(constraint)
-        constraint.enabled = enabled
-        return constraint
-
-    def enable_constraint(self, constraint: Constraint) -> Constraint:
-        return self.set_constraint_enabled(constraint, True)
-
-    def disable_constraint(self, constraint: Constraint) -> Constraint:
-        return self.set_constraint_enabled(constraint, False)
 
     def add_include(self, include_file: str) -> None:
         include_file = include_file.strip()
@@ -581,12 +541,9 @@ class Model(minizinc.Model):
     def add_constraints(
         self,
         constraints: Iterable[ConstraintInput],
-        is_redundant: bool = False,
-        enabled: bool = True,
     ) -> None:
-        constraints = list(constraints)
         for constraint in constraints:
-            self.add_constraint(constraint, is_redundant=is_redundant, enabled=enabled)
+            self.add_constraint(constraint)
 
     def add_function_declaration(self, declaration: str) -> None:
         declaration = declaration.strip()
@@ -656,21 +613,20 @@ class Model(minizinc.Model):
         return Expression.function(name, *args, returns_bool=returns_bool)
 
     def add_function_call(
-        self, name: str, *args: Any, is_redundant: bool = False
+        self, name: str, *args: Any
     ) -> Constraint:
         return self.add_constraint(
-            self.call_function(name, *args, returns_bool=True),
-            is_redundant=is_redundant,
+            self.call_function(name, *args, returns_bool=True)
         )
 
     def call_predicate(self, name: str, *args: Any) -> ExpressionBool:
         return Expression.predicate(name, *args)
 
     def add_predicate_call(
-        self, name: str, *args: Any, is_redundant: bool = False
+        self, name: str, *args: Any
     ) -> Constraint:
         return self.add_constraint(
-            self.call_predicate(name, *args), is_redundant=is_redundant
+            self.call_predicate(name, *args)
         )
 
     def generate(self, debug: bool = False) -> None:
@@ -900,9 +856,7 @@ class Model(minizinc.Model):
         if self.solve_criteria is None:
             raise PymzmSolveNotConfigured()
 
-        enabled_constraints = tuple(
-            constraint for constraint in self.constraints if constraint.enabled
-        )
+        enabled_constraints = tuple(self.constraints)
         auto_includes = {
             f"{constraint.ctype}.mzn"
             for constraint in enabled_constraints

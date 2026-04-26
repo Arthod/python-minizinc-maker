@@ -14,7 +14,6 @@ from pymzm import (
     PymzmArgumentError,
     PymzmModelStateError,
     PymzmSolveNotConfigured,
-    PymzmConstraintNotInModel,
     PymzmVariableTypeError,
 )
 from pymzm.model import SOLVE_MAXIMIZE, SOLVE_SATISFY, SearchAnnotation, SeqSearch, RestartStrategy
@@ -66,23 +65,6 @@ def test_set_solve_method_wrong_restart_strategy_raises():
     ann = SearchAnnotation("int_search", [v], "input_order", "indomain_min")
     with pytest.raises(PymzmArgumentError):
         m.set_solve_method(ann, restart_strategy="bad")
-
-
-# ---------------------------------------------------------------------------
-# Model.set_constraint_enabled()
-# ---------------------------------------------------------------------------
-
-
-def test_set_constraint_enabled_not_in_model_raises():
-    m = Model()
-    c = Constraint("x > 0")
-    with pytest.raises(PymzmConstraintNotInModel):
-        m.set_constraint_enabled(c, True)
-
-
-# ---------------------------------------------------------------------------
-# Model.add_include()
-# ---------------------------------------------------------------------------
 
 
 def test_add_include_empty_string_raises():
