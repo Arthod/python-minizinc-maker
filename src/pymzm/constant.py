@@ -2,6 +2,7 @@
 from .expression import Expression
 from .variable import *
 from .misc import *
+from .data_encoder import encode_scalar, encode_array, infer_shape
 
 
 class Constant(Expression):
@@ -24,20 +25,7 @@ class Constant(Expression):
 
     @staticmethod
     def _infer_shape(value):
-        if (hasattr(value, "shape")):
-            shape = tuple(int(d) for d in value.shape)
-            return shape if len(shape) > 0 else None
-
-        def _shape_of(v):
-            if (isinstance(v, (list, tuple))):
-                if (len(v) == 0):
-                    return (0,)
-                first_shape = _shape_of(v[0])
-                return (len(v), *first_shape)
-            return ()
-
-        shape = _shape_of(value)
-        return shape if len(shape) > 0 else None
+        return infer_shape(value)
         
     def __getitem__(self, other: Expression):
         # TODO boolean expression
@@ -58,25 +46,11 @@ class Constant(Expression):
             return f"{self.vtype}: {self.name} = {self._scalar_to_mz(self.value)};\n"
         
         else:
-            mz_array = array_py2mz(self.value, self.shape, self._scalar_to_mz)
+            mz_array = encode_array(self.value, shape=self.shape, scalar_formatter=self._scalar_to_mz)
             return f"array[{','.join(f'1..{d}' for d in self.shape)}] of {self.vtype}: {self.name} = {mz_array};\n"
 
     def _scalar_to_mz(self, value):
-        if (self.is_enum_type):
-            if (hasattr(value, "_to_mz_token")):
-                return value._to_mz_token()
-            if (isinstance(value, str)):
-                return value
-            return str(value)
-
-        if (self.vtype == Variable.VTYPE_BOOL):
-            return "true" if bool(value) else "false"
-
-        if (self.vtype == Variable.VTYPE_STRING):
-            escaped = str(value).replace("\\", "\\\\").replace('"', '\\"')
-            return f'"{escaped}"'
-
-        return str(value)
+        return encode_scalar(value, vtype=self.vtype, is_enum_type=self.is_enum_type)
 
 
 class Parameter(Constant):
