@@ -103,6 +103,68 @@ class TestModelExecution(unittest.TestCase):
         solve_mock.return_value = SimpleNamespace(status=minizinc.Status.UNSATISFIABLE)
         self.assertFalse(model.check_satisfiable())
 
+    @patch("pymzm.model.minizinc.Instance")
+    @patch("pymzm.model.minizinc.Solver.lookup")
+    def test_solver_config_routes_options(self, solver_lookup_mock, instance_cls_mock):
+        model = self._build_satisfy_model()
+        solver_lookup_mock.return_value = "solver-object"
+
+        instance_mock = MagicMock()
+        instance_mock.solve.return_value = object()
+        instance_cls_mock.return_value = instance_mock
+
+        config = pymzm.SolverConfig(
+            solver="gecode",
+            timeout=5,
+            random_seed=9,
+            threads=2,
+            free_search=True,
+            all_solutions=True,
+            extra_solve_args={"intermediate_solutions": True},
+        )
+
+        model.solve_with(config)
+
+        instance_mock.solve.assert_called_once_with(
+            timeout=5,
+            random_seed=9,
+            processes=2,
+            free_search=True,
+            all_solutions=True,
+            intermediate_solutions=True,
+        )
+
+    @patch("pymzm.model.minizinc.Instance")
+    @patch("pymzm.model.minizinc.Solver.lookup")
+    def test_solver_config_disallows_mixed_overrides(self, solver_lookup_mock, instance_cls_mock):
+        model = self._build_satisfy_model()
+        solver_lookup_mock.return_value = "solver-object"
+        instance_cls_mock.return_value = MagicMock()
+
+        config = pymzm.SolverConfig(solver="gecode")
+
+        with self.assertRaises(ValueError):
+            model.solve(solver=config, timeout=1)
+
+    @patch("pymzm.model.minizinc.Instance")
+    @patch("pymzm.model.minizinc.Solver.lookup")
+    def test_last_solve_info_exposes_status_and_statistics(self, solver_lookup_mock, instance_cls_mock):
+        model = self._build_satisfy_model()
+        solver_lookup_mock.return_value = "solver-object"
+
+        result_obj = SimpleNamespace(status=minizinc.Status.SATISFIED, statistics={"nodes": 12})
+        instance_mock = MagicMock()
+        instance_mock.solve.return_value = result_obj
+        instance_cls_mock.return_value = instance_mock
+
+        model.solve(solver="gecode")
+        last = model.get_last_solve_info()
+
+        self.assertEqual(last["solver"], "solver-object")
+        self.assertEqual(last["status"], minizinc.Status.SATISFIED)
+        self.assertEqual(last["statistics"], {"nodes": 12})
+        self.assertIs(last["result"], result_obj)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,6 @@
 
 import minizinc
+from dataclasses import dataclass, field
 from typing import Any, List, Optional, Tuple, Union
 
 from .exceptions import *
@@ -13,6 +14,30 @@ from .backends import MznTextBackend
 SOLVE_MAXIMIZE = "maximize"
 SOLVE_MINIMIZE = "minimize"
 SOLVE_SATISFY = "satisfy"
+
+
+@dataclass(frozen=True)
+class SolverConfig:
+    solver: Union[str, Any] = "gecode"
+    timeout: Any = None
+    random_seed: Optional[int] = None
+    threads: Optional[int] = None
+    free_search: bool = False
+    all_solutions: bool = False
+    extra_solve_args: dict[str, Any] = field(default_factory=dict)
+
+    def with_updates(self, **overrides):
+        values = {
+            "solver": self.solver,
+            "timeout": self.timeout,
+            "random_seed": self.random_seed,
+            "threads": self.threads,
+            "free_search": self.free_search,
+            "all_solutions": self.all_solutions,
+            "extra_solve_args": dict(self.extra_solve_args),
+        }
+        values.update(overrides)
+        return SolverConfig(**values)
 
 class RestartStrategy:
     def __init__(self, restart_type: str, scale: int):
@@ -156,6 +181,11 @@ class Model(minizinc.Model):
         self.function_declarations = []
         self.predicate_declarations = []
 
+        self.last_solver = None
+        self.last_solve_status = None
+        self.last_solve_statistics = None
+        self.last_solve_result = None
+
         super().__init__()
 
     def set_solve_criteria(self, criteria: str, expr: Expression=None):
@@ -255,25 +285,68 @@ class Model(minizinc.Model):
         self.model_mzn_str = MznTextBackend().render_model(self.to_ir())
         return self.model_mzn_str
 
-    def _resolve_solver(self, solver: Union[str, Any, None]):
-        if (solver is None):
-            solver = "gecode"
-
+    def _resolve_solver(self, solver: Union[str, Any]):
         if (isinstance(solver, str)):
             return minizinc.Solver.lookup(solver)
-
         return solver
 
-    def _create_instance(self, solver: Union[str, Any, None]=None):
-        solver_obj = self._resolve_solver(solver)
+    def _create_instance(self, config: SolverConfig):
+        solver_obj = self._resolve_solver(config.solver)
         model_text = self._render_model_string()
         runtime_model = minizinc.Model()
         runtime_model.add_string(model_text)
-        return minizinc.Instance(solver_obj, runtime_model)
+        return minizinc.Instance(solver_obj, runtime_model), solver_obj
+
+    def _normalize_solver_config(
+        self,
+        solver: Union[str, Any, SolverConfig, None]=None,
+        timeout=None,
+        random_seed: Optional[int]=None,
+        threads: Optional[int]=None,
+        free_search: bool=False,
+        all_solutions: bool=False,
+        **kwargs,
+    ) -> SolverConfig:
+        if (isinstance(solver, SolverConfig)):
+            has_overrides = (
+                timeout is not None
+                or random_seed is not None
+                or threads is not None
+                or free_search is not False
+                or all_solutions is not False
+                or len(kwargs) > 0
+            )
+            if (has_overrides):
+                raise ValueError("When passing SolverConfig to solve(), provide solve options only inside SolverConfig.")
+            return solver
+
+        return SolverConfig(
+            solver="gecode" if (solver is None) else solver,
+            timeout=timeout,
+            random_seed=random_seed,
+            threads=threads,
+            free_search=free_search,
+            all_solutions=all_solutions,
+            extra_solve_args=dict(kwargs),
+        )
+
+    def _record_solve_outcome(self, solver_obj, result):
+        self.last_solver = solver_obj
+        self.last_solve_result = result
+        self.last_solve_status = getattr(result, "status", None)
+        self.last_solve_statistics = getattr(result, "statistics", None)
+
+    def get_last_solve_info(self) -> dict[str, Any]:
+        return {
+            "solver": self.last_solver,
+            "status": self.last_solve_status,
+            "statistics": self.last_solve_statistics,
+            "result": self.last_solve_result,
+        }
 
     def solve(
         self,
-        solver: Union[str, Any, None]=None,
+        solver: Union[str, Any, SolverConfig, None]=None,
         timeout=None,
         random_seed: Optional[int]=None,
         threads: Optional[int]=None,
@@ -281,19 +354,33 @@ class Model(minizinc.Model):
         all_solutions: bool=False,
         **kwargs,
     ):
-        instance = self._create_instance(solver=solver)
-        return instance.solve(
+        config = self._normalize_solver_config(
+            solver=solver,
             timeout=timeout,
             random_seed=random_seed,
-            processes=threads,
+            threads=threads,
             free_search=free_search,
             all_solutions=all_solutions,
             **kwargs,
         )
+        instance, solver_obj = self._create_instance(config=config)
+        result = instance.solve(
+            timeout=config.timeout,
+            random_seed=config.random_seed,
+            processes=config.threads,
+            free_search=config.free_search,
+            all_solutions=config.all_solutions,
+            **config.extra_solve_args,
+        )
+        self._record_solve_outcome(solver_obj, result)
+        return result
+
+    def solve_with(self, config: SolverConfig):
+        return self.solve(solver=config)
 
     def optimize(
         self,
-        solver: Union[str, Any, None]=None,
+        solver: Union[str, Any, SolverConfig, None]=None,
         timeout=None,
         random_seed: Optional[int]=None,
         threads: Optional[int]=None,
@@ -315,7 +402,7 @@ class Model(minizinc.Model):
 
     def check_satisfiable(
         self,
-        solver: Union[str, Any, None]=None,
+        solver: Union[str, Any, SolverConfig, None]=None,
         timeout=None,
         random_seed: Optional[int]=None,
         threads: Optional[int]=None,
