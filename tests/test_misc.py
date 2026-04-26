@@ -1,5 +1,6 @@
 import unittest
 import pytest
+from tests.solver_utils import deterministic_instance_solve, lookup_default_solver
 
 import pymzm
 import minizinc
@@ -10,7 +11,7 @@ pytestmark = [pytest.mark.integration]
 class TestMisc(unittest.TestCase):
     def setUp(self):
         self.model = pymzm.Model()
-        self.gecode = minizinc.Solver.lookup("gecode")
+        self.gecode = lookup_default_solver()
 
     def test_misc1(self):
         model = self.model
@@ -20,7 +21,7 @@ class TestMisc(unittest.TestCase):
         model.set_solve_criteria(pymzm.SOLVE_MAXIMIZE, pymzm.Expression.sum(xs) - pymzm.Expression.sum(ys))
         model.generate()
         
-        result = minizinc.Instance(self.gecode, model).solve(all_solutions=False)
+        result = deterministic_instance_solve(minizinc.Instance(self.gecode, model), all_solutions=False)
 
         self.assertTrue(result.solution is not None)
         self.assertTrue(result.objective < 0)

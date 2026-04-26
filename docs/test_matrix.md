@@ -53,3 +53,13 @@ python -m pytest -q
 ## Runtime behavior without MiniZinc
 
 `tests/conftest.py` skips tests marked `integration` when MiniZinc runtime is unavailable. This keeps local and CI unit validation reliable on hosts without solver installation.
+
+## Deterministic Solver Utilities
+
+Use `tests/solver_utils.py` for stable integration solve defaults.
+
+- `lookup_default_solver()`
+- `deterministic_solver_config(...)`
+- `deterministic_instance_solve(...)`
+
+These utilities centralize deterministic defaults (`random_seed=1`, `threads=1`) to reduce test flakiness when integration tests run with a solver runtime.

@@ -4,6 +4,7 @@ import pytest
 
 import pymzm
 import minizinc
+from tests.solver_utils import deterministic_instance_solve, lookup_default_solver
 
 import equiv
 from functools import partial
@@ -14,7 +15,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.property]
 
 class TestExpression(unittest.TestCase):
     def setUp(self):
-        self.solver = minizinc.Solver.lookup("gecode")
+        self.solver = lookup_default_solver()
         self.val_min = -100
         self.val_max = 100
 
@@ -42,7 +43,7 @@ class TestExpression(unittest.TestCase):
                 pass
         #if (len(sols) == 0): print(inspect.getsource(func))
 
-        results = minizinc.Instance(self.solver, model).solve(all_solutions=True)
+        results = deterministic_instance_solve(minizinc.Instance(self.solver, model), all_solutions=True)
 
         self.assertTrue(results.solution is not None)
         self.assertEqual(len(sols), len(results), f"{sols}, {results}")
@@ -61,7 +62,7 @@ class TestExpression(unittest.TestCase):
         model.set_solve_criteria(pymzm.SOLVE_SATISFY)
         model.generate()
 
-        result = minizinc.Instance(self.solver, model).solve(all_solutions=False)
+        result = deterministic_instance_solve(minizinc.Instance(self.solver, model), all_solutions=False)
 
         if (is_solveable):
             self.assertTrue(result.solution is not None)
@@ -402,7 +403,7 @@ class TestExpression(unittest.TestCase):
         model.set_solve_criteria(pymzm.SOLVE_SATISFY)
         model.generate()
 
-        result = minizinc.Instance(self.solver, model).solve(all_solutions=False)
+        result = deterministic_instance_solve(minizinc.Instance(self.solver, model), all_solutions=False)
         self.assertTrue(result.solution is not None)
         self.assertEqual(result["x"], 3)
 
