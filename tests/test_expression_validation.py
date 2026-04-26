@@ -2,6 +2,7 @@ import unittest
 import pytest
 
 import pymzm
+from tests.mzn_verifier import assert_valid_mzn
 
 
 pytestmark = [pytest.mark.unit]
@@ -110,6 +111,22 @@ class TestExpressionValidation(unittest.TestCase):
         self.assertRaises(pymzm.PymzmValueIsNotCondition, pymzm.Expression.conditional, [(x, 1)], 0)
         self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.conditional, [(x >= 1, object())], 0)
         self.assertRaises(pymzm.PymzmValueIsNotExpression, pymzm.Expression.conditional, [(x >= 1, 1)], object())
+
+    def test_expression_render_is_valid_mzn_when_embedded_in_model(self):
+        model = pymzm.Model()
+        x = model.add_variable("x", val_min=0, val_max=10)
+
+        y_expr = pymzm.Expression.let(["int: y = x + 1"], pymzm.Expression("y"))
+        guard = pymzm.Expression.conditional([(x >= 5, True), (x >= 2, x >= 3)], False)
+        q = pymzm.Expression.forall("i", range(1, 4), lambda i: x >= i)
+
+        model.add_constraint(guard)
+        model.add_constraint(q)
+        model.add_constraint(y_expr >= 1)
+        model.set_solve_criteria(pymzm.SOLVE_MAXIMIZE, y_expr)
+        model.generate()
+
+        assert_valid_mzn(self, model.model_mzn_str)
 
 
 if __name__ == "__main__":

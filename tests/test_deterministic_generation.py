@@ -2,6 +2,7 @@ import unittest
 import pytest
 
 import pymzm
+from tests.mzn_verifier import assert_valid_mzn
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.snapshot]
@@ -54,6 +55,7 @@ class TestDeterministicGeneration(unittest.TestCase):
         self.assertIn('int: b = 2;', lines)
         self.assertLess(lines.index('int: a = 1;'), lines.index('int: b = 2;'))
         self.assertLess(lines.index('var 1..3: x;'), lines.index('var 1..3: y;'))
+        assert_valid_mzn(self, model_a.model_mzn_str)
 
 
 if __name__ == "__main__":

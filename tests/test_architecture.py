@@ -4,6 +4,7 @@ import pytest
 import pymzm
 
 from pymzm.backends import MznTextBackend
+from tests.mzn_verifier import assert_valid_mzn
 
 
 pytestmark = [pytest.mark.unit]
@@ -27,6 +28,7 @@ class TestArchitecture(unittest.TestCase):
         expected = MznTextBackend().render_model(model_ir)
         model.generate()
         self.assertEqual(model.model_mzn_str, expected)
+        assert_valid_mzn(self, model.model_mzn_str)
 
 
 if __name__ == "__main__":
