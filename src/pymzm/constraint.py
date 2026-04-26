@@ -133,6 +133,13 @@ class Constraint:
         assert len(left) == len(right), f"{arg_name_left} and {arg_name_right} must have the same length"
 
     @staticmethod
+    def _normalize_and_match(left_name: str, left, right_name: str, right):
+        left = Constraint._as_non_empty_list(left, left_name)
+        right = Constraint._as_non_empty_list(right, right_name)
+        Constraint._assert_same_length(left_name, left, right_name, right)
+        return left, right
+
+    @staticmethod
     def alldifferent(exprs: Sequence[ExprLike]) -> "Constraint":
         """Constrain the elements in the passed List to be pairwise different.
 
@@ -212,18 +219,14 @@ class Constraint:
     def disjunctive(s: Sequence[ExprLike], d: Sequence[ExprLike]) -> "Constraint":
         # Requires that a set of tasks given by start times s and durations d do not overlap in time. 
         # Tasks with duration 0 can be scheduled at any time, even in the middle of other tasks.
-        s = Constraint._as_non_empty_list(s, "s")
-        d = Constraint._as_non_empty_list(d, "d")
-        Constraint._assert_same_length("s", s, "d", d)
+        s, d = Constraint._normalize_and_match("s", s, "d", d)
         return Constraint._from_global_constraint("disjunctive", Constraint.CTYPE_DISJUNCTIVE, s, d)
     
     @staticmethod
     def disjunctive_strict(s: Sequence[ExprLike], d: Sequence[ExprLike]) -> "Constraint":
         # Requires that a set of tasks given by start times s and durations d do not overlap in time. 
         # Tasks with duration 0 CANNOT be scheduled at any time, but only when no other task is running.
-        s = Constraint._as_non_empty_list(s, "s")
-        d = Constraint._as_non_empty_list(d, "d")
-        Constraint._assert_same_length("s", s, "d", d)
+        s, d = Constraint._normalize_and_match("s", s, "d", d)
         return Constraint._from_global_constraint("disjunctive_strict", Constraint.CTYPE_DISJUNCTIVE, s, d)
 
     @staticmethod
@@ -238,44 +241,32 @@ class Constraint:
 
     @staticmethod
     def bin_packing(capacity: ExprLike, bins: Sequence[ExprLike], weights: Sequence[ExprLike]) -> "Constraint":
-        bins = Constraint._as_non_empty_list(bins, "bins")
-        weights = Constraint._as_non_empty_list(weights, "weights")
-        Constraint._assert_same_length("bins", bins, "weights", weights)
+        bins, weights = Constraint._normalize_and_match("bins", bins, "weights", weights)
         return Constraint._from_global_constraint("bin_packing", Constraint.CTYPE_BIN_PACKING, capacity, bins, weights)
 
     @staticmethod
     def inverse(forward: Sequence[ExprLike], backward: Sequence[ExprLike]) -> "Constraint":
-        forward = Constraint._as_non_empty_list(forward, "forward")
-        backward = Constraint._as_non_empty_list(backward, "backward")
-        Constraint._assert_same_length("forward", forward, "backward", backward)
+        forward, backward = Constraint._normalize_and_match("forward", forward, "backward", backward)
         return Constraint._from_global_constraint("inverse", Constraint.CTYPE_INVERSE, forward, backward)
 
     @staticmethod
     def lex_less(left: Sequence[ExprLike], right: Sequence[ExprLike]) -> "Constraint":
-        left = Constraint._as_non_empty_list(left, "left")
-        right = Constraint._as_non_empty_list(right, "right")
-        Constraint._assert_same_length("left", left, "right", right)
+        left, right = Constraint._normalize_and_match("left", left, "right", right)
         return Constraint._from_global_constraint("lex_less", Constraint.CTYPE_LEX_LESS, left, right)
 
     @staticmethod
     def lex_lesseq(left: Sequence[ExprLike], right: Sequence[ExprLike]) -> "Constraint":
-        left = Constraint._as_non_empty_list(left, "left")
-        right = Constraint._as_non_empty_list(right, "right")
-        Constraint._assert_same_length("left", left, "right", right)
+        left, right = Constraint._normalize_and_match("left", left, "right", right)
         return Constraint._from_global_constraint("lex_lesseq", Constraint.CTYPE_LEX_LESSEQ, left, right)
 
     @staticmethod
     def lex_greater(left: Sequence[ExprLike], right: Sequence[ExprLike]) -> "Constraint":
-        left = Constraint._as_non_empty_list(left, "left")
-        right = Constraint._as_non_empty_list(right, "right")
-        Constraint._assert_same_length("left", left, "right", right)
+        left, right = Constraint._normalize_and_match("left", left, "right", right)
         return Constraint._from_global_constraint("lex_greater", Constraint.CTYPE_LEX_GREATER, left, right)
 
     @staticmethod
     def lex_greatereq(left: Sequence[ExprLike], right: Sequence[ExprLike]) -> "Constraint":
-        left = Constraint._as_non_empty_list(left, "left")
-        right = Constraint._as_non_empty_list(right, "right")
-        Constraint._assert_same_length("left", left, "right", right)
+        left, right = Constraint._normalize_and_match("left", left, "right", right)
         return Constraint._from_global_constraint("lex_greatereq", Constraint.CTYPE_LEX_GREATEREQ, left, right)
 
     @staticmethod
@@ -298,9 +289,7 @@ class Constraint:
     @staticmethod
     def arg_sort(x: Sequence[ExprLike], p: Sequence[ExprLike]) -> "Constraint":
         # Constrains p to be the permutation which causes x to be in sorted order hence x[p[i]] <= x[p[i+1]].
-        x = Constraint._as_non_empty_list(x, "x")
-        p = Constraint._as_non_empty_list(p, "p")
-        Constraint._assert_same_length("x", x, "p", p)
+        x, p = Constraint._normalize_and_match("x", x, "p", p)
         return Constraint._from_global_constraint("arg_sort", Constraint.CTYPE_ARG_SORT, x, p)
     
     @staticmethod

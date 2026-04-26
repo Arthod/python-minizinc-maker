@@ -299,20 +299,26 @@ class Expression:
         return generators
 
     @staticmethod
-    def array_comprehension(expr, generators):
+    def _build_comprehension(expr, generators, open_bracket: str, close_bracket: str):
         generators = Expression._normalize_generators(generators, "generators")
-
         clauses = [Expression._generator_clause_to_mz(g) for g in generators]
         expr_mz = Expression._comprehension_expr_to_mz(expr, [g[0] for g in generators])
-        return Expression(f"[{expr_mz} | {', '.join(clauses)}]")
+        return Expression(f"{open_bracket}{expr_mz} | {', '.join(clauses)}{close_bracket}")
+
+    @staticmethod
+    def _build_quantifier(keyword: str, generators, predicate: "ExpressionBool") -> "ExpressionBool":
+        generators = Expression._normalize_generators(generators, "generators")
+        clauses = [Expression._generator_clause_to_mz(g) for g in generators]
+        predicate_mz = Expression._quantifier_predicate_to_mz(predicate, [g[0] for g in generators])
+        return ExpressionBool(f"{keyword} ({', '.join(clauses)}) ({predicate_mz})")
+
+    @staticmethod
+    def array_comprehension(expr, generators):
+        return Expression._build_comprehension(expr, generators, "[", "]")
 
     @staticmethod
     def set_comprehension(expr, generators):
-        generators = Expression._normalize_generators(generators, "generators")
-
-        clauses = [Expression._generator_clause_to_mz(g) for g in generators]
-        expr_mz = Expression._comprehension_expr_to_mz(expr, [g[0] for g in generators])
-        return Expression(f"{{{expr_mz} | {', '.join(clauses)}}}")
+        return Expression._build_comprehension(expr, generators, "{", "}")
 
     @staticmethod
     def predicate(name: str, *args) -> "ExpressionBool":
@@ -338,17 +344,11 @@ class Expression:
 
     @staticmethod
     def forall_over(generators, predicate: "ExpressionBool") -> "ExpressionBool":
-        generators = Expression._normalize_generators(generators, "generators")
-        clauses = [Expression._generator_clause_to_mz(g) for g in generators]
-        predicate_mz = Expression._quantifier_predicate_to_mz(predicate, [g[0] for g in generators])
-        return ExpressionBool(f"forall ({', '.join(clauses)}) ({predicate_mz})")
+        return Expression._build_quantifier("forall", generators, predicate)
 
     @staticmethod
     def exists_over(generators, predicate: "ExpressionBool") -> "ExpressionBool":
-        generators = Expression._normalize_generators(generators, "generators")
-        clauses = [Expression._generator_clause_to_mz(g) for g in generators]
-        predicate_mz = Expression._quantifier_predicate_to_mz(predicate, [g[0] for g in generators])
-        return ExpressionBool(f"exists ({', '.join(clauses)}) ({predicate_mz})")
+        return Expression._build_quantifier("exists", generators, predicate)
 
     @staticmethod
     def sum(exprs: List["Expression"]) -> "Expression":
