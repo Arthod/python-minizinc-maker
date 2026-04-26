@@ -208,6 +208,7 @@ class AnnotationValueChoice:
 class Model(minizinc.Model):
     def __init__(self):
         self.constants = []
+        self.parameters = []
         self.variables = []
         self.constraints = []
         self.solve_criteria = None
@@ -251,6 +252,30 @@ class Model(minizinc.Model):
         constant = Constant(name, value, vtype)
         self.constants.append(constant)
         return constant
+
+    def add_parameter(self, name: str, value, vtype=Variable.VTYPE_INTEGER):
+        parameter = Parameter(name, value, vtype)
+        self.parameters.append(parameter)
+        return parameter
+
+    def add_parameters(self, name: str, indices: List[Tuple[int]], values, vtype=Variable.VTYPE_INTEGER) -> ValueDict:
+        if (isinstance(values, dict)):
+            assert set(values.keys()) == set(indices)
+            values_map = values
+        elif (isinstance(values, list)):
+            assert len(values) == len(indices)
+            values_map = {idx: values[i] for i, idx in enumerate(indices)}
+        else:
+            values_map = {idx: values for idx in indices}
+
+        parameters = ValueDict()
+        for idx in indices:
+            idx_str = str(idx).replace(", ", "_").replace("(", "").replace(")", "").replace("'", "").replace("-", "_")
+            parameter = Parameter(f"{name}_{idx_str}", values_map[idx], vtype=vtype)
+            self.parameters.append(parameter)
+            parameters[idx] = parameter
+
+        return parameters
 
     def add_enum(self, type_name: str, members: List[str]) -> EnumDomain:
         if (not isinstance(type_name, str) or not type_name.strip()):
@@ -497,6 +522,7 @@ class Model(minizinc.Model):
         includes = tuple(sorted(f"{gconst}.mzn" for gconst in self.global_constraints))
 
         constants_sorted = sorted(self.constants, key=lambda c: c.name)
+        parameters_sorted = sorted(self.parameters, key=lambda p: p.name)
         variables_sorted = sorted(self.variables, key=lambda v: v.name)
         enum_declarations = tuple(
             self.enums[name].to_declaration()
@@ -504,7 +530,7 @@ class Model(minizinc.Model):
         )
         declarations = enum_declarations + tuple(
             line.rstrip("\n")
-            for line in (a._to_mz() for a in constants_sorted + variables_sorted)
+            for line in (a._to_mz() for a in constants_sorted + parameters_sorted + variables_sorted)
         )
         function_declarations = tuple(
             f"{line};" for line in sorted(set(self.function_declarations))

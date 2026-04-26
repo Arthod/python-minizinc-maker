@@ -1,11 +1,14 @@
 
+from .expression import Expression
 from .variable import *
 from .misc import *
 
 import numpy as np
 
-class Constant:
+
+class Constant(Expression):
     def __init__(self, name: str, value, vtype=Variable.VTYPE_INTEGER):
+        super().__init__(name)
         self.name = name
         self.value = value
         if (self.value is None):
@@ -66,5 +69,9 @@ class Constant:
             return f'"{escaped}"'
 
         return str(value)
+
+
+class Parameter(Constant):
+    pass
         
         
