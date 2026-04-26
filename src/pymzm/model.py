@@ -1,7 +1,7 @@
 
 import minizinc
 from dataclasses import dataclass, field
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Iterable, Iterator, List, Mapping, Optional, Sequence, Tuple, Union
 
 from .exceptions import *
 from .variable import *
@@ -16,19 +16,23 @@ SOLVE_MAXIMIZE = "maximize"
 SOLVE_MINIMIZE = "minimize"
 SOLVE_SATISFY = "satisfy"
 
+SolverLike = Union[str, Any]
+ConstraintInput = Union[Constraint, ExpressionBool]
+OutputPart = Union[str, bool, int, float, Expression]
+
 
 class EnumValue(Expression):
-    def __init__(self, enum_type_name: str, token: str):
+    def __init__(self, enum_type_name: str, token: str) -> None:
         self.enum_type_name = enum_type_name
         self.token = token
         super().__init__(token)
 
-    def _to_mz_token(self):
+    def _to_mz_token(self) -> str:
         return self.token
 
 
 class EnumDomain:
-    def __init__(self, type_name: str, members: List[str]):
+    def __init__(self, type_name: str, members: List[str]) -> None:
         self.type_name = type_name
         self.members = tuple(members)
         self._member_values = {
@@ -39,7 +43,7 @@ class EnumDomain:
     def __getitem__(self, member: str) -> EnumValue:
         return self._member_values[member]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[EnumValue]:
         for member in self.members:
             yield self._member_values[member]
 
@@ -65,7 +69,7 @@ class SolverConfig:
     all_solutions: bool = False
     extra_solve_args: dict[str, Any] = field(default_factory=dict)
 
-    def with_updates(self, **overrides):
+    def with_updates(self, **overrides) -> "SolverConfig":
         values = {
             "solver": self.solver,
             "timeout": self.timeout,
@@ -79,54 +83,54 @@ class SolverConfig:
         return SolverConfig(**values)
 
 class RestartStrategy:
-    def __init__(self, restart_type: str, scale: int):
+    def __init__(self, restart_type: str, scale: int) -> None:
         self.restart_type = restart_type
         self.scale = scale
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.restart_type}({self.scale})"
 
 class RestartConstant(RestartStrategy):
-    def __init__(self, scale):
+    def __init__(self, scale: int) -> None:
         super().__init__("restart_constant", scale)
 
 class RestartLinear(RestartStrategy):
-    def __init__(self, scale):
+    def __init__(self, scale: int) -> None:
         super().__init__("restart_linear", scale)
 
 class RestartGeometric(RestartStrategy):
-    def __init__(self, base, scale):
+    def __init__(self, base: int, scale: int) -> None:
         self.base = base
         super().__init__("restart_geometric", scale)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.restart_type}({self.base}, {self.scale})"
 
 class RestartLuby(RestartStrategy):
-    def __init__(self, scale):
+    def __init__(self, scale: int) -> None:
         super().__init__("restart_luby", scale)
 
 
 class RestartNone(RestartStrategy):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("restart_none", 0)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.restart_type
 
 
 
 class SeqSearch:
-    def __init__(self, search_annotations: list["SearchAnnotation"]):
+    def __init__(self, search_annotations: list["SearchAnnotation"]) -> None:
         self.search_annotations = search_annotations
         if (not all(isinstance(sa, SearchAnnotation) for sa in search_annotations)):
             raise PymzmInvalidSearchAnnotation()
         
-    def __str__(self):
+    def __str__(self) -> str:
         return f"seq_search([{','.join(str(sa) for sa in self.search_annotations)}])"
 
 class SearchAnnotation:
-    def __init__(self, search_type: str, variables: List["Variable"], varchoice: str, valchoice: str):
+    def __init__(self, search_type: str, variables: List["Variable"], varchoice: str, valchoice: str) -> None:
         self.search_type = search_type
         self.variables = variables
 
@@ -138,32 +142,32 @@ class SearchAnnotation:
         if (self.valchoice not in AnnotationValueChoice.VALCHOICES):
             raise PymzmInvalidValchoiceAnnotation("valchoice")
         
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.search_type}({self.variables}, {self.varchoice}, {self.valchoice})"
 
 class IntSearch(SearchAnnotation):
-    def __init__(self, variables: List["Variable"], varchoice: str, valchoice: str):
+    def __init__(self, variables: List["Variable"], varchoice: str, valchoice: str) -> None:
         if (not all(isinstance(v, Variable) for v in variables)):
             raise PymzmInvalidVariableError("variables", "Atleast one variable is not an integer.")
         
         super().__init__("int_search", variables, varchoice, valchoice)
 
 class BoolSearch(SearchAnnotation):
-    def __init__(self, variables: List["VariableBool"], varchoice: str, valchoice: str):
+    def __init__(self, variables: List["VariableBool"], varchoice: str, valchoice: str) -> None:
         if (not all(isinstance(v, VariableBool) for v in variables)):
             raise PymzmInvalidVariableError("variables", "Atleast one variable is not a bool.")
         
         super().__init__("bool_search", variables, varchoice, valchoice)
 
 class SetSearch(SearchAnnotation):
-    def __init__(self, variables: List["Expression"], varchoice: str, valchoice: str):
+    def __init__(self, variables: List["Expression"], varchoice: str, valchoice: str) -> None:
         if (not all(isinstance(v, Variable) or not all(v.vtype == Variable.VTYPE_SET) for v in variables)):
             raise PymzmInvalidVariableError("variables", "Atleast one variable is not a set.")
         
         super().__init__("set_search", variables, varchoice, valchoice)
 
 class FloatSearch(SearchAnnotation):
-    def __init__(self, variables: List["Expression"], precision: float, varchoice: str, valchoice: str):
+    def __init__(self, variables: List["Expression"], precision: float, varchoice: str, valchoice: str) -> None:
         raise NotImplementedError()
     
 class AnnotationVariableChoice:
@@ -226,7 +230,7 @@ class AnnotationValueChoice:
 
 
 class Model(minizinc.Model):
-    def __init__(self):
+    def __init__(self) -> None:
         self.constants = []
         self.parameters = []
         self.variables = []
@@ -253,7 +257,7 @@ class Model(minizinc.Model):
 
         super().__init__()
 
-    def set_solve_criteria(self, criteria: str, expr: Expression=None):
+    def set_solve_criteria(self, criteria: str, expr: Optional[Expression]=None) -> None:
         self.solve_criteria = criteria
         self.solve_expression = expr
 
@@ -264,36 +268,36 @@ class Model(minizinc.Model):
         else:
             raise Exception(f"Invalid solve criteria: {criteria}")
 
-    def set_solve_method(self, method: SearchAnnotation, restart_strategy: RestartStrategy=None):
+    def set_solve_method(self, method: SearchAnnotation, restart_strategy: Optional[RestartStrategy]=None) -> None:
         assert isinstance(method, (SeqSearch, SearchAnnotation))
         if (restart_strategy is not None):
             assert isinstance(restart_strategy, RestartStrategy)
         self.solve_method = method
         self.restart_strategy = restart_strategy
 
-    def set_solve_annotations(self, annotations):
+    def set_solve_annotations(self, annotations: Any) -> None:
         self.solve_annotations = Expression._normalize_annotations(annotations, "annotations")
 
-    def add_solve_annotation(self, annotation):
+    def add_solve_annotation(self, annotation: Any) -> None:
         self.solve_annotations.extend(Expression._normalize_annotations(annotation, "annotation"))
 
-    def set_warm_start(self, variables, values):
+    def set_warm_start(self, variables: Iterable[Expression], values: Iterable[Any]) -> None:
         self.add_solve_annotation(Annotation("warm_start", list(variables), list(values)))
 
-    def set_warm_start_array(self, warm_start_annotations):
+    def set_warm_start_array(self, warm_start_annotations: Iterable[Any]) -> None:
         self.add_solve_annotation(Annotation("warm_start_array", list(warm_start_annotations)))
 
-    def add_constant(self, name: str, value, vtype=Variable.VTYPE_INTEGER):
+    def add_constant(self, name: str, value: Any, vtype: str=Variable.VTYPE_INTEGER) -> Constant:
         constant = Constant(name, value, vtype)
         self.constants.append(constant)
         return constant
 
-    def add_parameter(self, name: str, value=None, vtype=Variable.VTYPE_INTEGER):
+    def add_parameter(self, name: str, value: Any=None, vtype: str=Variable.VTYPE_INTEGER) -> Parameter:
         parameter = Parameter(name, value, vtype)
         self.parameters.append(parameter)
         return parameter
 
-    def add_parameters(self, name: str, indices: List[Tuple[int]], values, vtype=Variable.VTYPE_INTEGER) -> ValueDict:
+    def add_parameters(self, name: str, indices: Sequence[Any], values: Any, vtype: str=Variable.VTYPE_INTEGER) -> ValueDict:
         if (isinstance(values, dict)):
             assert set(values.keys()) == set(indices)
             values_map = values
@@ -328,12 +332,12 @@ class Model(minizinc.Model):
         self.enums[type_name] = enum_domain
         return enum_domain
 
-    def add_variable(self, name: str, vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None, domain=None, annotations=None):
+    def add_variable(self, name: str, vtype: str=Variable.VTYPE_INTEGER, val_min: Optional[int]=None, val_max: Optional[int]=None, domain: Any=None, annotations: Any=None) -> Variable:
         variable = Variable(name, vtype, val_min, val_max, domain, annotations=annotations)
         self.variables.append(variable)
         return variable
     
-    def add_variables(self, name: str, indices: List[Tuple[int]], vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None, domains=None, annotations=None) -> ValueDict:
+    def add_variables(self, name: str, indices: Sequence[Any], vtype: str=Variable.VTYPE_INTEGER, val_min: Optional[int]=None, val_max: Optional[int]=None, domains: Any=None, annotations: Any=None) -> ValueDict:
 
         # Domain
         if (domains is None):
@@ -378,7 +382,7 @@ class Model(minizinc.Model):
 
         return variables
 
-    def add_constraint(self, constraint: ExpressionBool, is_redundant=False, enabled=True):
+    def add_constraint(self, constraint: ConstraintInput, is_redundant: bool=False, enabled: bool=True) -> Constraint:
         if (isinstance(constraint, Constraint)):
             constraint.is_redundant = is_redundant
             constraint.enabled = enabled
@@ -394,53 +398,53 @@ class Model(minizinc.Model):
         self.constraints.append(constraint)
         return constraint
 
-    def add_optional_constraint(self, constraint: ExpressionBool, enabled=False, is_redundant=False):
+    def add_optional_constraint(self, constraint: ConstraintInput, enabled: bool=False, is_redundant: bool=False) -> Constraint:
         return self.add_constraint(constraint, is_redundant=is_redundant, enabled=enabled)
 
-    def add_assumption(self, constraint: ExpressionBool, enabled=True, is_redundant=False):
+    def add_assumption(self, constraint: ConstraintInput, enabled: bool=True, is_redundant: bool=False) -> Constraint:
         return self.add_optional_constraint(constraint, enabled=enabled, is_redundant=is_redundant)
 
-    def set_constraint_enabled(self, constraint: Constraint, enabled=True):
+    def set_constraint_enabled(self, constraint: Constraint, enabled: bool=True) -> Constraint:
         assert constraint in self.constraints
         constraint.enabled = enabled
         return constraint
 
-    def enable_constraint(self, constraint: Constraint):
+    def enable_constraint(self, constraint: Constraint) -> Constraint:
         return self.set_constraint_enabled(constraint, True)
 
-    def disable_constraint(self, constraint: Constraint):
+    def disable_constraint(self, constraint: Constraint) -> Constraint:
         return self.set_constraint_enabled(constraint, False)
 
-    def add_include(self, include_file: str):
+    def add_include(self, include_file: str) -> None:
         assert isinstance(include_file, str)
         include_file = include_file.strip()
         assert len(include_file) > 0
         self.includes.add(include_file)
 
-    def add_includes(self, include_files):
+    def add_includes(self, include_files: Iterable[str]) -> None:
         include_files = list(include_files)
         for include_file in include_files:
             self.add_include(include_file)
 
-    def add_constraints(self, constraints: List[Constraint], is_redundant=False, enabled=True):
+    def add_constraints(self, constraints: Iterable[ConstraintInput], is_redundant: bool=False, enabled: bool=True) -> None:
         constraints = list(constraints)
         assert all(isinstance(constraint, (Constraint, Expression, str, bool)) for constraint in constraints)
         for constraint in constraints:
             self.add_constraint(constraint, is_redundant=is_redundant, enabled=enabled)
 
-    def add_function_declaration(self, declaration: str):
+    def add_function_declaration(self, declaration: str) -> None:
         assert isinstance(declaration, str)
         declaration = declaration.strip()
         assert len(declaration) > 0
         self.function_declarations.append(declaration.rstrip(";"))
 
-    def add_predicate_declaration(self, declaration: str):
+    def add_predicate_declaration(self, declaration: str) -> None:
         assert isinstance(declaration, str)
         declaration = declaration.strip()
         assert len(declaration) > 0
         self.predicate_declarations.append(declaration.rstrip(";"))
 
-    def _output_part_to_mz(self, part) -> str:
+    def _output_part_to_mz(self, part: OutputPart) -> str:
         if (isinstance(part, str)):
             escaped = (
                 part
@@ -457,7 +461,7 @@ class Model(minizinc.Model):
             return f"show({part})"
         raise PymzmValueIsNotExpression("part", part)
 
-    def add_output(self, parts, section: str=None, json_section: str=None):
+    def add_output(self, parts: Union[OutputPart, Iterable[OutputPart]], section: Optional[str]=None, json_section: Optional[str]=None) -> None:
         if (isinstance(parts, (str, Expression, int, float, bool))):
             parts = [parts]
 
@@ -473,26 +477,26 @@ class Model(minizinc.Model):
 
         self.output_items.append(output_item + ";")
 
-    def set_output(self, parts, section: str=None, json_section: str=None):
+    def set_output(self, parts: Union[OutputPart, Iterable[OutputPart]], section: Optional[str]=None, json_section: Optional[str]=None) -> None:
         self.output_items = []
         self.add_output(parts, section=section, json_section=json_section)
 
-    def add_output_kv(self, label: str, value, suffix: str=""):
+    def add_output_kv(self, label: str, value: OutputPart, suffix: str="") -> None:
         self.add_output([f"{label}=", value, suffix])
 
-    def call_function(self, name: str, *args, returns_bool: bool=False):
+    def call_function(self, name: str, *args: Any, returns_bool: bool=False) -> Expression:
         return Expression.function(name, *args, returns_bool=returns_bool)
 
-    def add_function_call(self, name: str, *args, is_redundant: bool=False):
+    def add_function_call(self, name: str, *args: Any, is_redundant: bool=False) -> Constraint:
         return self.add_constraint(self.call_function(name, *args, returns_bool=True), is_redundant=is_redundant)
 
-    def call_predicate(self, name: str, *args) -> ExpressionBool:
+    def call_predicate(self, name: str, *args: Any) -> ExpressionBool:
         return Expression.predicate(name, *args)
 
-    def add_predicate_call(self, name: str, *args, is_redundant: bool=False):
+    def add_predicate_call(self, name: str, *args: Any, is_redundant: bool=False) -> Constraint:
         return self.add_constraint(self.call_predicate(name, *args), is_redundant=is_redundant)
 
-    def generate(self, debug=False):
+    def generate(self, debug: bool=False) -> None:
         self._sync_compiled_model()
         if (debug):
             print(self.model_mzn_str)
@@ -510,7 +514,7 @@ class Model(minizinc.Model):
             self._compiled_model_text = model_text
         return model_text
 
-    def _resolve_solver(self, solver: Union[str, Any]):
+    def _resolve_solver(self, solver: SolverLike) -> Any:
         if (isinstance(solver, str)):
             return minizinc.Solver.lookup(solver)
         return solver
@@ -522,28 +526,28 @@ class Model(minizinc.Model):
                 defaults[parameter.name] = parameter.value
         return defaults
 
-    def _bind_instance_data(self, instance, data: dict[str, Any]):
+    def _bind_instance_data(self, instance: minizinc.Instance, data: Mapping[str, Any]) -> None:
         defaults = self._parameter_default_data()
         merged = {**defaults, **dict(data)}
         for key, value in merged.items():
             instance[key] = value
 
-    def _create_instance(self, config: SolverConfig):
+    def _create_instance(self, config: SolverConfig) -> tuple[minizinc.Instance, Any]:
         solver_obj = self._resolve_solver(config.solver)
         model_text = self._render_model_string()
         runtime_model = minizinc.Model()
         runtime_model.add_string(model_text)
         return minizinc.Instance(solver_obj, runtime_model), solver_obj
 
-    def _create_compiled_instance(self, config: SolverConfig):
+    def _create_compiled_instance(self, config: SolverConfig) -> tuple[minizinc.Instance, Any]:
         solver_obj = self._resolve_solver(config.solver)
         self._sync_compiled_model()
         return minizinc.Instance(solver_obj, self), solver_obj
 
     def _normalize_solver_config(
         self,
-        solver: Union[str, Any, SolverConfig, None]=None,
-        timeout=None,
+        solver: Union[SolverLike, SolverConfig, None]=None,
+        timeout: Any=None,
         random_seed: Optional[int]=None,
         threads: Optional[int]=None,
         free_search: bool=False,
@@ -573,7 +577,7 @@ class Model(minizinc.Model):
             extra_solve_args=dict(kwargs),
         )
 
-    def _record_solve_outcome(self, solver_obj, result):
+    def _record_solve_outcome(self, solver_obj: Any, result: SolveResult) -> None:
         self.last_solver = solver_obj
         self.last_solve_result = result
         self.last_solve_status = getattr(result, "status", None)
@@ -589,14 +593,14 @@ class Model(minizinc.Model):
 
     def solve(
         self,
-        solver: Union[str, Any, SolverConfig, None]=None,
-        timeout=None,
+        solver: Union[SolverLike, SolverConfig, None]=None,
+        timeout: Any=None,
         random_seed: Optional[int]=None,
         threads: Optional[int]=None,
         free_search: bool=False,
         all_solutions: bool=False,
         **kwargs,
-    ):
+    ) -> SolveResult:
         config = self._normalize_solver_config(
             solver=solver,
             timeout=timeout,
@@ -619,20 +623,20 @@ class Model(minizinc.Model):
         self._record_solve_outcome(solver_obj, normalized)
         return normalized
 
-    def solve_with(self, config: SolverConfig):
+    def solve_with(self, config: SolverConfig) -> SolveResult:
         return self.solve(solver=config)
 
     def solve_with_data(
         self,
-        data: dict[str, Any],
-        solver: Union[str, Any, SolverConfig, None]=None,
-        timeout=None,
+        data: Mapping[str, Any],
+        solver: Union[SolverLike, SolverConfig, None]=None,
+        timeout: Any=None,
         random_seed: Optional[int]=None,
         threads: Optional[int]=None,
         free_search: bool=False,
         all_solutions: bool=False,
         **kwargs,
-    ):
+    ) -> SolveResult:
         config = self._normalize_solver_config(
             solver=solver,
             timeout=timeout,
@@ -660,13 +664,13 @@ class Model(minizinc.Model):
 
     def optimize(
         self,
-        solver: Union[str, Any, SolverConfig, None]=None,
-        timeout=None,
+        solver: Union[SolverLike, SolverConfig, None]=None,
+        timeout: Any=None,
         random_seed: Optional[int]=None,
         threads: Optional[int]=None,
         free_search: bool=False,
         **kwargs,
-    ):
+    ) -> SolveResult:
         if (self.solve_criteria not in (SOLVE_MAXIMIZE, SOLVE_MINIMIZE)):
             raise ValueError("Model.optimize() requires solve criteria 'maximize' or 'minimize'.")
 
@@ -682,8 +686,8 @@ class Model(minizinc.Model):
 
     def check_satisfiable(
         self,
-        solver: Union[str, Any, SolverConfig, None]=None,
-        timeout=None,
+        solver: Union[SolverLike, SolverConfig, None]=None,
+        timeout: Any=None,
         random_seed: Optional[int]=None,
         threads: Optional[int]=None,
         free_search: bool=False,
@@ -760,7 +764,7 @@ class Model(minizinc.Model):
             output_items=output_items,
         )
 
-    def write(self, fn: str):
+    def write(self, fn: str) -> None:
         if (self.model_mzn_str is None):
             self.generate()
         with open(fn, "w") as f:
