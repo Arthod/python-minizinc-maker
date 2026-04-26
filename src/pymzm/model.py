@@ -17,6 +17,44 @@ SOLVE_MINIMIZE = "minimize"
 SOLVE_SATISFY = "satisfy"
 
 
+class EnumValue(Expression):
+    def __init__(self, enum_type_name: str, token: str):
+        self.enum_type_name = enum_type_name
+        self.token = token
+        super().__init__(token)
+
+    def _to_mz_token(self):
+        return self.token
+
+
+class EnumDomain:
+    def __init__(self, type_name: str, members: List[str]):
+        self.type_name = type_name
+        self.members = tuple(members)
+        self._member_values = {
+            member: EnumValue(type_name, member)
+            for member in self.members
+        }
+
+    def __getitem__(self, member: str) -> EnumValue:
+        return self._member_values[member]
+
+    def __iter__(self):
+        for member in self.members:
+            yield self._member_values[member]
+
+    def __contains__(self, member: str) -> bool:
+        return member in self._member_values
+
+    def __getattr__(self, member: str) -> EnumValue:
+        if (member in self._member_values):
+            return self._member_values[member]
+        raise AttributeError(member)
+
+    def to_declaration(self) -> str:
+        return f"enum {self.type_name} = {{{', '.join(self.members)}}};"
+
+
 @dataclass(frozen=True)
 class SolverConfig:
     solver: Union[str, Any] = "gecode"
@@ -179,6 +217,7 @@ class Model(minizinc.Model):
         self.model_mzn_str = None
 
         self.global_constraints = set()
+        self.enums = {}
         self.function_declarations = []
         self.predicate_declarations = []
 
@@ -212,6 +251,22 @@ class Model(minizinc.Model):
         constant = Constant(name, value, vtype)
         self.constants.append(constant)
         return constant
+
+    def add_enum(self, type_name: str, members: List[str]) -> EnumDomain:
+        if (not isinstance(type_name, str) or not type_name.strip()):
+            raise ValueError("Enum type name must be a non-empty string.")
+
+        members = list(members)
+        if (not len(members)):
+            raise ValueError("Enum members must contain at least one value.")
+        if (not all(isinstance(member, str) and member.strip() for member in members)):
+            raise ValueError("Enum members must be non-empty strings.")
+        if (len(set(members)) != len(members)):
+            raise ValueError("Enum members must be unique.")
+
+        enum_domain = EnumDomain(type_name, members)
+        self.enums[type_name] = enum_domain
+        return enum_domain
 
     def add_variable(self, name: str, vtype: int=Variable.VTYPE_INTEGER, val_min: int=None, val_max: int=None, domain: set=None):
         variable = Variable(name, vtype, val_min, val_max, domain)
@@ -443,7 +498,11 @@ class Model(minizinc.Model):
 
         constants_sorted = sorted(self.constants, key=lambda c: c.name)
         variables_sorted = sorted(self.variables, key=lambda v: v.name)
-        declarations = tuple(
+        enum_declarations = tuple(
+            self.enums[name].to_declaration()
+            for name in sorted(self.enums.keys())
+        )
+        declarations = enum_declarations + tuple(
             line.rstrip("\n")
             for line in (a._to_mz() for a in constants_sorted + variables_sorted)
         )

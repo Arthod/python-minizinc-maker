@@ -92,7 +92,9 @@ class Variable(Expression):
             else:
                 assert self.val_min is None
                 assert self.val_max is None
-                if (isinstance(domain, (str, Expression))):
+                if (hasattr(domain, "type_name")):
+                    self.domain = domain.type_name
+                elif (isinstance(domain, (str, Expression))):
                     self.domain = domain
                 else:
                     self.domain = set(domain)
@@ -105,7 +107,9 @@ class Variable(Expression):
             else:
                 assert self.val_min is None
                 assert self.val_max is None
-                if (isinstance(domain, (str, Expression))):
+                if (hasattr(domain, "type_name")):
+                    self.domain = domain.type_name
+                elif (isinstance(domain, (str, Expression))):
                     self.domain = domain
                 else:
                     self.domain = set(domain)

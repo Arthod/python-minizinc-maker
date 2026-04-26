@@ -5,6 +5,8 @@ def variableIterable2Str(variables) -> str:
     return str([v.name if isinstance(v, Expression) else v for v in variables]).replace("'", "")
 
 def scalar_py2mz(value):
+    if (hasattr(value, "_to_mz_token")):
+        return value._to_mz_token()
     if (isinstance(value, bool)):
         return "true" if value else "false"
     if (isinstance(value, str)):
@@ -16,7 +18,7 @@ def scalar_py2mz(value):
 def set_py2mz(values) -> str:
     values_list = list(values)
     values_list.sort(key=lambda v: (type(v).__name__, str(v)))
-    return "{" + ", ".join(scalar_py2mz(v) if isinstance(v, str) else str(v) for v in values_list) + "}"
+    return "{" + ", ".join(scalar_py2mz(v) for v in values_list) + "}"
 
 
 def array_py2mz(arr, shape, scalar_formatter=scalar_py2mz):

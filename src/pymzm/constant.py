@@ -11,9 +11,13 @@ class Constant:
         if (self.value is None):
             raise Exception("Non-initialized constant is not supported by pymzm.")
         
-        self.vtype = vtype        
-        if (self.vtype not in [Variable.VTYPE_INTEGER, Variable.VTYPE_BOOL, Variable.VTYPE_FLOAT, Variable.VTYPE_STRING]):
-            raise Exception("Invalid vtype for constant. Supported scalar types are int, bool, float, and string")
+        self.vtype = vtype
+        self.is_enum_type = (
+            isinstance(self.vtype, str)
+            and self.vtype not in [Variable.VTYPE_INTEGER, Variable.VTYPE_BOOL, Variable.VTYPE_FLOAT, Variable.VTYPE_STRING]
+        )
+        if (not self.is_enum_type and self.vtype not in [Variable.VTYPE_INTEGER, Variable.VTYPE_BOOL, Variable.VTYPE_FLOAT, Variable.VTYPE_STRING]):
+            raise Exception("Invalid vtype for constant. Supported scalar types are int, bool, float, string, and enum type names")
         
         arr = np.array(value)
         if (arr.shape):
@@ -47,6 +51,13 @@ class Constant:
             return f"array[{','.join(f'1..{d}' for d in self.shape)}] of {self.vtype}: {self.name} = {mz_array};\n"
 
     def _scalar_to_mz(self, value):
+        if (self.is_enum_type):
+            if (hasattr(value, "_to_mz_token")):
+                return value._to_mz_token()
+            if (isinstance(value, str)):
+                return value
+            return str(value)
+
         if (self.vtype == Variable.VTYPE_BOOL):
             return "true" if bool(value) else "false"
 
